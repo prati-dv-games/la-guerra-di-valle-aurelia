@@ -1109,7 +1109,7 @@ const levels = [
     name: 'Via Plava',
     boss: 'LaFed',
     bossColor: '#ffd54f',
-    bossHp: 260,
+    bossHp: 300,
     subtitle: 'Il rugbista narcisista',
     bgColor: '#1a1a30',
     groundColor: '#3a3a4a',
@@ -1131,7 +1131,7 @@ const levels = [
     name: 'Down Under Pub',
     boss: 'Gioacchino',
     bossColor: '#6d4c41',
-    bossHp: 380,
+    bossHp: 440,
     subtitle: 'Il bastone e la sorella',
     bgColor: '#1b2631',
     groundColor: '#2c3e50',
@@ -1153,7 +1153,7 @@ const levels = [
     name: 'Piazza Bainsizza',
     boss: 'Il Dale',
     bossColor: '#90a4ae',
-    bossHp: 460,
+    bossHp: 530,
     subtitle: 'La capoeira de Piazza Bainsizza',
     bgColor: '#263238',
     groundColor: '#37474f',
@@ -1174,7 +1174,7 @@ const levels = [
     name: 'Pizzarium',
     boss: 'Ciccio Ruver',
     bossColor: '#ff7043',
-    bossHp: 540,
+    bossHp: 620,
     subtitle: 'Il pizzaiolo col mohawk',
     bgColor: '#3e2723',
     groundColor: '#4e342e',
@@ -1195,7 +1195,7 @@ const levels = [
     name: 'Piazza Mazzini',
     boss: 'Pisellino',
     bossColor: '#b0bec5',
-    bossHp: 800,
+    bossHp: 920,
     subtitle: 'Il fantasma di Valle Aurelia',
     bgColor: '#0d0d1a',
     groundColor: '#1a1a2e',
@@ -3451,8 +3451,8 @@ function createBoss(levelIdx) {
     currentMove: null,
     moveData: {},
     // Poise
-    poise: [42, 48, 68, 48, 42][levelIdx],
-    maxPoise: [42, 48, 68, 48, 42][levelIdx],
+    poise: [52, 60, 85, 60, 52][levelIdx],
+    maxPoise: [52, 60, 85, 60, 52][levelIdx],
     poiseRecovery: 0.45,
     staggerTimer: 0,
     lastHitTimer: 999,
@@ -4329,33 +4329,33 @@ function aiGioacchino() {}
 const ENEMY_TYPES = {
   // Level 0 - Via Plava: rugby hooligans + Lazio tifosi
   0: [
-    { name: 'Tifoso', color: '#1565c0', hp: 110, speed: 1.3, dmg: 7, w: 32, h: 50, type: 'rusher', hat: '#64b5f6', poise: 25, poiseRecovery: 0.4 },
-    { name: 'Hooligan', color: '#455a64', hp: 220, speed: 0.8, dmg: 12, w: 36, h: 52, type: 'tank', hat: '#90a4ae', poise: 65, poiseRecovery: 0.55 },
+    { name: 'Tifoso', color: '#1565c0', hp: 110, speed: 1.5, dmg: 9, w: 32, h: 50, type: 'rusher', hat: '#64b5f6', poise: 25, poiseRecovery: 0.4 },
+    { name: 'Hooligan', color: '#455a64', hp: 220, speed: 0.9, dmg: 14, w: 36, h: 52, type: 'tank', hat: '#90a4ae', poise: 65, poiseRecovery: 0.55 },
   ],
   // Level 1 - Down Under Pub: drunk pub guys + bouncers
   1: [
-    { name: 'Ubriaco', color: '#5d4037', hp: 90, speed: 1.5, dmg: 6, w: 30, h: 48, type: 'drunk', hat: '#8d6e63', poise: 20, poiseRecovery: 0.3 },
-    { name: 'Bouncer', color: '#212121', hp: 250, speed: 0.6, dmg: 14, w: 40, h: 56, type: 'tank', hat: '#424242', poise: 72, poiseRecovery: 0.55 },
-    { name: 'Barista', color: '#4e342e', hp: 105, speed: 1.0, dmg: 10, w: 30, h: 48, type: 'thrower', hat: '#6d4c41', poise: 25, poiseRecovery: 0.4 },
+    { name: 'Ubriaco', color: '#5d4037', hp: 90, speed: 1.7, dmg: 8, w: 30, h: 48, type: 'drunk', hat: '#8d6e63', poise: 20, poiseRecovery: 0.3 },
+    { name: 'Bouncer', color: '#212121', hp: 250, speed: 0.7, dmg: 16, w: 40, h: 56, type: 'tank', hat: '#424242', poise: 72, poiseRecovery: 0.55 },
+    { name: 'Barista', color: '#4e342e', hp: 105, speed: 1.1, dmg: 12, w: 30, h: 48, type: 'thrower', hat: '#6d4c41', poise: 25, poiseRecovery: 0.4 },
   ],
   // Level 2 - Piazza Bainsizza: street toughs
   2: [
-    { name: 'Teppista', color: '#37474f', hp: 155, speed: 1.2, dmg: 10, w: 32, h: 50, type: 'rusher', hat: '#546e7a', poise: 30, poiseRecovery: 0.4 },
-    { name: 'Spacciatore', color: '#1b5e20', hp: 105, speed: 1.8, dmg: 7, w: 28, h: 46, type: 'flanker', hat: '#2e7d32', poise: 24, poiseRecovery: 0.4 },
-    { name: 'Grosso', color: '#424242', hp: 335, speed: 0.5, dmg: 18, w: 44, h: 58, type: 'tank', hat: '#616161', poise: 80, poiseRecovery: 0.6 },
+    { name: 'Teppista', color: '#37474f', hp: 155, speed: 1.4, dmg: 12, w: 32, h: 50, type: 'rusher', hat: '#546e7a', poise: 30, poiseRecovery: 0.4 },
+    { name: 'Spacciatore', color: '#1b5e20', hp: 105, speed: 2.0, dmg: 9, w: 28, h: 46, type: 'flanker', hat: '#2e7d32', poise: 24, poiseRecovery: 0.4 },
+    { name: 'Grosso', color: '#424242', hp: 335, speed: 0.6, dmg: 20, w: 44, h: 58, type: 'tank', hat: '#616161', poise: 80, poiseRecovery: 0.6 },
   ],
   // Level 3 - Pizzarium: pizza workers + delivery guys
   3: [
-    { name: 'Garzone', color: '#fff', hp: 100, speed: 1.4, dmg: 8, w: 30, h: 48, type: 'thrower', hat: '#f44336', poise: 24, poiseRecovery: 0.4 },
-    { name: 'Fattorino', color: '#ff8f00', hp: 140, speed: 2.0, dmg: 10, w: 30, h: 48, type: 'rusher', hat: '#ffc107', poise: 28, poiseRecovery: 0.4 },
-    { name: 'Impastatore', color: '#fff', hp: 310, speed: 0.7, dmg: 17, w: 42, h: 54, type: 'tank', hat: '#d32f2f', poise: 78, poiseRecovery: 0.55 },
+    { name: 'Garzone', color: '#fff', hp: 100, speed: 1.6, dmg: 10, w: 30, h: 48, type: 'thrower', hat: '#f44336', poise: 24, poiseRecovery: 0.4 },
+    { name: 'Fattorino', color: '#ff8f00', hp: 140, speed: 2.2, dmg: 12, w: 30, h: 48, type: 'rusher', hat: '#ffc107', poise: 28, poiseRecovery: 0.4 },
+    { name: 'Impastatore', color: '#fff', hp: 310, speed: 0.8, dmg: 19, w: 42, h: 54, type: 'tank', hat: '#d32f2f', poise: 78, poiseRecovery: 0.55 },
   ],
   // Level 4 - Piazza Mazzini: Valle Aurelia gang elite
   4: [
-    { name: 'Soldato', color: '#263238', hp: 170, speed: 1.5, dmg: 12, w: 32, h: 52, type: 'rusher', hat: '#37474f', poise: 34, poiseRecovery: 0.5 },
-    { name: 'Cecchino', color: '#1a1a2e', hp: 100, speed: 0.8, dmg: 17, w: 28, h: 48, type: 'ranged', hat: '#311b92', poise: 20, poiseRecovery: 0.4 },
-    { name: 'Guardaspalle', color: '#1a1a1a', hp: 380, speed: 0.6, dmg: 19, w: 46, h: 60, type: 'tank', hat: '#333', poise: 88, poiseRecovery: 0.6 },
-    { name: 'Scugnizzo', color: '#4a148c', hp: 90, speed: 2.5, dmg: 7, w: 26, h: 44, type: 'flanker', hat: '#7b1fa2', poise: 24, poiseRecovery: 0.4 },
+    { name: 'Soldato', color: '#263238', hp: 170, speed: 1.7, dmg: 14, w: 32, h: 52, type: 'rusher', hat: '#37474f', poise: 34, poiseRecovery: 0.5 },
+    { name: 'Cecchino', color: '#1a1a2e', hp: 100, speed: 0.9, dmg: 19, w: 28, h: 48, type: 'ranged', hat: '#311b92', poise: 20, poiseRecovery: 0.4 },
+    { name: 'Guardaspalle', color: '#1a1a1a', hp: 380, speed: 0.7, dmg: 22, w: 46, h: 60, type: 'tank', hat: '#333', poise: 88, poiseRecovery: 0.6 },
+    { name: 'Scugnizzo', color: '#4a148c', hp: 90, speed: 2.8, dmg: 9, w: 26, h: 44, type: 'flanker', hat: '#7b1fa2', poise: 24, poiseRecovery: 0.4 },
   ]
 };
 
@@ -4406,8 +4406,8 @@ function updateGoons() {
   const aliveGoons = goons.filter(g => !g.dead);
   const aliveCount = aliveGoons.length;
 
-  // Aggression slots: max 4 enemies attack simultaneously, others circle at medium range
-  const MAX_ATTACKERS = 4;
+  // Aggression slots: max 5 enemies attack simultaneously, others circle at medium range
+  const MAX_ATTACKERS = 5;
   const attackingGoons = aliveGoons.filter(g => g.windupTimer > 0 || (g.attackTimer > 0 && g.attackTimer < 20));
   const attackSlotsAvailable = MAX_ATTACKERS - attackingGoons.length;
 
@@ -4512,20 +4512,21 @@ function updateGoons() {
           const pType = currentLevel === 3 ? 'pizza' : 'meat';
           projectiles.push({
             x: g.x, y: g.y - 25,
-            vx: Math.sign(dx) * 3.5, vy: -2,
+            vx: Math.sign(dx) * 4.5, vy: -2.5,
             life: 80, damage: g.damage, hostile: true,
             type: pType, gravity: true
           });
         } else if (g.type === 'ranged') {
           projectiles.push({
             x: g.x, y: g.y - 25,
-            vx: Math.sign(dx) * 5, vy: 0,
+            vx: Math.sign(dx) * 6.5, vy: 0,
             life: 90, damage: g.damage, hostile: true,
             type: 'bullet', color: '#7b1fa2'
           });
         } else {
-          // Melee - check if still in range
-          if (dist < 65) {
+          // Melee - check if still in range (jumping avoids melee attacks)
+          const playerAirborne = player.y < GROUND_Y - 30;
+          if (dist < 65 && !playerAirborne) {
             hurtPlayer(g.damage);
             screenShake = g.type === 'tank' ? 5 : 3;
             if (g.type === 'tank') spawnParticles(player.x, player.y - 20, '#f44336', 4);
@@ -4554,10 +4555,10 @@ function updateGoons() {
           // Circle at medium range
           g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
         } else if (dist > 45) {
-          g.x += Math.sign(dx) * g.speed * 1.3 * aggroMult;
+          g.x += Math.sign(dx) * g.speed * 1.5 * aggroMult;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
-          g.windupTimer = 20;
-          g.attackTimer = Math.floor(30 / aggroMult);
+          g.windupTimer = 16;
+          g.attackTimer = Math.floor(24 / aggroMult);
         }
         break;
 
@@ -4565,18 +4566,18 @@ function updateGoons() {
         if (!canAttack && dist < circleRange) {
           g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
         } else if (dist > 55) {
-          g.x += Math.sign(dx) * g.speed * aggroMult;
+          g.x += Math.sign(dx) * g.speed * 1.1 * aggroMult;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
-          g.windupTimer = 30;
-          g.attackTimer = Math.floor(42 / aggroMult);
+          g.windupTimer = 24;
+          g.attackTimer = Math.floor(36 / aggroMult);
         }
         break;
 
       case 'drunk':
-        g.x += Math.sign(dx) * g.speed * aggroMult + Math.sin(gameTime * 0.1 + g.x) * 1.5;
+        g.x += Math.sign(dx) * g.speed * aggroMult + Math.sin(gameTime * 0.1 + g.x) * 1.8;
         if (dist < 50 && g.attackTimer === 0 && !player.dead && canAttack) {
-          g.windupTimer = 16;
-          g.attackTimer = Math.floor(28 / aggroMult);
+          g.windupTimer = 12;
+          g.attackTimer = Math.floor(22 / aggroMult);
         }
         break;
 
@@ -4584,22 +4585,22 @@ function updateGoons() {
         if (dist < 120) g.x -= Math.sign(dx) * g.speed * 0.5;
         else if (dist > 250) g.x += Math.sign(dx) * g.speed;
         g.shootTimer++;
-        if (g.shootTimer > Math.floor(60 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
+        if (g.shootTimer > Math.floor(48 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
           g.shootTimer = 0;
-          g.windupTimer = 24;
-          g.attackTimer = 25;
+          g.windupTimer = 18;
+          g.attackTimer = 20;
         }
         break;
 
       case 'flanker': {
         const behindX = player.x + g.flankDir * 80;
         if (!canAttack && dist < circleRange) {
-          g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
+          g.x += Math.sign(g.x - player.x) * g.speed * 0.6;
         } else if (Math.abs(g.x - behindX) > 30) {
-          g.x += Math.sign(behindX - g.x) * g.speed * aggroMult;
+          g.x += Math.sign(behindX - g.x) * g.speed * 1.15 * aggroMult;
         } else if (g.attackTimer === 0 && dist < 60 && !player.dead && canAttack) {
-          g.windupTimer = 18;
-          g.attackTimer = Math.floor(24 / aggroMult);
+          g.windupTimer = 14;
+          g.attackTimer = Math.floor(20 / aggroMult);
           g.flankDir *= -1;
         }
         break;
@@ -4608,10 +4609,10 @@ function updateGoons() {
       case 'ranged':
         if (dist < 200) g.x -= Math.sign(dx) * g.speed;
         g.shootTimer++;
-        if (g.shootTimer > Math.floor(50 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
+        if (g.shootTimer > Math.floor(40 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
           g.shootTimer = 0;
-          g.windupTimer = 22;
-          g.attackTimer = 25;
+          g.windupTimer = 18;
+          g.attackTimer = 20;
         }
         break;
 
@@ -4621,8 +4622,8 @@ function updateGoons() {
         } else if (dist > 50) {
           g.x += Math.sign(dx) * g.speed;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
-          g.windupTimer = 20;
-          g.attackTimer = 34;
+          g.windupTimer = 16;
+          g.attackTimer = 28;
         }
     }
 
