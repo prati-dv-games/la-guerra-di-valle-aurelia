@@ -33,6 +33,7 @@ Choose at game start:
 | 3 | Helper: Cicca the cat (heal) |
 | 4 | Helper: Il Mostro (speed boost) |
 | S | Open shop (at Vanni hub) |
+| B | Open casino — Bingo degli Ubaldi (at Vanni hub) |
 | M | Mute/unmute music |
 | ESC | Back / return to hub |
 
@@ -96,6 +97,30 @@ Unlock helpers as you progress. Each has a cooldown and 3 upgrade tiers (bought 
 - **Tommy** — Throws a knife in a drunken arc
 - **Cicca** — Heals you (it's a cat)
 - **Il Mostro** — Speed boost aura
+
+### Casino — Bingo degli Ubaldi
+
+Press **B** from the hub (Vanni's Bar) to enter the casino. Two mini-games are available:
+
+| Game | NPC | Rules |
+|------|-----|-------|
+| **Video Poker** (Jacks or Better) | Andreino Volpi | Deal 5 cards, hold the ones you want, draw replacements. Jacks or Better pays 1x up to Royal Flush at 250x. Bet 10-100 coins. |
+| **Slot Machine** | Panda | Spin 3 reels. Three-of-a-kind pays big, pairs pay small. Bet 10-50 coins. |
+
+Casino controls:
+
+| Key | Action |
+|-----|--------|
+| B (from hub) | Open casino |
+| ESC | Return to hub |
+| 1 / 2 | Switch tab (Poker / Slots) |
+| Left/Right | Adjust bet |
+| Enter | Deal / Draw / Spin |
+| 1-5 (poker hold phase) | Toggle hold on cards |
+
+NPCs:
+- **Andreino Volpi** — Poker-obsessed ex-footballer with a PokerStars hat, bad knee, and a joint. Comments on your hands.
+- **Panda** — A panda obsessed with padel and tennis. Works sports references into everything.
 
 ### Secret Codes
 

@@ -111,6 +111,7 @@ function getTouchButtonsForState() {
   if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'cons5', 'cons6', 'cons7', 'tab', 'pause'];
   if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'enter'];
   if (state === 'sabi') return ['left', 'right', 'attack', 'pause'];
+  if (state === 'casino') return ['enter', 'tab', 'pause'];
   if (state === 'hub' || state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
   if (state === 'dialogue') return ['enter'];
   if (state === 'menu' || state === 'difficultySelect' || state === 'weaponSelect' || state === 'helperSelect') return ['enter'];
@@ -727,6 +728,35 @@ const TRACKS = {
     ],
     melodyWave: 'square',
     bassWave: 'triangle'
+  },
+
+  // Casino (Bingo degli Ubaldi): smoky lounge jazz, minor key, cool and sleazy
+  casino: {
+    tempo: 92,
+    melody: [
+      // Smoky jazz melody — Dm7 / Am7 / Bb / A7 feel
+      [NOTE.D5,1],[NOTE.R,0.5],[NOTE.F5,0.5],[NOTE.E5,0.5],[NOTE.D5,0.5],[NOTE.C5,0.5],[NOTE.A4,0.5],
+      [NOTE.Bb4,1],[NOTE.A4,0.5],[NOTE.G4,0.5],[NOTE.A4,1],[NOTE.R,1],
+      [NOTE.D5,0.5],[NOTE.E5,0.5],[NOTE.F5,1],[NOTE.E5,0.5],[NOTE.D5,0.5],[NOTE.Cs4,0.5],[NOTE.D4,0.5],
+      [NOTE.A4,1.5],[NOTE.R,0.5],[NOTE.G4,0.5],[NOTE.A4,0.5],[NOTE.Bb4,0.5],[NOTE.A4,0.5],
+      [NOTE.F5,1],[NOTE.E5,0.5],[NOTE.D5,0.5],[NOTE.C5,0.5],[NOTE.Bb4,0.5],[NOTE.A4,0.5],[NOTE.G4,0.5],
+      [NOTE.A4,1],[NOTE.Bb4,0.5],[NOTE.A4,0.5],[NOTE.G4,1],[NOTE.R,1],
+      [NOTE.D4,0.5],[NOTE.F4,0.5],[NOTE.A4,0.5],[NOTE.D5,0.5],[NOTE.Cs5,0.5],[NOTE.D5,0.5],[NOTE.A4,1],
+      [NOTE.G4,0.5],[NOTE.A4,0.5],[NOTE.Bb4,0.5],[NOTE.A4,0.5],[NOTE.D4,1],[NOTE.R,1],
+    ],
+    bass: [
+      // Walking bass line — jazzy, steady
+      [NOTE.D3,1],[NOTE.F3,0.5],[NOTE.A3,0.5],[NOTE.D3,1],[NOTE.A3,1],
+      [NOTE.Bb3,1],[NOTE.F3,0.5],[NOTE.Bb3,0.5],[NOTE.A3,1],[NOTE.E3,1],
+      [NOTE.D3,1],[NOTE.E3,0.5],[NOTE.F3,0.5],[NOTE.G3,1],[NOTE.A3,1],
+      [NOTE.Bb3,0.5],[NOTE.A3,0.5],[NOTE.G3,0.5],[NOTE.F3,0.5],[NOTE.E3,1],[NOTE.A3,1],
+      [NOTE.D3,1],[NOTE.A3,0.5],[NOTE.D3,0.5],[NOTE.F3,1],[NOTE.A3,1],
+      [NOTE.Bb3,1],[NOTE.G3,0.5],[NOTE.E3,0.5],[NOTE.A3,1],[NOTE.D3,1],
+      [NOTE.G3,1],[NOTE.F3,0.5],[NOTE.E3,0.5],[NOTE.D3,1],[NOTE.A3,1],
+      [NOTE.Bb3,0.5],[NOTE.A3,0.5],[NOTE.G3,0.5],[NOTE.F3,0.5],[NOTE.D3,1],[NOTE.R,1],
+    ],
+    melodyWave: 'triangle',
+    bassWave: 'sine'
   }
 };
 
@@ -861,7 +891,7 @@ window.addEventListener('keydown', e => {
 // ==========================================
 // GAME STATE
 // ==========================================
-let state = 'menu'; // menu, difficultySelect, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, gameover, victory
+let state = 'menu'; // menu, difficultySelect, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, casino, gameover, victory
 let difficulty = 'medium'; // 'easy', 'medium', 'hard'
 const DIFF_HP = { easy: 0.7, medium: 0.9, hard: 1.0 };
 const DIFF_DMG = { easy: 0.6, medium: 0.85, hard: 0.935 };
@@ -1134,6 +1164,81 @@ const gachaJokes = [
   '"Come dice mi nonna: chi nun risica, perde lo stesso."',
   '"Jackpot de niente! Come trovà posto ar Pigneto er sabato."'
 ];
+
+// ==========================================
+// CASINO — Bingo degli Ubaldi
+// ==========================================
+let casinoTab = 0; // 0=poker, 1=slots
+let casinoFirstVisit = true;
+
+// Poker state
+let pokerPhase = 'idle'; // 'idle' | 'hold' | 'result'
+let pokerDeck = [];
+let pokerHand = [null, null, null, null, null];
+let pokerHeld = [false, false, false, false, false];
+let pokerBet = 10;
+let pokerResult = '';
+let pokerWinAmount = 0;
+let pokerResultTimer = 0;
+let pokerDealAnim = 0;
+let pokerNpcComment = '';
+let pokerNpcCommentTimer = 0;
+
+// Slot state
+let slotPhase = 'idle'; // 'idle' | 'spinning' | 'result'
+let slotReels = [0, 0, 0];
+let slotTargetReels = [0, 0, 0];
+let slotSpinTimers = [0, 0, 0];
+let slotBet = 10;
+let slotResult = '';
+let slotWinAmount = 0;
+let slotResultTimer = 0;
+let slotNpcComment = '';
+let slotNpcCommentTimer = 0;
+
+// Casino dialogue
+let casinoDialogueActive = false;
+let casinoDialogueLines = [];
+let casinoDialogueIndex = 0;
+let casinoDialogueCooldown = 0;
+
+// Card constants
+const CARD_SUITS = ['hearts', 'diamonds', 'clubs', 'spades'];
+const CARD_RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const SUIT_SYMBOLS = { hearts: '\u2665', diamonds: '\u2666', clubs: '\u2663', spades: '\u2660' };
+const SUIT_COLORS = { hearts: '#e94560', diamonds: '#e94560', clubs: '#333', spades: '#333' };
+
+// Poker payouts (Jacks or Better) — ~90% EV with optimal play
+const POKER_PAYOUTS = {
+  'Royal Flush': 250,
+  'Straight Flush': 50,
+  'Four of a Kind': 25,
+  'Full House': 8,
+  'Flush': 5,
+  'Straight': 4,
+  'Three of a Kind': 3,
+  'Two Pair': 2,
+  'Jacks or Better': 1,
+  'Nothing': 0
+};
+
+// Slot symbols and payouts
+const SLOT_SYMBOLS = [
+  { name: 'Cuore', symbol: '\u2665', color: '#e94560' },
+  { name: 'Stella', symbol: '\u2605', color: '#ffd700' },
+  { name: 'Sette', symbol: '7', color: '#4caf50' },
+  { name: 'Nota', symbol: '\u266B', color: '#9c27b0' },
+  { name: 'Soldi', symbol: '$', color: '#ff9800' },
+  { name: 'Casa', symbol: '\u2302', color: '#2196f3' },
+  { name: 'Niente', symbol: '-', color: '#666' }
+];
+// Slot payouts — EV = (111 + 18*11) / 343 = 309/343 = ~0.901
+const SLOT_PAYOUTS_3 = [38, 25, 18, 14, 10, 6, 0]; // 3-of-a-kind multipliers
+const SLOT_PAYOUTS_2 = [5, 3, 2, 1, 0, 0, 0]; // pair multipliers (best symbols only)
+
+// Bet limits
+const POKER_BET_MIN = 10, POKER_BET_MAX = 100, POKER_BET_STEP = 5;
+const SLOT_BET_MIN = 10, SLOT_BET_MAX = 50, SLOT_BET_STEP = 5;
 
 // Consumable items
 const consumableItems = [
@@ -6257,6 +6362,83 @@ function drawHub() {
     ctx.globalAlpha = 1;
   }
 
+  // === BINGO DEGLI UBALDI building (right of Bar Vanni) ===
+  const bingoX = 700, bingoY = 130, bingoW = 195, bingoH = 280;
+  // Main building structure (dark purple/maroon)
+  drawRect(bingoX, bingoY, bingoW, bingoH, '#2a1a3a');
+  drawRect(bingoX, bingoY, bingoW, 4, '#4a2a5a');
+  // Roof trim
+  drawRect(bingoX - 4, bingoY - 4, bingoW + 8, 8, '#3d2050');
+  drawRect(bingoX - 4, bingoY - 4, bingoW + 8, 2, '#7b1fa2');
+
+  // Neon sign: "BINGO UBALDI" with pulsing glow
+  const neonP = 0.6 + Math.sin(gameTime * 0.06) * 0.4;
+  const signX = bingoX + bingoW/2, signY = bingoY + 28;
+  // Sign backing
+  drawRect(bingoX + 15, bingoY + 10, bingoW - 30, 32, '#111');
+  drawRect(bingoX + 15, bingoY + 10, bingoW - 30, 2, '#7b1fa2');
+  // Neon glow
+  ctx.globalAlpha = neonP * 0.2;
+  drawRect(bingoX + 10, bingoY + 6, bingoW - 20, 40, '#ce93d8');
+  ctx.globalAlpha = 1;
+  drawText('BINGO', signX, signY, '#e1bee7', 14, 'center');
+  ctx.globalAlpha = neonP;
+  drawText('UBALDI', signX, signY + 14, '#ce93d8', 11, 'center');
+  ctx.globalAlpha = 1;
+
+  // Windows (2 rows, dark interior with purple-ish glow)
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
+    const wx = bingoX + 18 + c * 95;
+    const wy = bingoY + 55 + r * 70;
+    drawRect(wx, wy, 55, 50, '#0d0a1a');
+    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.025 + c + r * 2) * 0.1;
+    drawRect(wx + 2, wy + 2, 51, 46, '#4a148c');
+    ctx.globalAlpha = 1;
+    // Window frame
+    drawRect(wx, wy, 55, 2, '#3d2050');
+    drawRect(wx + 26, wy, 2, 50, '#3d2050');
+  }
+
+  // Door — clickable entrance with warm purple light
+  const doorX = bingoX + bingoW/2 - 30, doorY = bingoY + 200, doorW = 60, doorH = bingoH - 200;
+  drawRect(doorX, doorY, doorW, doorH, '#1a0a2a');
+  drawRect(doorX + 3, doorY + 3, doorW - 6, doorH - 3, '#120820');
+  // Warm light from inside
+  ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.04) * 0.1;
+  ctx.fillStyle = '#9c27b0';
+  ctx.beginPath();
+  ctx.arc(doorX + doorW/2, doorY + 30, 30, Math.PI, 0);
+  ctx.fill();
+  ctx.globalAlpha = 0.15;
+  ctx.fillRect(doorX + 5, doorY + 40, doorW - 10, doorH - 45);
+  ctx.globalAlpha = 1;
+  // Door frame
+  drawRect(doorX, doorY, doorW, 3, '#7b1fa2');
+  drawRect(doorX, doorY, 3, doorH, '#4a2a5a');
+  drawRect(doorX + doorW - 3, doorY, 3, doorH, '#4a2a5a');
+
+  // "ENTRA" sign above door
+  drawRect(doorX - 5, doorY - 18, doorW + 10, 16, 'rgba(0,0,0,0.7)');
+  const entraPulse = 0.7 + Math.sin(gameTime * 0.08) * 0.3;
+  ctx.globalAlpha = entraPulse;
+  drawText('[B] ENTRA', doorX + doorW/2, doorY - 6, '#e1bee7', 10, 'center');
+  ctx.globalAlpha = 1;
+
+  // Click on door to enter casino
+  const doorHover = mouseX > doorX && mouseX < doorX + doorW && mouseY > doorY && mouseY < doorY + doorH;
+  if (doorHover) {
+    // Hover highlight on door
+    ctx.globalAlpha = 0.15;
+    drawRect(doorX, doorY, doorW, doorH, '#ce93d8');
+    ctx.globalAlpha = 1;
+  }
+
+  // Small decorative neon strips on building sides
+  ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.07) * 0.15;
+  drawRect(bingoX, bingoY + 48, 2, bingoH - 48, '#7b1fa2');
+  drawRect(bingoX + bingoW - 2, bingoY + 48, 2, bingoH - 48, '#7b1fa2');
+  ctx.globalAlpha = 1;
+
   // === TOP BAR ===
   drawRect(0, 0, W, 50, 'rgba(0,0,0,0.75)');
   drawRect(0, 48, W, 2, '#4e342e');
@@ -6281,6 +6463,34 @@ function drawHub() {
   if (!showCredits && ((shopHover && mouseClick) || keys['KeyS'])) {
     state = 'shop';
     shopTab = 0;
+    mouseClick = false;
+  }
+
+  // Casino button (top bar + door click)
+  const casinoBx = 345, casinoBy = 10;
+  const casinoHover = mouseX > casinoBx && mouseX < casinoBx + 195 && mouseY > casinoBy && mouseY < casinoBy + 32;
+  drawRect(casinoBx, casinoBy, 195, 32, casinoHover ? '#7b1fa2' : '#6a1b9a');
+  drawRect(casinoBx, casinoBy, 195, 2, '#ce93d8');
+  drawText('BINGO UBALDI [B]', casinoBx + 98, casinoBy + 22, '#fff', 13, 'center');
+  // Door hitbox (matches the bingo building door drawn earlier)
+  const bingoDoorClick = mouseX > 700 + 195/2 - 30 && mouseX < 700 + 195/2 + 30 && mouseY > 330 && mouseY < 410;
+  if (!showCredits && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
+    state = 'casino';
+    casinoTab = 0;
+    pokerPhase = 'idle';
+    slotPhase = 'idle';
+    if (casinoFirstVisit) {
+      casinoFirstVisit = false;
+      casinoDialogueActive = true;
+      casinoDialogueLines = [
+        'Benvenuto al BINGO DEGLI UBALDI!',
+        'Qui se gioca, Conte... e se perde pure.',
+        'Video Poker con Andreino... o le Slot col Panda.',
+        'Sceji er tavolo e bona fortuna!'
+      ];
+      casinoDialogueIndex = 0;
+      casinoDialogueCooldown = 15;
+    }
     mouseClick = false;
   }
 
@@ -6990,6 +7200,904 @@ function drawShopStats(py) {
         drawText('BLOCCATO', sx + boxW - 50, uy + 28, '#444', 9, 'center');
       }
     }
+  }
+}
+
+// ==========================================
+// CASINO — Bingo degli Ubaldi
+// ==========================================
+
+// --- NPC: Andreino Volpi (big version) ---
+function drawAndreinoVolpi(x, y) {
+  const bob = Math.sin(gameTime * 0.04) * 2;
+  drawPixelChar(x, y + bob, 56, 82, '#2e7d32', '#ffcc80', (px, py, w, h) => {
+    // PokerStars hat (dark red with gold star/spade)
+    drawRect(px - 2, py - 10, w + 4, 8, '#8b0000');
+    drawRect(px - 5, py - 3, w + 10, 6, '#8b0000');
+    drawRect(px + 5, py - 12, 8, 4, '#ffd700'); // gold star
+    drawRect(px + w - 14, py - 11, 7, 4, '#333'); // spade symbol
+    // Hair peeking
+    drawRect(px + 4, py, w - 8, 4, '#3e2723');
+    // Stubble
+    ctx.globalAlpha = 0.3;
+    for (let sx = 0; sx < 6; sx++) {
+      drawRect(px + 10 + sx * 7, py + 24, 3, 3, '#5d4037');
+    }
+    ctx.globalAlpha = 1;
+    // Green hoodie body
+    drawRect(px + 3, py + 30, w - 6, h - 50, '#2e7d32');
+    drawRect(px + w/2 - 4, py + 32, 8, 16, '#1b5e20'); // hoodie zipper
+    // Hoodie pocket
+    drawRect(px + 10, py + 50, w - 20, 8, '#256028');
+    // Arms
+    drawRect(px - 5, py + 32, 9, 28, '#2e7d32');
+    drawRect(px + w - 4, py + 32, 9, 28, '#2e7d32');
+    // Hands (skin)
+    drawRect(px - 4, py + 58, 7, 6, '#ffcc80');
+    drawRect(px + w - 3, py + 58, 7, 6, '#ffcc80');
+    // Joint in right hand
+    drawRect(px + w + 3, py + 56, 16, 3, '#f5f5dc');
+    drawRect(px + w + 16, py + 55, 4, 4, '#ff6f00');
+    // Ember glow
+    ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.1) * 0.3;
+    drawRect(px + w + 17, py + 54, 2, 2, '#ff3d00');
+    ctx.globalAlpha = 1;
+    // Smoke wisps (multiple, animated)
+    const smokeT = gameTime * 0.06;
+    for (let si = 0; si < 3; si++) {
+      const sOff = si * 12;
+      ctx.globalAlpha = 0.2 - si * 0.05;
+      drawRect(px + w + 16 + Math.sin(smokeT + si) * 5, py + 48 - sOff - (gameTime % 35), 3, 4, '#bbb');
+    }
+    ctx.globalAlpha = 1;
+    // Knee brace on left leg
+    drawRect(px + 6, py + h - 18, 16, 6, '#90a4ae');
+    drawRect(px + 7, py + h - 17, 14, 4, '#607d8b');
+    drawRect(px + 10, py + h - 16, 2, 2, '#b0bec5'); // buckle
+  });
+}
+
+// --- NPC: Panda (big version) ---
+function drawPandaNpc(x, y) {
+  const bob = Math.sin(gameTime * 0.035) * 2;
+  const py = y + bob;
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x - 2, py + 76, 64, 8);
+  // Body (white round)
+  drawRect(x + 6, py + 24, 48, 52, '#f5f5f5');
+  // Belly spot
+  drawRect(x + 16, py + 34, 28, 30, '#e8e8e8');
+  // Head (white round, big)
+  drawRect(x + 3, py, 54, 36, '#fafafa');
+  // Ears (black, chunky)
+  drawRect(x - 2, py - 8, 14, 14, '#222');
+  drawRect(x + 48, py - 8, 14, 14, '#222');
+  // Ear inner (pink)
+  drawRect(x + 1, py - 5, 8, 8, '#444');
+  drawRect(x + 51, py - 5, 8, 8, '#444');
+  // Eye patches (black, big)
+  drawRect(x + 8, py + 8, 16, 16, '#222');
+  drawRect(x + 36, py + 8, 16, 16, '#222');
+  // White eyes inside patches
+  drawRect(x + 11, py + 11, 10, 10, '#fff');
+  drawRect(x + 39, py + 11, 10, 10, '#fff');
+  // Pupils (animated look)
+  const lookX = Math.sin(gameTime * 0.02) * 2;
+  drawRect(x + 15 + lookX, py + 14, 4, 5, '#111');
+  drawRect(x + 43 + lookX, py + 14, 4, 5, '#111');
+  // Eye shine
+  drawRect(x + 14, py + 12, 2, 2, 'rgba(255,255,255,0.7)');
+  drawRect(x + 42, py + 12, 2, 2, 'rgba(255,255,255,0.7)');
+  // Nose
+  drawRect(x + 24, py + 24, 10, 5, '#333');
+  // Mouth / smile
+  drawRect(x + 22, py + 29, 5, 2, '#555');
+  drawRect(x + 33, py + 29, 5, 2, '#555');
+  drawRect(x + 26, py + 30, 8, 2, '#555');
+  // Arms (black, chunky)
+  drawRect(x - 4, py + 28, 12, 36, '#222');
+  drawRect(x + 52, py + 28, 12, 36, '#222');
+  // Paws (lighter tips)
+  drawRect(x - 3, py + 60, 10, 6, '#444');
+  drawRect(x + 53, py + 60, 10, 6, '#444');
+  // Padel racket in right paw
+  drawRect(x + 62, py + 38, 4, 22, '#8d6e63'); // handle
+  drawRect(x + 58, py + 24, 16, 16, '#1565c0'); // racket head
+  drawRect(x + 61, py + 27, 10, 10, '#1976d2'); // inner grid
+  // Grid lines on racket
+  drawRect(x + 65, py + 27, 1, 10, '#0d47a1');
+  drawRect(x + 61, py + 31, 10, 1, '#0d47a1');
+  // Headband (blue sporty)
+  drawRect(x + 3, py + 2, 54, 5, '#1565c0');
+  drawRect(x + 50, py + 2, 14, 3, '#1976d2'); // headband tail
+  drawRect(x + 56, py + 4, 8, 2, '#1565c0'); // tail end
+  // Legs (black, short)
+  drawRect(x + 12, py + 70, 14, 16, '#222');
+  drawRect(x + 34, py + 70, 14, 16, '#222');
+  // Feet
+  drawRect(x + 10, py + 82, 18, 6, '#222');
+  drawRect(x + 32, py + 82, 18, 6, '#222');
+}
+
+// --- NPC Dialogue Lines ---
+const ANDREINO_IDLE = [
+  '"Aho, oggi vinco io... come sempre su PokerStars."',
+  '"Prima del ginocchio giocavo a pallone... adesso gioco a carte."',
+  '"Tira, tira... tanto perdi."',
+  '"Me so\' fumato er guadagno de ieri... in tutti i sensi."',
+  '"Su PokerStars ero Andreino_il_Re. Bannato 3 volte."',
+  '"Il poker e\' come er calcio: serve strategia... e culo."'
+];
+const ANDREINO_WIN = [
+  '"Bravo, hai vinto! Ma io ho vinto de piu\' ieri sera."',
+  '"Bella mano! Quasi come le mie su PokerStars."',
+  '"Vince chi sa bluffare... e te nun stai bluffando."',
+  '"Complimenti! Ma col ginocchio rotto io vincevo comunque."',
+  '"Hai fortuna, Conte! Fumati \'sto successo."'
+];
+const ANDREINO_LOSE = [
+  '"Ahahah! Come quando me so\' rotto er ginocchio: male."',
+  '"Hai perso? Capita. A me capita ogni giorno su PokerStars."',
+  '"Niente, Conte... riprova e rifumati la tristezza."',
+  '"Mano morta! Come il mio ginocchio sinistro."',
+  '"Dai su, nun piagne... piango gia\' io per la carriera."'
+];
+const ANDREINO_BIG_WIN = [
+  '"MADONNA! Manco a PokerStars Vegas!"',
+  '"BOOM! Hai spaccato! Come il mio legamento crociato!"',
+  '"JACKPOT DELLA MADONNA! Me devi offrire er caffe\'!"'
+];
+const ANDREINO_BROKE = [
+  '"Sei al verde... come la mia erba preferita."',
+  '"Zero coins? Vai a lavorare, Conte!"'
+];
+
+const PANDA_IDLE = [
+  '"Gira le slot come un rovescio: con potenza!"',
+  '"Ogni spin e\' come un match point... tensione pura."',
+  '"Io gioco a padel E gestisco le slot. Multitasking."',
+  '"Le probabilita\'? Come vincere un tie-break: servono i nervi."',
+  '"Pensa alla slot come un campo da padel: tutto puo\' succedere."',
+  '"Facciamo un set? ...di slot, intendo."'
+];
+const PANDA_WIN = [
+  '"ACE! Punto diretto! Che spin!"',
+  '"Game, set, SOLDI! Bel colpo, Conte!"',
+  '"Hai vinto come Alcaraz al Roland Garros!"',
+  '"Dritto vincente! Cioe\'... slot vincente!"',
+  '"Match point convertito! I coins sono tuoi!"'
+];
+const PANDA_LOSE = [
+  '"Doppio fallo! Niente, riprova."',
+  '"Fuori campo! Zero punti \'sto giro."',
+  '"Palla in rete! Meglio al prossimo spin."',
+  '"Hai perso come uno che gioca padel coi piedi."',
+  '"Break subito! Ma il match e\' lungo..."'
+];
+const PANDA_BIG_WIN = [
+  '"GOLDEN SET!!! MAI VISTO UNO SPIN COSI\'!"',
+  '"SLAM! HAI VINTO LO SLAM DELLE SLOT!"',
+  '"MATCHBALL CONVERTITO! SEI UN CAMPIONE!"'
+];
+const PANDA_BROKE = [
+  '"Ritiro per infortunio economico."',
+  '"Partita sospesa: zero coins in campo."'
+];
+
+function getAndreinoComment(type) {
+  const lists = { idle: ANDREINO_IDLE, win: ANDREINO_WIN, lose: ANDREINO_LOSE, bigwin: ANDREINO_BIG_WIN, broke: ANDREINO_BROKE };
+  const list = lists[type] || ANDREINO_IDLE;
+  return list[Math.floor(Math.random() * list.length)];
+}
+function getPandaComment(type) {
+  const lists = { idle: PANDA_IDLE, win: PANDA_WIN, lose: PANDA_LOSE, bigwin: PANDA_BIG_WIN, broke: PANDA_BROKE };
+  const list = lists[type] || PANDA_IDLE;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// --- Card Utilities ---
+function createShuffledDeck() {
+  const deck = [];
+  for (const suit of CARD_SUITS) {
+    for (const rank of CARD_RANKS) {
+      deck.push({ suit, rank });
+    }
+  }
+  // Fisher-Yates shuffle
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function cardRankValue(rank) {
+  return CARD_RANKS.indexOf(rank);
+}
+
+function evaluatePokerHand(hand) {
+  const ranks = hand.map(c => cardRankValue(c.rank)).sort((a, b) => a - b);
+  const suits = hand.map(c => c.suit);
+  const isFlush = suits.every(s => s === suits[0]);
+  const isStraight = (ranks[4] - ranks[0] === 4 && new Set(ranks).size === 5) ||
+    (ranks[0] === 0 && ranks[1] === 1 && ranks[2] === 2 && ranks[3] === 3 && ranks[4] === 12); // A-2-3-4-5
+  const counts = {};
+  ranks.forEach(r => { counts[r] = (counts[r] || 0) + 1; });
+  const freq = Object.values(counts).sort((a, b) => b - a);
+
+  if (isFlush && isStraight && ranks[0] === 8) return 'Royal Flush';
+  if (isFlush && isStraight) return 'Straight Flush';
+  if (freq[0] === 4) return 'Four of a Kind';
+  if (freq[0] === 3 && freq[1] === 2) return 'Full House';
+  if (isFlush) return 'Flush';
+  if (isStraight) return 'Straight';
+  if (freq[0] === 3) return 'Three of a Kind';
+  if (freq[0] === 2 && freq[1] === 2) return 'Two Pair';
+  if (freq[0] === 2) {
+    // Check if pair is Jacks or better
+    const pairRank = parseInt(Object.keys(counts).find(k => counts[k] === 2));
+    if (pairRank >= 9) return 'Jacks or Better'; // J=9, Q=10, K=11, A=12
+    return 'Nothing';
+  }
+  return 'Nothing';
+}
+
+function drawCard(x, y, card, w, h) {
+  w = w || 64;
+  h = h || 88;
+  // Card shadow
+  drawRect(x + 3, y + 3, w, h, 'rgba(0,0,0,0.25)');
+  // Card background
+  drawRect(x, y, w, h, '#fff');
+  drawRect(x, y, w, 2, '#ddd');
+  ctx.strokeStyle = '#999';
+  ctx.strokeRect(x, y, w, h);
+  // Suit & rank
+  const sym = SUIT_SYMBOLS[card.suit];
+  const col = SUIT_COLORS[card.suit];
+  drawText(card.rank, x + 10, y + 18, col, 14);
+  drawText(sym, x + 10, y + 32, col, 10);
+  drawText(sym, x + w/2, y + h/2 + 8, col, 28, 'center');
+  drawText(card.rank, x + w - 10, y + h - 10, col, 10, 'right');
+}
+
+function drawCardBack(x, y, w, h) {
+  w = w || 64;
+  h = h || 88;
+  // Shadow
+  drawRect(x + 3, y + 3, w, h, 'rgba(0,0,0,0.25)');
+  drawRect(x, y, w, h, '#1565c0');
+  drawRect(x + 4, y + 4, w - 8, h - 8, '#0d47a1');
+  // Diamond pattern
+  const cols = Math.floor((w - 16) / 14);
+  const rows = Math.floor((h - 16) / 16);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      drawRect(x + 10 + c * 14, y + 10 + r * 16, 10, 10, '#1976d2');
+    }
+  }
+  // Center emblem
+  drawRect(x + w/2 - 8, y + h/2 - 8, 16, 16, '#ffd700');
+  drawRect(x + w/2 - 5, y + h/2 - 5, 10, 10, '#0d47a1');
+}
+
+// --- Casino Speech Bubble ---
+function drawCasinoBubble(x, y, text, maxW, accentColor) {
+  maxW = maxW || 220;
+  accentColor = accentColor || '#555';
+  ctx.font = '11px monospace';
+  // Word wrap
+  const words = text.split(' ');
+  const lines = [];
+  let curLine = '';
+  for (const word of words) {
+    const test = curLine ? curLine + ' ' + word : word;
+    if (ctx.measureText(test).width > maxW - 20) {
+      if (curLine) lines.push(curLine);
+      curLine = word;
+    } else {
+      curLine = test;
+    }
+  }
+  if (curLine) lines.push(curLine);
+  const lineH = 15;
+  const bubW = maxW;
+  const bubH = lines.length * lineH + 16;
+  const bx = x - bubW/2;
+  const by = y - bubH - 10;
+  // Bubble shadow
+  drawRect(bx + 3, by + 3, bubW, bubH, 'rgba(0,0,0,0.3)');
+  // Bubble background
+  drawRect(bx, by, bubW, bubH, 'rgba(255,255,255,0.95)');
+  drawRect(bx, by, bubW, 3, accentColor);
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(bx, by, bubW, bubH);
+  ctx.lineWidth = 1;
+  // Tail
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.beginPath();
+  ctx.moveTo(x - 8, by + bubH);
+  ctx.lineTo(x + 8, by + bubH);
+  ctx.lineTo(x, by + bubH + 10);
+  ctx.fill();
+  ctx.strokeStyle = accentColor;
+  ctx.beginPath();
+  ctx.moveTo(x - 8, by + bubH);
+  ctx.lineTo(x, by + bubH + 10);
+  ctx.lineTo(x + 8, by + bubH);
+  ctx.stroke();
+  // Text
+  for (let i = 0; i < lines.length; i++) {
+    drawText(lines[i], x, by + 14 + i * lineH, '#222', 11, 'center');
+  }
+}
+
+// --- Main Casino Draw ---
+function drawCasino() {
+  // Dark smoky background
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0d0a1a');
+  grad.addColorStop(0.3, '#140e28');
+  grad.addColorStop(0.7, '#120e24');
+  grad.addColorStop(1, '#0d0a1a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Ambient smoke particles
+  ctx.globalAlpha = 0.05;
+  for (let i = 0; i < 10; i++) {
+    const sx = (i * 113 + gameTime * 0.25) % W;
+    const sy = 80 + Math.sin(gameTime * 0.008 + i * 0.7) * 60;
+    drawRect(sx, sy, 50 + i * 12, 15 + i * 3, '#776');
+  }
+  ctx.globalAlpha = 1;
+
+  // Floor — dark carpet with subtle pattern
+  drawRect(0, H - 60, W, 60, '#1a0e28');
+  for (let i = 0; i < 30; i++) {
+    ctx.globalAlpha = 0.06;
+    drawRect(i * 32, H - 58, 28, 4, '#2a1a3a');
+    drawRect(i * 32 + 16, H - 52, 28, 4, '#2a1a3a');
+    ctx.globalAlpha = 1;
+  }
+  drawRect(0, H - 60, W, 2, '#3d2050');
+
+  // Pulsing neon title
+  const neonPulse = 0.7 + Math.sin(gameTime * 0.05) * 0.3;
+  // Glow behind title
+  ctx.globalAlpha = neonPulse * 0.12;
+  drawRect(W/2 - 180, 4, 360, 32, '#9c27b0');
+  ctx.globalAlpha = 1;
+  drawText('BINGO DEGLI UBALDI', W/2, 26, '#ce93d8', 20, 'center');
+  ctx.globalAlpha = neonPulse * 0.4;
+  drawText('BINGO DEGLI UBALDI', W/2, 27, '#e1bee7', 20, 'center');
+  ctx.globalAlpha = 1;
+
+  // Coins display
+  drawRect(W/2 - 60, 30, 120, 18, 'rgba(0,0,0,0.4)');
+  drawText('COINS: ' + coins, W/2, 44, '#ffd700', 13, 'center');
+
+  // === TAB BUTTONS ===
+  const tabNames = ['VIDEO POKER [1]', 'SLOT MACHINE [2]'];
+  const tabColors = ['#4caf50', '#ff9800'];
+  const tabW = 220, tabH = 30, tabY = 52;
+  for (let t = 0; t < 2; t++) {
+    const tx = W/2 - 230 + t * 240;
+    const active = casinoTab === t;
+    const hover = mouseX > tx && mouseX < tx + tabW && mouseY > tabY && mouseY < tabY + tabH;
+    drawRect(tx, tabY, tabW, tabH, active ? tabColors[t] : hover ? '#333' : '#1a1a2e');
+    drawRect(tx, tabY, tabW, 2, tabColors[t]);
+    if (active) {
+      drawRect(tx, tabY + tabH - 2, tabW, 2, tabColors[t]);
+    }
+    drawText(tabNames[t], tx + tabW/2, tabY + 20, active ? '#000' : '#888', 12, 'center');
+    if (hover && mouseClick) {
+      casinoTab = t;
+      mouseClick = false;
+    }
+  }
+  if (keysJustPressed['Digit1']) casinoTab = 0;
+  if (keysJustPressed['Digit2']) casinoTab = 1;
+
+  const panelY = 86;
+  if (casinoTab === 0) drawVideoPoker(panelY);
+  else drawSlotMachine(panelY);
+
+  // Back button
+  const backHover = mouseX > 20 && mouseX < 150 && mouseY > H - 40 && mouseY < H - 10;
+  drawRect(20, H - 40, 130, 30, backHover ? '#c62828' : '#b71c1c');
+  drawRect(20, H - 40, 130, 2, '#e94560');
+  drawText('INDIETRO [ESC]', 85, H - 20, '#fff', 12, 'center');
+  if ((backHover && mouseClick) || keysJustPressed['Escape']) {
+    state = 'hub';
+    mouseClick = false;
+  }
+
+  // Casino dialogue overlay
+  if (casinoDialogueActive) {
+    drawCasinoDialogue();
+  }
+
+  mouseClick = false;
+}
+
+// --- Casino Dialogue ---
+function drawCasinoDialogue() {
+  // Dark overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Dialogue box
+  const dlgY = isTouchDevice ? 200 : H - 160;
+  drawRect(50, dlgY, W - 100, 120, 'rgba(20,20,40,0.95)');
+  drawRect(50, dlgY, W - 100, 3, '#ce93d8');
+
+  if (casinoDialogueIndex < casinoDialogueLines.length) {
+    const line = casinoDialogueLines[casinoDialogueIndex];
+    drawText(line, W/2, dlgY + 55, '#fff', 15, 'center');
+
+    if (Math.floor(gameTime / 30) % 2 === 0) {
+      drawText('[ENTER]', W/2, dlgY + 100, '#888', 11, 'center');
+    }
+
+    casinoDialogueCooldown = Math.max(0, casinoDialogueCooldown - 1);
+    if ((keysJustPressed['Enter'] || mouseClick) && casinoDialogueCooldown === 0) {
+      casinoDialogueIndex++;
+      casinoDialogueCooldown = 15;
+      mouseClick = false;
+    }
+  } else {
+    casinoDialogueActive = false;
+  }
+}
+
+// --- Video Poker ---
+function drawVideoPoker(panelY) {
+  // NPC column (left side)
+  const npcX = 20, npcW = 140;
+  drawRect(npcX, panelY, npcW, H - panelY - 50, 'rgba(0,0,0,0.3)');
+  drawRect(npcX + npcW, panelY, 2, H - panelY - 50, '#2e7d32');
+
+  // Draw NPC centered in column
+  drawAndreinoVolpi(npcX + 40, panelY + 120);
+  // NPC name plate
+  drawRect(npcX + 10, panelY + 6, npcW - 20, 22, 'rgba(0,0,0,0.6)');
+  drawRect(npcX + 10, panelY + 6, npcW - 20, 2, '#4caf50');
+  drawText('ANDREINO VOLPI', npcX + npcW/2, panelY + 22, '#4caf50', 9, 'center');
+
+  // NPC comment bubble
+  if (pokerNpcCommentTimer > 0) {
+    pokerNpcCommentTimer--;
+    drawCasinoBubble(npcX + npcW/2, panelY + 110, pokerNpcComment, 190, '#4caf50');
+  } else if (pokerPhase === 'idle') {
+    if (gameTime % 360 === 0) pokerNpcComment = getAndreinoComment('idle');
+    if (pokerNpcComment) drawCasinoBubble(npcX + npcW/2, panelY + 110, pokerNpcComment, 190, '#4caf50');
+  }
+
+  // Poker table area (right of NPC)
+  const tableX = npcX + npcW + 8;
+  const tableW = W - tableX - 10;
+  drawRect(tableX, panelY, tableW, H - panelY - 50, 'rgba(0,60,0,0.12)');
+  drawRect(tableX, panelY, tableW, 2, '#4caf50');
+
+  // Payout table (top right corner)
+  const payX = tableX + tableW - 200;
+  const payY = panelY + 4;
+  drawRect(payX, payY, 195, 182, 'rgba(0,0,0,0.55)');
+  drawRect(payX, payY, 195, 3, '#ffd700');
+  drawText('PAGAMENTI', payX + 98, payY + 18, '#ffd700', 13, 'center');
+  const payNames = Object.keys(POKER_PAYOUTS);
+  for (let i = 0; i < payNames.length - 1; i++) {
+    const name = payNames[i];
+    const mult = POKER_PAYOUTS[name];
+    const isActive = pokerPhase === 'result' && pokerResult === name;
+    if (isActive) drawRect(payX + 3, payY + 24 + i * 17, 189, 16, 'rgba(255,215,0,0.15)');
+    drawText(name, payX + 10, payY + 38 + i * 17, isActive ? '#ffd700' : '#bbb', 11);
+    drawText(mult + 'x', payX + 180, payY + 38 + i * 17, isActive ? '#ffd700' : '#999', 11, 'right');
+  }
+
+  // Cards area — bigger cards, centered in table
+  const cardW = 64, cardH = 88;
+  const cardSpacing = 74;
+  const totalCardsW = 5 * cardSpacing - (cardSpacing - cardW);
+  const cardStartX = tableX + (tableW - totalCardsW) / 2 - 40;
+  const cardY = panelY + 18;
+
+  if (pokerPhase === 'idle') {
+    // Show face-down cards
+    for (let i = 0; i < 5; i++) {
+      drawCardBack(cardStartX + i * cardSpacing, cardY, cardW, cardH);
+    }
+
+    // Bet controls (below cards)
+    const betY = cardY + cardH + 16;
+    const betCenterX = cardStartX + totalCardsW / 2 - 30;
+    drawText('PUNTATA: ' + pokerBet, betCenterX, betY + 16, '#ffd700', 16, 'center');
+
+    const minusBx = betCenterX - 90;
+    const plusBx = betCenterX + 60;
+    const minusHover = mouseX > minusBx && mouseX < minusBx + 36 && mouseY > betY && mouseY < betY + 28;
+    const plusHover = mouseX > plusBx && mouseX < plusBx + 36 && mouseY > betY && mouseY < betY + 28;
+    drawRect(minusBx, betY, 36, 28, minusHover ? '#555' : '#333');
+    drawRect(minusBx, betY, 36, 2, '#666');
+    drawText('<', minusBx + 18, betY + 19, '#fff', 16, 'center');
+    drawRect(plusBx, betY, 36, 28, plusHover ? '#555' : '#333');
+    drawRect(plusBx, betY, 36, 2, '#666');
+    drawText('>', plusBx + 18, betY + 19, '#fff', 16, 'center');
+
+    if ((minusHover && mouseClick) || keysJustPressed['ArrowLeft']) {
+      pokerBet = Math.max(POKER_BET_MIN, pokerBet - POKER_BET_STEP);
+      mouseClick = false;
+    }
+    if ((plusHover && mouseClick) || keysJustPressed['ArrowRight']) {
+      pokerBet = Math.min(POKER_BET_MAX, pokerBet + POKER_BET_STEP);
+      mouseClick = false;
+    }
+
+    // Deal button
+    const canDeal = coins >= pokerBet;
+    const dealY = betY + 38;
+    const dealBx = betCenterX - 95;
+    const dealBw = 190;
+    const dealHover = mouseX > dealBx && mouseX < dealBx + dealBw && mouseY > dealY && mouseY < dealY + 38;
+    drawRect(dealBx, dealY, dealBw, 38, canDeal ? (dealHover ? '#2e7d32' : '#1b5e20') : '#333');
+    drawRect(dealBx, dealY, dealBw, 2, canDeal ? '#4caf50' : '#555');
+    drawText('DISTRIBUISCI [ENTER]', dealBx + dealBw/2, dealY + 25, canDeal ? '#fff' : '#666', 13, 'center');
+
+    if (canDeal && ((dealHover && mouseClick) || keysJustPressed['Enter'])) {
+      coins -= pokerBet;
+      pokerDeck = createShuffledDeck();
+      pokerHand = pokerDeck.splice(0, 5);
+      pokerHeld = [false, false, false, false, false];
+      pokerPhase = 'hold';
+      pokerDealAnim = 30;
+      pokerNpcComment = '';
+      pokerNpcCommentTimer = 0;
+      playSFX('hit');
+      mouseClick = false;
+    } else if (!canDeal && ((dealHover && mouseClick) || keysJustPressed['Enter'])) {
+      pokerNpcComment = getAndreinoComment('broke');
+      pokerNpcCommentTimer = 180;
+      mouseClick = false;
+    }
+
+  } else if (pokerPhase === 'hold') {
+    pokerDealAnim = Math.max(0, pokerDealAnim - 1);
+
+    for (let i = 0; i < 5; i++) {
+      const cx = cardStartX + i * cardSpacing;
+      const cy = cardY;
+      const revealed = pokerDealAnim < (25 - i * 5);
+
+      if (revealed && pokerHand[i]) {
+        drawCard(cx, cy, pokerHand[i], cardW, cardH);
+        // Hold indicator
+        if (pokerHeld[i]) {
+          drawRect(cx, cy + cardH + 2, cardW, 18, '#ffd700');
+          drawText('TIENI', cx + cardW/2, cy + cardH + 16, '#000', 10, 'center');
+        }
+        // Number label
+        drawText(String(i + 1), cx + cardW/2, cy + cardH + (pokerHeld[i] ? 34 : 16), '#666', 9, 'center');
+        // Click to toggle hold
+        const cardHover = mouseX > cx && mouseX < cx + cardW && mouseY > cy && mouseY < cy + cardH;
+        if (cardHover && mouseClick) {
+          pokerHeld[i] = !pokerHeld[i];
+          playSFX('hit');
+          mouseClick = false;
+        }
+      } else {
+        drawCardBack(cx, cy, cardW, cardH);
+      }
+    }
+    // Keyboard hold: keys 1-5
+    if (pokerDealAnim === 0) {
+      for (let i = 0; i < 5; i++) {
+        if (keysJustPressed['Digit' + (i + 1)]) {
+          pokerHeld[i] = !pokerHeld[i];
+          playSFX('hit');
+        }
+      }
+    }
+
+    // Draw button
+    if (pokerDealAnim === 0) {
+      const drawBtnY = cardY + cardH + 40;
+      const drawBx = cardStartX + totalCardsW / 2 - 130;
+      const drawBw = 190;
+      const drawHover = mouseX > drawBx && mouseX < drawBx + drawBw && mouseY > drawBtnY && mouseY < drawBtnY + 38;
+      drawRect(drawBx, drawBtnY, drawBw, 38, drawHover ? '#e65100' : '#bf360c');
+      drawRect(drawBx, drawBtnY, drawBw, 2, '#ff6e40');
+      drawText('PESCA [ENTER]', drawBx + drawBw/2, drawBtnY + 25, '#fff', 13, 'center');
+
+      drawText('Clicca o premi 1-5 per tenere', drawBx + drawBw/2, drawBtnY + 52, '#666', 9, 'center');
+
+      if ((drawHover && mouseClick) || keysJustPressed['Enter']) {
+        for (let i = 0; i < 5; i++) {
+          if (!pokerHeld[i]) pokerHand[i] = pokerDeck.pop();
+        }
+        pokerResult = evaluatePokerHand(pokerHand);
+        const mult = POKER_PAYOUTS[pokerResult] || 0;
+        pokerWinAmount = mult * pokerBet;
+        coins += pokerWinAmount;
+        pokerPhase = 'result';
+        pokerResultTimer = 180;
+        if (pokerWinAmount >= pokerBet * 10) {
+          pokerNpcComment = getAndreinoComment('bigwin');
+        } else if (pokerWinAmount > 0) {
+          pokerNpcComment = getAndreinoComment('win');
+        } else {
+          pokerNpcComment = getAndreinoComment('lose');
+        }
+        pokerNpcCommentTimer = 180;
+        if (pokerWinAmount > 0) {
+          playSFX('coin');
+          spawnParticles(cardStartX + totalCardsW/2, cardY + 40, '#ffd700', 20, 5);
+        } else {
+          playSFX('hurt');
+        }
+        mouseClick = false;
+      }
+    }
+
+  } else if (pokerPhase === 'result') {
+    pokerResultTimer--;
+    for (let i = 0; i < 5; i++) {
+      if (pokerHand[i]) drawCard(cardStartX + i * cardSpacing, cardY, pokerHand[i], cardW, cardH);
+    }
+    const bounce = Math.sin(pokerResultTimer * 0.12) * 5;
+    const resY = cardY + cardH + 20;
+    const resCenterX = cardStartX + totalCardsW / 2 - 30;
+    if (pokerWinAmount > 0) {
+      // Win glow
+      ctx.globalAlpha = 0.08 + Math.sin(pokerResultTimer * 0.1) * 0.04;
+      drawRect(tableX, panelY, tableW, H - panelY - 50, '#ffd700');
+      ctx.globalAlpha = 1;
+      drawText(pokerResult + '!', resCenterX, resY + bounce, '#ffd700', 20, 'center');
+      drawText('+' + pokerWinAmount + ' COINS', resCenterX, resY + 24, '#4caf50', 16, 'center');
+    } else {
+      drawText('Niente...', resCenterX, resY + bounce, '#e94560', 20, 'center');
+      drawText('Riprova!', resCenterX, resY + 24, '#888', 12, 'center');
+    }
+
+    if (pokerResultTimer <= 0 || keysJustPressed['Enter'] || mouseClick) {
+      pokerPhase = 'idle';
+      pokerNpcComment = '';
+      mouseClick = false;
+    }
+  }
+}
+
+// --- Slot Machine ---
+function drawSlotMachine(panelY) {
+  // NPC column (left side)
+  const npcX = 20, npcW = 140;
+  drawRect(npcX, panelY, npcW, H - panelY - 50, 'rgba(0,0,0,0.3)');
+  drawRect(npcX + npcW, panelY, 2, H - panelY - 50, '#ff9800');
+
+  // Draw NPC centered in column
+  drawPandaNpc(npcX + 36, panelY + 120);
+  // NPC name plate
+  drawRect(npcX + 10, panelY + 6, npcW - 20, 22, 'rgba(0,0,0,0.6)');
+  drawRect(npcX + 10, panelY + 6, npcW - 20, 2, '#ff9800');
+  drawText('PANDA', npcX + npcW/2, panelY + 22, '#ff9800', 10, 'center');
+
+  // NPC comment bubble
+  if (slotNpcCommentTimer > 0) {
+    slotNpcCommentTimer--;
+    drawCasinoBubble(npcX + npcW/2, panelY + 110, slotNpcComment, 190, '#ff9800');
+  } else if (slotPhase === 'idle') {
+    if (gameTime % 360 === 0) slotNpcComment = getPandaComment('idle');
+    if (slotNpcComment) drawCasinoBubble(npcX + npcW/2, panelY + 110, slotNpcComment, 190, '#ff9800');
+  }
+
+  // Main area
+  const areaX = npcX + npcW + 8;
+  const areaW = W - areaX - 10;
+
+  // Slot machine frame — bigger
+  const machW = 380, machH = 240;
+  const machX = areaX + 10;
+  const machY = panelY + 4;
+  // Outer frame (gray metal)
+  drawRect(machX - 8, machY - 8, machW + 16, machH + 16, '#555');
+  drawRect(machX - 6, machY - 6, machW + 12, machH + 12, '#666');
+  drawRect(machX - 4, machY - 4, machW + 8, machH + 8, '#757575');
+  // Gold trim
+  drawRect(machX - 8, machY - 8, machW + 16, 4, '#ffd700');
+  drawRect(machX - 8, machY + machH + 4, machW + 16, 4, '#ffd700');
+  drawRect(machX - 8, machY - 8, 4, machH + 16, '#c9a900');
+  drawRect(machX + machW + 4, machY - 8, 4, machH + 16, '#c9a900');
+  // Machine body
+  drawRect(machX, machY, machW, machH, '#1a1a1a');
+  // Machine title
+  drawRect(machX + 20, machY + 6, machW - 40, 24, 'rgba(0,0,0,0.5)');
+  drawText('SLOT UBALDI', machX + machW/2, machY + 22, '#ffd700', 14, 'center');
+
+  // Decorative lights on top
+  for (let li = 0; li < 8; li++) {
+    const lx = machX + 30 + li * 42;
+    const on = (Math.floor(gameTime / 10) + li) % 3 === 0;
+    drawRect(lx, machY - 4, 6, 4, on ? '#ffd700' : '#555');
+  }
+
+  // Reel window
+  const reelY = machY + 38;
+  const reelH = 110;
+  drawRect(machX + 20, reelY, machW - 40, reelH, '#0a0a0a');
+  drawRect(machX + 20, reelY, machW - 40, 2, '#444');
+  drawRect(machX + 20, reelY + reelH - 2, machW - 40, 2, '#444');
+  // Reel dividers
+  const reelSlotW = Math.floor((machW - 40) / 3);
+  drawRect(machX + 20 + reelSlotW, reelY, 2, reelH, '#333');
+  drawRect(machX + 20 + reelSlotW * 2, reelY, 2, reelH, '#333');
+  // Red payline indicator
+  drawRect(machX + 15, reelY + reelH/2 - 2, machW - 30, 4, 'rgba(233,69,96,0.4)');
+  // Payline arrows
+  drawText('\u25B6', machX + 12, reelY + reelH/2 + 5, '#e94560', 12);
+  drawText('\u25C0', machX + machW - 20, reelY + reelH/2 + 5, '#e94560', 12);
+
+  // Draw reels
+  for (let r = 0; r < 3; r++) {
+    const rx = machX + 25 + r * reelSlotW;
+    const ry = reelY + 8;
+    const rw = reelSlotW - 8;
+
+    if (slotPhase === 'spinning' && slotSpinTimers[r] > 0) {
+      slotSpinTimers[r]--;
+      const speed = slotSpinTimers[r] < 10 ? 5 : 2;
+      const symIdx = Math.floor(gameTime / speed) % SLOT_SYMBOLS.length;
+      const sym = SLOT_SYMBOLS[symIdx];
+      drawText(sym.symbol, rx + rw/2, ry + 62, sym.color, 52, 'center');
+
+      if (slotSpinTimers[r] <= 0) {
+        slotReels[r] = slotTargetReels[r];
+        playSFX('hit');
+        if (slotSpinTimers.every(t => t <= 0)) {
+          const r0 = slotReels[0], r1 = slotReels[1], r2 = slotReels[2];
+          if (r0 === r1 && r1 === r2) {
+            slotResult = '3x ' + SLOT_SYMBOLS[r0].name;
+            slotWinAmount = SLOT_PAYOUTS_3[r0] * slotBet;
+          } else if (r0 === r1) {
+            slotResult = '2x ' + SLOT_SYMBOLS[r0].name;
+            slotWinAmount = SLOT_PAYOUTS_2[r0] * slotBet;
+          } else if (r1 === r2) {
+            slotResult = '2x ' + SLOT_SYMBOLS[r1].name;
+            slotWinAmount = SLOT_PAYOUTS_2[r1] * slotBet;
+          } else if (r0 === r2) {
+            slotResult = '2x ' + SLOT_SYMBOLS[r0].name;
+            slotWinAmount = SLOT_PAYOUTS_2[r0] * slotBet;
+          } else {
+            slotResult = 'Niente';
+            slotWinAmount = 0;
+          }
+          coins += slotWinAmount;
+          slotPhase = 'result';
+          slotResultTimer = 150;
+          if (slotWinAmount >= slotBet * 15) {
+            slotNpcComment = getPandaComment('bigwin');
+          } else if (slotWinAmount > 0) {
+            slotNpcComment = getPandaComment('win');
+          } else {
+            slotNpcComment = getPandaComment('lose');
+          }
+          slotNpcCommentTimer = 150;
+          if (slotWinAmount > 0) {
+            playSFX('coin');
+            spawnParticles(machX + machW/2, reelY + reelH/2, '#ffd700', 25, 5);
+          } else {
+            playSFX('hurt');
+          }
+        }
+      }
+    } else {
+      const sym = SLOT_SYMBOLS[slotReels[r]];
+      drawText(sym.symbol, rx + rw/2, ry + 62, sym.color, 52, 'center');
+      drawText(sym.name, rx + rw/2, ry + 82, '#777', 9, 'center');
+    }
+  }
+
+  // Controls area below machine
+  const ctrlY = machY + machH + 14;
+
+  if (slotPhase === 'idle') {
+    // Bet controls
+    drawText('PUNTATA: ' + slotBet, machX + machW/2, ctrlY + 16, '#ffd700', 16, 'center');
+
+    const minusBx = machX + machW/2 - 100;
+    const plusBx = machX + machW/2 + 65;
+    const minusHover = mouseX > minusBx && mouseX < minusBx + 36 && mouseY > ctrlY && mouseY < ctrlY + 28;
+    const plusHover = mouseX > plusBx && mouseX < plusBx + 36 && mouseY > ctrlY && mouseY < ctrlY + 28;
+    drawRect(minusBx, ctrlY, 36, 28, minusHover ? '#555' : '#333');
+    drawRect(minusBx, ctrlY, 36, 2, '#666');
+    drawText('<', minusBx + 18, ctrlY + 19, '#fff', 16, 'center');
+    drawRect(plusBx, ctrlY, 36, 28, plusHover ? '#555' : '#333');
+    drawRect(plusBx, ctrlY, 36, 2, '#666');
+    drawText('>', plusBx + 18, ctrlY + 19, '#fff', 16, 'center');
+
+    if ((minusHover && mouseClick) || keysJustPressed['ArrowLeft']) {
+      slotBet = Math.max(SLOT_BET_MIN, slotBet - SLOT_BET_STEP);
+      mouseClick = false;
+    }
+    if ((plusHover && mouseClick) || keysJustPressed['ArrowRight']) {
+      slotBet = Math.min(SLOT_BET_MAX, slotBet + SLOT_BET_STEP);
+      mouseClick = false;
+    }
+
+    // Spin button
+    const canSpin = coins >= slotBet;
+    const spinY = ctrlY + 36;
+    const spinBx = machX + machW/2 - 110;
+    const spinBw = 220;
+    const spinHover = mouseX > spinBx && mouseX < spinBx + spinBw && mouseY > spinY && mouseY < spinY + 40;
+    drawRect(spinBx, spinY, spinBw, 40, canSpin ? (spinHover ? '#e65100' : '#bf360c') : '#333');
+    drawRect(spinBx, spinY, spinBw, 3, canSpin ? '#ff6e40' : '#555');
+    drawText('GIRA! [ENTER]', machX + machW/2, spinY + 27, canSpin ? '#fff' : '#666', 15, 'center');
+
+    if (canSpin && ((spinHover && mouseClick) || keysJustPressed['Enter'])) {
+      coins -= slotBet;
+      slotPhase = 'spinning';
+      slotSpinTimers = [30 + Math.floor(Math.random() * 15), 50 + Math.floor(Math.random() * 15), 70 + Math.floor(Math.random() * 15)];
+      slotTargetReels = [
+        Math.floor(Math.random() * SLOT_SYMBOLS.length),
+        Math.floor(Math.random() * SLOT_SYMBOLS.length),
+        Math.floor(Math.random() * SLOT_SYMBOLS.length)
+      ];
+      slotNpcComment = '';
+      slotNpcCommentTimer = 0;
+      playSFX('hit');
+      mouseClick = false;
+    } else if (!canSpin && ((spinHover && mouseClick) || keysJustPressed['Enter'])) {
+      slotNpcComment = getPandaComment('broke');
+      slotNpcCommentTimer = 180;
+      mouseClick = false;
+    }
+  } else if (slotPhase === 'result') {
+    slotResultTimer--;
+    const bounce = Math.sin(slotResultTimer * 0.12) * 4;
+    if (slotWinAmount > 0) {
+      // Win glow on machine
+      ctx.globalAlpha = 0.08 + Math.sin(slotResultTimer * 0.1) * 0.04;
+      drawRect(machX, machY, machW, machH, '#ffd700');
+      ctx.globalAlpha = 1;
+      drawText(slotResult + '!', machX + machW/2, ctrlY + 10 + bounce, '#ffd700', 20, 'center');
+      drawText('+' + slotWinAmount + ' COINS', machX + machW/2, ctrlY + 34, '#4caf50', 16, 'center');
+    } else {
+      drawText('Niente...', machX + machW/2, ctrlY + 10 + bounce, '#e94560', 20, 'center');
+      drawText('Riprova!', machX + machW/2, ctrlY + 34, '#888', 12, 'center');
+    }
+
+    if (slotResultTimer <= 0 || keysJustPressed['Enter'] || mouseClick) {
+      slotPhase = 'idle';
+      slotNpcComment = '';
+      mouseClick = false;
+    }
+  }
+
+  // Payout table on right side
+  const ptX = machX + machW + 16, ptY = panelY + 4;
+  const ptW = W - ptX - 14;
+  drawRect(ptX, ptY, ptW, H - panelY - 54, 'rgba(0,0,0,0.5)');
+  drawRect(ptX, ptY, ptW, 2, '#ff9800');
+  drawText('PAGAMENTI', ptX + ptW/2, ptY + 18, '#ff9800', 12, 'center');
+
+  drawText('--- 3 UGUALI ---', ptX + ptW/2, ptY + 38, '#ffd700', 9, 'center');
+  for (let i = 0; i < SLOT_SYMBOLS.length; i++) {
+    if (SLOT_PAYOUTS_3[i] === 0) continue;
+    const sym = SLOT_SYMBOLS[i];
+    drawText(sym.symbol + ' ' + sym.symbol + ' ' + sym.symbol, ptX + 10, ptY + 56 + i * 18, sym.color, 10);
+    drawText(SLOT_PAYOUTS_3[i] + 'x', ptX + ptW - 12, ptY + 56 + i * 18, '#ffd700', 10, 'right');
+  }
+
+  drawText('--- 2 UGUALI ---', ptX + ptW/2, ptY + 170, '#aaa', 9, 'center');
+  let p2Count = 0;
+  for (let i = 0; i < SLOT_SYMBOLS.length; i++) {
+    if (SLOT_PAYOUTS_2[i] === 0) continue;
+    const sym = SLOT_SYMBOLS[i];
+    drawText(sym.symbol + ' ' + sym.symbol, ptX + 10, ptY + 188 + p2Count * 17, sym.color, 10);
+    drawText(SLOT_PAYOUTS_2[i] + 'x', ptX + ptW - 12, ptY + 188 + p2Count * 17, '#aaa', 10, 'right');
+    p2Count++;
   }
 }
 
@@ -9507,6 +10615,7 @@ function update() {
     case 'gameover': playTrack('gameover'); break;
     case 'victory': if (!victorySongStarted) playTrack('victory'); break;
     case 'sabi': playTrack('sabi'); break;
+    case 'casino': playTrack('casino'); break;
   }
 
   switch(state) {
@@ -9524,6 +10633,7 @@ function update() {
     case 'gameover': break;
     case 'victory': break;
     case 'sabi': break;
+    case 'casino': break;
   }
 
   // Screen shake
@@ -9557,6 +10667,7 @@ function draw() {
     case 'gameover': drawGameOver(); break;
     case 'victory': drawVictory(); break;
     case 'sabi': drawSabi(); break;
+    case 'casino': drawCasino(); break;
   }
 
   // Screen flash
