@@ -837,7 +837,8 @@ window.addEventListener('keydown', e => {
 // ==========================================
 // GAME STATE
 // ==========================================
-let state = 'menu'; // menu, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, gameover, victory
+let state = 'menu'; // menu, difficultySelect, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, gameover, victory
+let difficulty = 'medium'; // 'easy', 'medium', 'hard'
 let tutorialStep = 0;
 let tutorialDummy = null;
 let tutorialTimer = 0;
@@ -987,8 +988,8 @@ const player = {
 
 // 4 starter weapons — player picks one at game start
 const starterWeapons = [
-  { name: 'Sanpietrino',    damage: 12, range: 42,  speed: 7,  crit: 15,
-    comboHits: 4, poise: 5, activeFrames: 6, comboWindow: 12, endLag: 14,
+  { name: 'Sanpietrino',    damage: 14, range: 50,  speed: 7,  crit: 15,
+    comboHits: 4, poise: 6, activeFrames: 6, comboWindow: 13, endLag: 13,
     special: 'critCombo', desc: 'Veloce, 4 colpi. Crit cresce nel combo.',
     color: '#9e9e9e', icon: 'S' },
   { name: 'Cacciavite',     damage: 16, range: 48,  speed: 10, crit: 10,
@@ -2719,6 +2720,7 @@ function isDodgeInvincible() {
 
 function hurtPlayer(dmg) {
   if (player.invincible > 0 || isDodgeInvincible() || player.dead) return;
+  if (difficulty === 'easy') dmg *= 0.6;
   player.hp -= dmg;
   player.invincible = 20;
   levelDamageTaken += dmg;
@@ -3445,7 +3447,7 @@ function createBoss(levelIdx) {
   const b = {
     x: 700, y: 430, w: 44, h: 60,
     vx: 0, vy: 0,
-    hp: lvl.bossHp, maxHp: lvl.bossHp,
+    hp: lvl.bossHp * (difficulty === 'easy' ? 0.7 : 1), maxHp: lvl.bossHp * (difficulty === 'easy' ? 0.7 : 1),
     speed: 2.2 + levelIdx * 0.3,
     facing: -1,
     attackTimer: 0,
@@ -3562,7 +3564,7 @@ function updateBossAI() {
       reginaActive = true;
       regina = {
         x: W + 50, y: 430, w: 32, h: 50,
-        hp: 120, maxHp: 120,
+        hp: 120 * (difficulty === 'easy' ? 0.7 : 1), maxHp: 120 * (difficulty === 'easy' ? 0.7 : 1),
         hitFlash: 0, stunTimer: 0, dead: false,
         throwTimer: 0, entering: true,
         poise: 30, maxPoise: 30, poiseRecovery: 0.45, staggerTimer: 0, lastHitTimer: 999,
@@ -3603,7 +3605,7 @@ function updateBossAI() {
       mariusoActive = true;
       mariuso = {
         x: W + 60, y: 430, w: 50, h: 60,
-        hp: 200, maxHp: 200,
+        hp: 200 * (difficulty === 'easy' ? 0.7 : 1), maxHp: 200 * (difficulty === 'easy' ? 0.7 : 1),
         hitFlash: 0, stunTimer: 0, dead: false,
         attackTimer: 0, isBoss: false, entering: true,
         poise: 50, maxPoise: 50, poiseRecovery: 0.45, staggerTimer: 0, lastHitTimer: 999,
@@ -4125,7 +4127,7 @@ const BOSS_MOVES = {
             const t = types[Math.floor(Math.random() * types.length)];
             goons.push({
               x: boss.x + (i === 0 ? -80 : 80), y: GROUND_Y, w: t.w, h: t.h,
-              hp: t.hp * 0.6, maxHp: t.hp * 0.6, speed: t.speed, damage: t.dmg,
+              hp: t.hp * 0.6 * (difficulty === 'easy' ? 0.7 : 1), maxHp: t.hp * 0.6 * (difficulty === 'easy' ? 0.7 : 1), speed: t.speed, damage: t.dmg,
               attackTimer: 60 + Math.random() * 60, hitFlash: 0, stunTimer: 0, dead: false,
               color: t.color, hat: t.hat, name: t.name, type: t.type, shootTimer: 0,
               flankDir: Math.random() > 0.5 ? 1 : -1, knockbackVx: 0, windupTimer: 0,
@@ -4427,7 +4429,7 @@ function spawnGoons(count) {
       y: GROUND_Y,
       entering: true, // walk-in flag
       w: t.w, h: t.h,
-      hp: t.hp, maxHp: t.hp,
+      hp: t.hp * (difficulty === 'easy' ? 0.7 : 1), maxHp: t.hp * (difficulty === 'easy' ? 0.7 : 1),
       speed: t.speed,
       damage: t.dmg,
       attackTimer: 60 + Math.random() * 60,
@@ -5029,10 +5031,7 @@ function drawMenu() {
   const startTap = startHover && mouseClick;
   if (keys['Enter'] || keys['Space'] || startTap) {
     if (firstTime) {
-      state = 'weaponSelect';
-      weaponSelectIndex = 0;
-      weaponSelectReady = false;
-      weaponSelectTimer = 0;
+      state = 'difficultySelect';
       firstTime = false;
       resetPlayer();
     } else {
@@ -5040,6 +5039,128 @@ function drawMenu() {
       resetPlayer();
     }
   }
+  mouseClick = false;
+}
+
+// ==========================================
+// DIFFICULTY SELECT
+// ==========================================
+let diffSelectIndex = 1; // default to medium
+let diffSelectReady = false;
+let diffSelectTimer = 0;
+
+function drawDifficultySelect() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0d0d1a');
+  grad.addColorStop(1, '#1a1a2e');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  drawText('SCEGLI LA DIFFICOLTA\'', W/2, 60, '#e94560', 24, 'center');
+  drawText('Puoi sempre cambiare dopo', W/2, 82, '#666', 10, 'center');
+
+  diffSelectTimer++;
+  if (diffSelectTimer > 15) diffSelectReady = true;
+
+  const diffs = [
+    { name: 'FACILE', color: '#4caf50', desc: 'Vite infinite, nemici piu\' deboli.',
+      detail: 'Per goderti la storia del Conte senza troppo stress.', icon: '\u263A' },
+    { name: 'MEDIO', color: '#ff9800', desc: 'La sfida classica. 3 vite per boss.',
+      detail: 'L\'esperienza bilanciata. Duro ma giusto.', icon: '\u2694' },
+    { name: 'DIFFICILE', color: '#f44336', desc: 'Solo 3 vite in TUTTO il gioco.',
+      detail: 'Per i veri guerrieri di Valle Aurelia. Nessuna pieta\'.', icon: '\u2620' }
+  ];
+
+  // Navigation
+  if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) { diffSelectIndex = Math.max(0, diffSelectIndex - 1); playSFX('hit'); }
+  if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) { diffSelectIndex = Math.min(2, diffSelectIndex + 1); playSFX('hit'); }
+  if (keysJustPressed['Digit1']) { diffSelectIndex = 0; playSFX('hit'); }
+  if (keysJustPressed['Digit2']) { diffSelectIndex = 1; playSFX('hit'); }
+  if (keysJustPressed['Digit3']) { diffSelectIndex = 2; playSFX('hit'); }
+
+  diffs.forEach((d, i) => {
+    const cx = 120 + i * 240;
+    const selected = (i === diffSelectIndex);
+
+    // Click detection
+    if (mouseX >= cx && mouseX <= cx + 200 && mouseY >= 110 && mouseY <= 380 && mouseClick) {
+      diffSelectIndex = i;
+      playSFX('hit');
+    }
+
+    // Card
+    const cardAlpha = selected ? 1 : 0.5;
+    ctx.globalAlpha = cardAlpha;
+    drawRect(cx, 110, 200, 270, selected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.4)');
+    drawRect(cx, 110, 200, 3, d.color);
+    if (selected) {
+      drawRect(cx, 377, 200, 3, d.color);
+      drawRect(cx, 110, 3, 270, d.color);
+      drawRect(cx + 197, 110, 3, 270, d.color);
+    }
+
+    // Icon
+    drawText(d.icon, cx + 100, 170, d.color, 32, 'center');
+
+    // Name
+    drawText(d.name, cx + 100, 210, d.color, 18, 'center');
+
+    // Description
+    drawText(d.desc, cx + 100, 240, '#ccc', 10, 'center');
+
+    // Detail lines (word wrap manually)
+    const words = d.detail.split(' ');
+    let line1 = '', line2 = '';
+    words.forEach(w => {
+      if ((line1 + w).length < 28) line1 += (line1 ? ' ' : '') + w;
+      else line2 += (line2 ? ' ' : '') + w;
+    });
+    drawText(line1, cx + 100, 270, '#888', 9, 'center');
+    if (line2) drawText(line2, cx + 100, 284, '#888', 9, 'center');
+
+    // Difficulty-specific info
+    if (i === 0) {
+      drawText('Vite: \u221E', cx + 100, 310, '#4caf50', 11, 'center');
+      drawText('Nemici: -30% HP', cx + 100, 326, '#4caf50', 10, 'center');
+      drawText('Danni subiti: -40%', cx + 100, 342, '#4caf50', 10, 'center');
+    } else if (i === 1) {
+      drawText('Vite: 3 per boss', cx + 100, 310, '#ff9800', 11, 'center');
+      drawText('Nemici: normali', cx + 100, 326, '#ff9800', 10, 'center');
+      drawText('Danni subiti: normali', cx + 100, 342, '#ff9800', 10, 'center');
+    } else {
+      drawText('Vite: 3 in TOTALE', cx + 100, 310, '#f44336', 11, 'center');
+      drawText('Nemici: normali', cx + 100, 326, '#f44336', 10, 'center');
+      drawText('Danni subiti: normali', cx + 100, 342, '#f44336', 10, 'center');
+    }
+
+    ctx.globalAlpha = 1;
+  });
+
+  // Key hint
+  drawText('Frecce/1-2-3 per scegliere', W/2, 400, '#555', 10, 'center');
+
+  // Confirm button
+  const confirmW = 220, confirmH = 36;
+  const confirmX = W/2 - confirmW/2, confirmY = 420;
+  const confirmHover = mouseX >= confirmX && mouseX <= confirmX + confirmW && mouseY >= confirmY && mouseY <= confirmY + confirmH;
+  const selColor = diffs[diffSelectIndex].color;
+  drawRect(confirmX, confirmY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.1)');
+  drawRect(confirmX, confirmY, confirmW, 2, selColor);
+  drawText('CONFERMA: ' + diffs[diffSelectIndex].name, W/2, confirmY + 25, '#fff', 14, 'center');
+
+  const confirmTap = diffSelectReady && confirmHover && mouseClick;
+  if (diffSelectReady && (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || confirmTap)) {
+    difficulty = ['easy', 'medium', 'hard'][diffSelectIndex];
+    if (difficulty === 'hard') lives = 3;
+    state = 'weaponSelect';
+    weaponSelectIndex = 0;
+    weaponSelectReady = false;
+    weaponSelectTimer = 0;
+    spawnParticles(W/2, H/2, selColor, 20, 5);
+    playSFX('coin');
+  }
+
+  drawTouchButtons();
   mouseClick = false;
 }
 
@@ -5988,10 +6109,14 @@ function drawHub() {
   drawRect(0, 48, W, 2, '#4e342e');
   drawText('COINS: ' + coins, 25, 28, '#ffd700', 14);
   // Lives display in hub
-  for (let li = 0; li < 3; li++) {
-    const alive = li < lives;
-    drawRect(25 + li * 22, 34, 18, 14, alive ? '#e94560' : '#333');
-    drawText(alive ? '\u2665' : '\u2661', 34 + li * 22, 46, alive ? '#fff' : '#555', 11, 'center');
+  if (difficulty === 'easy') {
+    drawText('\u221E', 38, 46, '#4caf50', 14, 'center');
+  } else {
+    for (let li = 0; li < 3; li++) {
+      const alive = li < lives;
+      drawRect(25 + li * 22, 34, 18, 14, alive ? '#e94560' : '#333');
+      drawText(alive ? '\u2665' : '\u2661', 34 + li * 22, 46, alive ? '#fff' : '#555', 11, 'center');
+    }
   }
   drawText('Base del Conte', W/2, 32, '#a1887f', 13, 'center');
   // Shop button
@@ -6900,7 +7025,8 @@ let isReplayLevel = false; // true if replaying a beaten level
 function startLevel(idx) {
   currentLevel = idx;
   isReplayLevel = bossDefeated[idx]; // track if this was already beaten
-  lives = 3; // 3 lives per boss attempt
+  if (difficulty === 'medium') lives = 3; // medium: 3 lives per boss
+  // hard: lives carry over; easy: infinite (lives never decremented)
   state = 'dialogue';
   resetPlayer();
   player.x = 100;
@@ -7530,7 +7656,7 @@ function updateLevel() {
   if (player.dead) {
     // Game over after a delay
     if (player.invincible < -60) {
-      lives--;
+      if (difficulty !== 'easy') lives--;
       state = 'gameover';
     }
     player.invincible--;
@@ -7688,7 +7814,7 @@ function updateLevel() {
   if (boss && boss.hp <= 0 && !boss.dead) {
     boss.dead = true;
     bossDefeated[currentLevel] = true;
-    lives = 3; // lives reset per boss
+    if (difficulty === 'medium') lives = 3; // medium: lives reset per boss
     // Boss coin drops (physical pickups) — first clear gives big bonus
     const bossCoins = isReplayLevel ? 15 + currentLevel * 10 : 50 + currentLevel * 35;
     spawnCoinPickup(boss.x, boss.y - 30, bossCoins);
@@ -8311,11 +8437,16 @@ function drawHUD() {
   const curWeap = weapons[player.weapon];
   drawText(curWeap.name, 14, 57, '#ffcc80', 9);
   // Lives display — clear hearts at bottom of panel
-  drawRect(14, 62, 60, 18, 'rgba(0,0,0,0.5)');
-  for (let li = 0; li < 3; li++) {
-    const alive = li < lives;
-    drawRect(16 + li * 19, 64, 15, 14, alive ? '#e94560' : '#333');
-    drawText(alive ? '\u2665' : '\u2661', 24 + li * 19, 76, alive ? '#fff' : '#555', 11, 'center');
+  if (difficulty === 'easy') {
+    drawRect(14, 62, 40, 18, 'rgba(0,0,0,0.5)');
+    drawText('\u221E', 34, 76, '#4caf50', 14, 'center');
+  } else {
+    drawRect(14, 62, 60, 18, 'rgba(0,0,0,0.5)');
+    for (let li = 0; li < 3; li++) {
+      const alive = li < lives;
+      drawRect(16 + li * 19, 64, 15, 14, alive ? '#e94560' : '#333');
+      drawText(alive ? '\u2665' : '\u2661', 24 + li * 19, 76, alive ? '#fff' : '#555', 11, 'center');
+    }
   }
   // Dodge & Jump indicators — right side of panel
   if (player.dodgeCooldown > 0) {
@@ -8525,50 +8656,88 @@ function drawGameOver() {
   ctx.fillStyle = 'rgba(10,0,0,0.95)';
   ctx.fillRect(0, 0, W, H);
 
-  if (lives <= 0) {
-    // ALL 3 LIVES LOST ON THIS BOSS — Pisellino mocks you, back to Vanni
-    drawText('SCONFITTA TOTALE', W/2, 100, '#e53935', 32, 'center');
+  if (lives <= 0 && difficulty !== 'easy') {
+    if (difficulty === 'hard') {
+      // HARD: 0 lives = full game over, back to menu
+      drawText('GAME OVER - FINE', W/2, 100, '#e53935', 32, 'center');
+      drawText('Tutte le vite perse. Nessuna pieta\'.', W/2, 135, '#888', 12, 'center');
 
-    drawText('3 vite perse contro ' + levels[currentLevel].boss + '!', W/2, 135, '#888', 12, 'center');
+      const hardTaunts = [
+        '"Ahahah Conte, sei finito! La difficile non perdona!"',
+        '"Game over totale! Valle Aurelia e\' nostra per sempre!"',
+        '"Pensavi di farcela in difficile? Illuso!"',
+      ];
+      const taunt = hardTaunts[Math.floor(gameTime / 240) % hardTaunts.length];
+      drawText(taunt, W/2, 200, '#ff8a65', 13, 'center');
+      drawText('- Pisellino', W/2, 225, '#ff6e40', 11, 'center');
 
-    // Pisellino's victory speech
-    const finalTaunts = [
-      '"Ahahah Conte, 3 tentativi e niente! Sei scarso forte!"',
-      '"Torna a Vanni a allenarti, Contino... LOL"',
-      '"Bro sei morto 3 volte, maybe prova a comprare qualcosa?"',
-      '"Easy clap x3, troppo facile per ' + levels[currentLevel].boss + '!"',
-    ];
-    const taunt = finalTaunts[Math.floor(gameTime / 240) % finalTaunts.length];
-    drawText(taunt, W/2, 200, '#ff8a65', 13, 'center');
-    drawText('- Pisellino', W/2, 225, '#ff6e40', 11, 'center');
+      const restartBtnW = 260, restartBtnH = 40;
+      const restartBtnX = W/2 - restartBtnW/2, restartBtnY = 300;
+      const restartHover = mouseX >= restartBtnX && mouseX <= restartBtnX + restartBtnW && mouseY >= restartBtnY && mouseY <= restartBtnY + restartBtnH;
+      drawRect(restartBtnX, restartBtnY, restartBtnW, restartBtnH, restartHover ? '#e94560' : 'rgba(233,69,96,0.3)');
+      drawRect(restartBtnX, restartBtnY, restartBtnW, 2, '#e94560');
+      drawText('RICOMINCIA DA CAPO', W/2, restartBtnY + 27, '#fff', 14, 'center');
 
-    drawText('Torna da Vanni, potenziati e riprova!', W/2, 270, '#aaa', 12, 'center');
+      if (keys['Enter'] || keys['Space'] || (restartHover && mouseClick)) {
+        // Full reset
+        coins = 0; weapons = [starterWeapons[0]]; weaponTier = 0;
+        jumpTier = 0; dodgeTier = 0; speedTier = 0;
+        player.maxHp = 120; player.maxStamina = 100; player.speed = 4.0;
+        player.upgrades = []; player.consumables = []; player.consumableTimers = {};
+        helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
+        bossDefeated = [false, false, false, false, false];
+        lives = 3; firstTime = true;
+        state = 'menu';
+        resetPlayer();
+        bossIntro = false;
+      }
+    } else {
+      // MEDIUM: 0 lives on this boss — back to Vanni
+      drawText('SCONFITTA TOTALE', W/2, 100, '#e53935', 32, 'center');
+      drawText('3 vite perse contro ' + levels[currentLevel].boss + '!', W/2, 135, '#888', 12, 'center');
 
-    // Back to hub button
-    const restartBtnW = 260, restartBtnH = 40;
-    const restartBtnX = W/2 - restartBtnW/2, restartBtnY = 320;
-    const restartHover = mouseX >= restartBtnX && mouseX <= restartBtnX + restartBtnW && mouseY >= restartBtnY && mouseY <= restartBtnY + restartBtnH;
-    drawRect(restartBtnX, restartBtnY, restartBtnW, restartBtnH, restartHover ? '#e94560' : 'rgba(233,69,96,0.3)');
-    drawRect(restartBtnX, restartBtnY, restartBtnW, 2, '#e94560');
-    drawText('TORNA DA VANNI', W/2, restartBtnY + 27, '#fff', 14, 'center');
+      const finalTaunts = [
+        '"Ahahah Conte, 3 tentativi e niente! Sei scarso forte!"',
+        '"Torna a Vanni a allenarti, Contino... LOL"',
+        '"Bro sei morto 3 volte, maybe prova a comprare qualcosa?"',
+        '"Easy clap x3, troppo facile per ' + levels[currentLevel].boss + '!"',
+      ];
+      const taunt = finalTaunts[Math.floor(gameTime / 240) % finalTaunts.length];
+      drawText(taunt, W/2, 200, '#ff8a65', 13, 'center');
+      drawText('- Pisellino', W/2, 225, '#ff6e40', 11, 'center');
 
-    if (keys['Enter'] || keys['Space'] || (restartHover && mouseClick)) {
-      lives = 3; // reset lives for next attempt
-      state = 'hub';
-      resetPlayer();
-      bossIntro = false;
+      drawText('Torna da Vanni, potenziati e riprova!', W/2, 270, '#aaa', 12, 'center');
+
+      const restartBtnW = 260, restartBtnH = 40;
+      const restartBtnX = W/2 - restartBtnW/2, restartBtnY = 320;
+      const restartHover = mouseX >= restartBtnX && mouseX <= restartBtnX + restartBtnW && mouseY >= restartBtnY && mouseY <= restartBtnY + restartBtnH;
+      drawRect(restartBtnX, restartBtnY, restartBtnW, restartBtnH, restartHover ? '#e94560' : 'rgba(233,69,96,0.3)');
+      drawRect(restartBtnX, restartBtnY, restartBtnW, 2, '#e94560');
+      drawText('TORNA DA VANNI', W/2, restartBtnY + 27, '#fff', 14, 'center');
+
+      if (keys['Enter'] || keys['Space'] || (restartHover && mouseClick)) {
+        lives = 3;
+        state = 'hub';
+        resetPlayer();
+        bossIntro = false;
+      }
     }
   } else {
     // Still have lives — normal game over
     drawText('GAME OVER', W/2, 120, '#e53935', 36, 'center');
 
     // Lives display
-    for (let i = 0; i < 3; i++) {
-      const lx = W/2 - 40 + i * 30;
-      drawRect(lx, 145, 20, 20, i < lives ? '#e94560' : '#333');
-      drawText(i < lives ? '\u2665' : '\u2661', lx + 10, 161, i < lives ? '#fff' : '#555', 14, 'center');
+    if (difficulty === 'easy') {
+      drawText('\u221E', W/2, 165, '#4caf50', 24, 'center');
+      drawText('Vite infinite (facile)', W/2, 185, '#4caf50', 11, 'center');
+    } else {
+      for (let i = 0; i < 3; i++) {
+        const lx = W/2 - 40 + i * 30;
+        drawRect(lx, 145, 20, 20, i < lives ? '#e94560' : '#333');
+        drawText(i < lives ? '\u2665' : '\u2661', lx + 10, 161, i < lives ? '#fff' : '#555', 14, 'center');
+      }
+      drawText('Vite rimaste: ' + lives, W/2, 185, '#ff8a80', 11, 'center');
     }
-    drawText('Vite rimaste: ' + lives, W/2, 185, '#ff8a80', 11, 'center');
 
     // Pisellino special taunts
     if (currentLevel === 4) {
@@ -9104,7 +9273,7 @@ function update() {
   // Music management per state
   switch(state) {
     case 'menu': playTrack('menu'); break;
-    case 'weaponSelect': case 'helperSelect': playTrack('menu'); break;
+    case 'difficultySelect': case 'weaponSelect': case 'helperSelect': playTrack('menu'); break;
     case 'tutorial': playTrack('hub'); break;
     case 'hub': case 'shop': case 'upgrade': playTrack('hub'); break;
     case 'moves': break; // keep whatever music was playing
@@ -9130,6 +9299,7 @@ function update() {
 
   switch(state) {
     case 'menu': break;
+    case 'difficultySelect': break;
     case 'weaponSelect': break;
     case 'helperSelect': break;
     case 'moves': break;
@@ -9162,6 +9332,7 @@ function draw() {
 
   switch(state) {
     case 'menu': drawMenu(); break;
+    case 'difficultySelect': drawDifficultySelect(); break;
     case 'weaponSelect': drawWeaponSelect(); break;
     case 'helperSelect': drawHelperSelect(); break;
     case 'moves': drawMovesScreen(); break;
