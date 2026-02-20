@@ -7602,8 +7602,10 @@ function drawCasino() {
   if (keysJustPressed['Digit2']) casinoTab = 1;
 
   const panelY = 86;
-  if (casinoTab === 0) drawVideoPoker(panelY);
-  else drawSlotMachine(panelY);
+  if (!casinoDialogueActive) {
+    if (casinoTab === 0) drawVideoPoker(panelY);
+    else drawSlotMachine(panelY);
+  }
 
   // Back button
   const backHover = mouseX > 20 && mouseX < 150 && mouseY > H - 40 && mouseY < H - 10;
@@ -9530,6 +9532,15 @@ function drawLevel() {
     toggleMovesScreen();
   }
 
+  // Camera zoom — 1.5x following the player
+  const levelZoom = 1.3;
+  ctx.save();
+  const camX = Math.max(W / (2 * levelZoom), Math.min(W - W / (2 * levelZoom), player.x));
+  const camY = Math.max(H / (2 * levelZoom), Math.min(H - H / (2 * levelZoom), player.y - 40));
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(levelZoom, levelZoom);
+  ctx.translate(-camX, -camY);
+
   drawLevelBg();
   drawHazards();
 
@@ -9559,6 +9570,8 @@ function drawLevel() {
 
   // Draw particles
   drawParticles();
+
+  ctx.restore();
 
   // HUD
   drawHUD();
