@@ -9556,8 +9556,8 @@ function drawLevel() {
     toggleMovesScreen();
   }
 
-  // Camera zoom — 1.5x following the player
-  const levelZoom = 1.3;
+  // Camera zoom — 1.5x on mobile, 1.3x on desktop
+  const levelZoom = isTouchDevice ? 1.5 : 1.3;
   ctx.save();
   const camX = Math.max(W / (2 * levelZoom), Math.min(W - W / (2 * levelZoom), player.x));
   const camY = Math.max(H / (2 * levelZoom), Math.min(H - H / (2 * levelZoom), player.y - 40));
