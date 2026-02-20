@@ -97,9 +97,24 @@ html, body {
   font-weight: bold;
 }
 
-/* Action buttons (right side — all rectangular) */
-.action-btn {
+/* Action buttons container (right side — mirrors D-pad structure) */
+#actions {
   position: fixed;
+  bottom: max(2dvh, env(safe-area-inset-bottom, 0px));
+  right: max(2vw, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 20;
+  pointer-events: none;
+}
+#action-row {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
   border-radius: 10px;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.1);
@@ -110,38 +125,41 @@ html, body {
   align-items: center;
   justify-content: center;
   font-family: 'Courier New', monospace;
-  z-index: 20;
   pointer-events: none;
 }
 .action-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
-/* Right side: X and W side by side above ATK, all rectangular */
 #btn-x {
-  bottom: calc(max(3dvh, 6px) + 16vw);
-  right: calc(max(3vw, 6px) + 16vw);
-  width: 15vw; max-width: 64px;
-  height: 14vw; max-height: 60px;
+  width: 17vw; max-width: 72px;
+  height: 15vw; max-height: 64px;
   background: rgba(33,150,243,0.25); border-color: rgba(33,150,243,0.3);
 }
 #btn-w {
-  bottom: calc(max(3dvh, 6px) + 16vw);
-  right: max(3vw, 6px);
-  width: 15vw; max-width: 64px;
-  height: 14vw; max-height: 60px;
+  width: 17vw; max-width: 72px;
+  height: 15vw; max-height: 64px;
   background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.3);
 }
 #btn-atk {
-  bottom: max(3dvh, 6px);
-  right: max(3vw, 6px);
-  width: 31vw; max-width: 132px;
-  height: 14vw; max-height: 60px;
+  width: calc(34vw + 4px); max-width: 148px;
+  height: 15vw; max-height: 64px;
   background: rgba(233,69,96,0.25); border-color: rgba(233,69,96,0.3);
+}
+
+/* Top bar flex container */
+#top-bar {
+  position: fixed;
+  top: max(1dvh, env(safe-area-inset-top, 0px));
+  left: 2vw;
+  right: 2vw;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  z-index: 20;
+  pointer-events: none;
 }
 
 /* Top bar buttons */
 .top-btn {
-  position: fixed;
-  top: max(1dvh, env(safe-area-inset-top, 0px));
   width: 9vw;
   height: 9vw;
   max-width: 38px;
@@ -156,21 +174,13 @@ html, body {
   align-items: center;
   justify-content: center;
   font-family: 'Courier New', monospace;
-  z-index: 20;
   pointer-events: none;
+  flex-shrink: 0;
 }
 .top-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
 .top-btn.helper { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.2); }
 .top-btn.consumable { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.2); }
-
-#top-1 { left: 2vw; }
-#top-2 { left: calc(2vw + 10vw); }
-#top-3 { left: calc(2vw + 20vw); }
-#top-4 { left: calc(2vw + 30vw); }
-#top-5 { left: calc(2vw + 42vw); }
-#top-6 { left: calc(2vw + 52vw); }
-#top-7 { left: calc(2vw + 62vw); }
 
 /* Credits button — small, bottom center, unobtrusive */
 #btn-credits {
@@ -196,7 +206,6 @@ html, body {
 
 /* Navigation buttons */
 .nav-btn {
-  position: fixed;
   width: 12vw;
   height: 7vw;
   max-width: 52px;
@@ -211,14 +220,12 @@ html, body {
   align-items: center;
   justify-content: center;
   font-family: 'Courier New', monospace;
-  z-index: 20;
   pointer-events: none;
+  flex-shrink: 0;
 }
 .nav-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
-#btn-enter { top: max(1dvh, env(safe-area-inset-top, 0px)); right: calc(2vw + 30vw); background: rgba(76,175,80,0.2); }
-#btn-tab   { top: max(1dvh, env(safe-area-inset-top, 0px)); right: calc(2vw + 20vw); }
-#btn-esc   { top: max(1dvh, env(safe-area-inset-top, 0px)); right: 2vw; }
+#btn-enter { background: rgba(76,175,80,0.2); }
 
 /* Portrait orientation warning */
 #rotate-msg {
@@ -241,7 +248,7 @@ html, body {
 
 @media (orientation: portrait) {
   #rotate-msg { display: flex; }
-  #game-container, #touch-layer, .dpad-btn, .action-btn, .top-btn, .nav-btn, #dpad { display: none !important; }
+  #game-container, #touch-layer, .dpad-btn, .action-btn, .top-btn, .nav-btn, #dpad, #top-bar, #actions { display: none !important; }
 }
 
 /* Add-to-homescreen hint */
@@ -259,6 +266,61 @@ html, body {
   justify-content: space-between;
 }
 #a2hs .close-hint { color: #e94560; font-size: 18px; padding: 4px 8px; cursor: pointer; }
+
+/* Code keyboard overlay for credits screen */
+#code-keyboard {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(10,10,20,0.95);
+  border-top: 2px solid #e94560;
+  z-index: 30;
+  padding: 6px 4px env(safe-area-inset-bottom, 4px);
+  pointer-events: auto;
+  touch-action: none;
+}
+#code-keyboard.visible { display: block; }
+#kb-display {
+  text-align: center;
+  color: #fff;
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  padding: 4px 0 6px;
+  letter-spacing: 2px;
+}
+#kb-display span { color: #555; }
+#kb-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.kb-row {
+  display: flex;
+  gap: 3px;
+}
+.kb-key {
+  width: 8.5vw; height: 7.5vw;
+  max-width: 42px; max-height: 36px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #ddd;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kb-key.special {
+  width: auto;
+  padding: 0 10px;
+  font-size: 10px;
+}
+.kb-key.del { background: rgba(255,152,0,0.25); border-color: rgba(255,152,0,0.3); }
+.kb-key.close-kb { background: rgba(233,69,96,0.3); border-color: rgba(233,69,96,0.4); color: #e94560; }
+.kb-key:active, .kb-key.pressed { background: rgba(255,255,255,0.35); color: #fff; }
 </style>
 </head>
 <body>
@@ -291,26 +353,73 @@ html, body {
   </div>
 </div>
 
-<!-- Right side: X and W on top, ATK rectangular at bottom -->
-<div class="action-btn" id="btn-x">X</div>
-<div class="action-btn" id="btn-w">W</div>
-<div class="action-btn" id="btn-atk">ATK</div>
+<!-- Right side: X and W on top, ATK wide below (mirrors D-pad) -->
+<div id="actions">
+  <div id="action-row">
+    <div class="action-btn" id="btn-x">X</div>
+    <div class="action-btn" id="btn-w">W</div>
+  </div>
+  <div class="action-btn" id="btn-atk">ATK</div>
+</div>
 
-<!-- Top bar: helpers 1-4, consumables 5-7, nav (right) -->
-<div class="top-btn helper" id="top-1">1</div>
-<div class="top-btn helper" id="top-2">2</div>
-<div class="top-btn helper" id="top-3">3</div>
-<div class="top-btn helper" id="top-4">4</div>
-<div class="top-btn consumable" id="top-5">5</div>
-<div class="top-btn consumable" id="top-6">6</div>
-<div class="top-btn consumable" id="top-7">7</div>
-
-<div class="nav-btn" id="btn-enter">OK</div>
-<div class="nav-btn" id="btn-tab">TAB</div>
-<div class="nav-btn" id="btn-esc">ESC</div>
+<!-- Top bar: helpers 1-4, consumables 5-7, spacer, nav (right) -->
+<div id="top-bar">
+  <div class="top-btn helper" id="top-1">1</div>
+  <div class="top-btn helper" id="top-2">2</div>
+  <div class="top-btn helper" id="top-3">3</div>
+  <div class="top-btn helper" id="top-4">4</div>
+  <div class="top-btn consumable" id="top-5">5</div>
+  <div class="top-btn consumable" id="top-6">6</div>
+  <div class="top-btn consumable" id="top-7">7</div>
+  <div style="flex:1"></div>
+  <div class="nav-btn" id="btn-enter">OK</div>
+  <div class="nav-btn" id="btn-tab">TAB</div>
+  <div class="nav-btn" id="btn-esc">ESC</div>
+</div>
 
 <!-- Credits — small unobtrusive button bottom center -->
 <div id="btn-credits">Crediti</div>
+
+<!-- Code keyboard overlay (shown when credits are open) -->
+<div id="code-keyboard">
+  <div id="kb-display"><span>Inserisci codice...</span></div>
+  <div id="kb-rows">
+    <div class="kb-row">
+      <div class="kb-key" data-key="Q">Q</div>
+      <div class="kb-key" data-key="W">W</div>
+      <div class="kb-key" data-key="E">E</div>
+      <div class="kb-key" data-key="R">R</div>
+      <div class="kb-key" data-key="T">T</div>
+      <div class="kb-key" data-key="Y">Y</div>
+      <div class="kb-key" data-key="U">U</div>
+      <div class="kb-key" data-key="I">I</div>
+      <div class="kb-key" data-key="O">O</div>
+      <div class="kb-key" data-key="P">P</div>
+    </div>
+    <div class="kb-row">
+      <div class="kb-key" data-key="A">A</div>
+      <div class="kb-key" data-key="S">S</div>
+      <div class="kb-key" data-key="D">D</div>
+      <div class="kb-key" data-key="F">F</div>
+      <div class="kb-key" data-key="G">G</div>
+      <div class="kb-key" data-key="H">H</div>
+      <div class="kb-key" data-key="J">J</div>
+      <div class="kb-key" data-key="K">K</div>
+      <div class="kb-key" data-key="L">L</div>
+    </div>
+    <div class="kb-row">
+      <div class="kb-key" data-key="Z">Z</div>
+      <div class="kb-key" data-key="X">X</div>
+      <div class="kb-key" data-key="C">C</div>
+      <div class="kb-key" data-key="V">V</div>
+      <div class="kb-key" data-key="B">B</div>
+      <div class="kb-key" data-key="N">N</div>
+      <div class="kb-key" data-key="M">M</div>
+      <div class="kb-key special del" data-key="DEL">DEL</div>
+      <div class="kb-key special close-kb" data-key="ESC">ESC</div>
+    </div>
+  </div>
+</div>
 
 <script>
 (function() {
@@ -356,9 +465,16 @@ html, body {
     buttons.push({ id: 'btn-credits', keys: [], el, getRect: () => el.getBoundingClientRect(), isCredits: true });
   })();
 
+  // Cache button rects — recompute only on resize
+  let cachedRects = [];
+  function updateRects() {
+    cachedRects = buttons.map(btn => ({ btn, r: btn.getRect() }));
+  }
+  updateRects();
+  window.addEventListener('resize', updateRects);
+
   function hitTest(x, y) {
-    for (const btn of buttons) {
-      const r = btn.getRect();
+    for (const { btn, r } of cachedRects) {
       if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
         return btn;
       }
@@ -368,11 +484,16 @@ html, body {
 
   // ── Key dispatch into iframe ──
   const keyMap = {
-    'KeyW': 'w', 'KeyA': 'a', 'KeyS': 's', 'KeyD': 'd',
-    'KeyZ': 'z', 'KeyX': 'x', 'KeyQ': 'q',
+    'KeyA': 'a', 'KeyB': 'b', 'KeyC': 'c', 'KeyD': 'd', 'KeyE': 'e',
+    'KeyF': 'f', 'KeyG': 'g', 'KeyH': 'h', 'KeyI': 'i', 'KeyJ': 'j',
+    'KeyK': 'k', 'KeyL': 'l', 'KeyM': 'm', 'KeyN': 'n', 'KeyO': 'o',
+    'KeyP': 'p', 'KeyQ': 'q', 'KeyR': 'r', 'KeyS': 's', 'KeyT': 't',
+    'KeyU': 'u', 'KeyV': 'v', 'KeyW': 'w', 'KeyX': 'x', 'KeyY': 'y',
+    'KeyZ': 'z',
     'ArrowUp': 'ArrowUp', 'ArrowDown': 'ArrowDown',
     'ArrowLeft': 'ArrowLeft', 'ArrowRight': 'ArrowRight',
     'Space': ' ', 'Enter': 'Enter', 'Tab': 'Tab', 'Escape': 'Escape',
+    'Backspace': 'Backspace',
     'Digit1': '1', 'Digit2': '2', 'Digit3': '3', 'Digit4': '4',
     'Digit5': '5', 'Digit6': '6', 'Digit7': '7'
   };
@@ -499,6 +620,90 @@ html, body {
       releaseBtn(touch.identifier);
     }
   }, { passive: false });
+
+  // ── Code keyboard overlay for credits ──
+  const codeKeyboard = document.getElementById('code-keyboard');
+  const kbDisplay = document.getElementById('kb-display');
+  let kbInput = '';
+  let kbVisible = false;
+
+  function showCodeKeyboard() {
+    kbInput = '';
+    updateKbDisplay();
+    codeKeyboard.classList.add('visible');
+    kbVisible = true;
+    updateRects(); // recache since keyboard changes layout
+  }
+
+  function hideCodeKeyboard() {
+    codeKeyboard.classList.remove('visible');
+    kbVisible = false;
+    kbInput = '';
+    updateRects();
+  }
+
+  function updateKbDisplay() {
+    if (kbInput) {
+      kbDisplay.textContent = kbInput;
+    } else {
+      kbDisplay.innerHTML = '<span>Inserisci codice...</span>';
+    }
+  }
+
+  // Handle keyboard key taps
+  codeKeyboard.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const touch = e.changedTouches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el || !el.classList.contains('kb-key')) return;
+
+    el.classList.add('pressed');
+    setTimeout(() => el.classList.remove('pressed'), 120);
+
+    const key = el.dataset.key;
+    if (key === 'ESC') {
+      hideCodeKeyboard();
+      sendKey('Escape', 'keydown');
+      setTimeout(() => sendKey('Escape', 'keyup'), 50);
+      return;
+    }
+    if (key === 'DEL') {
+      kbInput = kbInput.slice(0, -1);
+      updateKbDisplay();
+      sendKey('Backspace', 'keydown');
+      setTimeout(() => sendKey('Backspace', 'keyup'), 50);
+      return;
+    }
+    // Letter key
+    if (kbInput.length < 12) {
+      kbInput += key;
+      updateKbDisplay();
+      const code = 'Key' + key;
+      sendKey(code, 'keydown');
+      setTimeout(() => sendKey(code, 'keyup'), 50);
+    }
+  }, { passive: false });
+
+  // Show keyboard when credits button is pressed
+  // (Override the credits button handler to also show keyboard)
+  const origPressBtn = pressBtn;
+  pressBtn = function(btn) {
+    origPressBtn(btn);
+    if (btn.isCredits) {
+      setTimeout(showCodeKeyboard, 100);
+    }
+  };
+
+  // Also hide keyboard when ESC game button is pressed
+  const origReleaseBtn = releaseBtn;
+  releaseBtn = function(touchId) {
+    const entry = touchMap.get(touchId);
+    if (entry && entry.keys.includes('Escape') && kbVisible) {
+      hideCodeKeyboard();
+    }
+    origReleaseBtn(touchId);
+  };
 
   // ── Add-to-homescreen hint (only in browser, not standalone) ──
   const a2hs = document.getElementById('a2hs');
