@@ -2323,8 +2323,8 @@ function updateCoinPickups() {
 
     // Player pickup (30px radius)
     if (!player.dead && Math.abs(c.x - player.x) < 30 && Math.abs(c.y - player.y + 20) < 30) {
-      // Replay penalty: replaying beaten levels gives 50% coins
-      const replayMult = isReplayLevel ? 0.5 : 1.0;
+      // Replay penalty: replaying beaten levels gives 40% coins
+      const replayMult = isReplayLevel ? 0.4 : 1.0;
       const coinValue = Math.floor(c.value * player.scoreMultiplier * replayMult);
       coins += coinValue;
       levelScore += coinValue * 2;
@@ -6780,6 +6780,7 @@ let isReplayLevel = false; // true if replaying a beaten level
 function startLevel(idx) {
   currentLevel = idx;
   isReplayLevel = bossDefeated[idx]; // track if this was already beaten
+  lives = 3; // 3 lives per boss attempt
   state = 'dialogue';
   resetPlayer();
   player.x = 100;
@@ -7404,6 +7405,7 @@ function updateLevel() {
   if (boss && boss.hp <= 0 && !boss.dead) {
     boss.dead = true;
     bossDefeated[currentLevel] = true;
+    lives = 3; // lives reset per boss
     // Boss coin drops (physical pickups) — first clear gives big bonus
     const bossCoins = isReplayLevel ? 15 + currentLevel * 10 : 50 + currentLevel * 35;
     spawnCoinPickup(boss.x, boss.y - 30, bossCoins);
@@ -8241,50 +8243,34 @@ function drawGameOver() {
   ctx.fillRect(0, 0, W, H);
 
   if (lives <= 0) {
-    // TOTAL DEFEAT — Pisellino mocks you
+    // ALL 3 LIVES LOST ON THIS BOSS — Pisellino mocks you, back to Vanni
     drawText('SCONFITTA TOTALE', W/2, 100, '#e53935', 32, 'center');
 
-    // Lives skulls
-    drawText('VITE FINITE', W/2, 135, '#888', 12, 'center');
+    drawText('3 vite perse contro ' + levels[currentLevel].boss + '!', W/2, 135, '#888', 12, 'center');
 
     // Pisellino's victory speech
     const finalTaunts = [
-      '"Ahahah Conte, sei finito! Prati e\' nostra!"',
-      '"Valle Aurelia ha conquistato Prati!"',
-      '"Torna quando impari a mena\', Contino!"',
-      '"Game over per davvero stavolta, bro!"',
+      '"Ahahah Conte, 3 tentativi e niente! Sei scarso forte!"',
+      '"Torna a Vanni a allenarti, Contino... LOL"',
+      '"Bro sei morto 3 volte, maybe prova a comprare qualcosa?"',
+      '"Easy clap x3, troppo facile per ' + levels[currentLevel].boss + '!"',
     ];
     const taunt = finalTaunts[Math.floor(gameTime / 240) % finalTaunts.length];
-    drawText(taunt, W/2, 200, '#ff8a65', 14, 'center');
+    drawText(taunt, W/2, 200, '#ff8a65', 13, 'center');
     drawText('- Pisellino', W/2, 225, '#ff6e40', 11, 'center');
 
-    drawText('"Prati adesso e\' di Valle Aurelia.', W/2, 270, '#e94560', 13, 'center');
-    drawText('Tornatene a Via Plava, perdente."', W/2, 290, '#e94560', 13, 'center');
+    drawText('Torna da Vanni, potenziati e riprova!', W/2, 270, '#aaa', 12, 'center');
 
-    // Restart from beginning button
+    // Back to hub button
     const restartBtnW = 260, restartBtnH = 40;
-    const restartBtnX = W/2 - restartBtnW/2, restartBtnY = 340;
+    const restartBtnX = W/2 - restartBtnW/2, restartBtnY = 320;
     const restartHover = mouseX >= restartBtnX && mouseX <= restartBtnX + restartBtnW && mouseY >= restartBtnY && mouseY <= restartBtnY + restartBtnH;
     drawRect(restartBtnX, restartBtnY, restartBtnW, restartBtnH, restartHover ? '#e94560' : 'rgba(233,69,96,0.3)');
     drawRect(restartBtnX, restartBtnY, restartBtnW, 2, '#e94560');
-    drawText('RICOMINCIA DA VIA PLAVA', W/2, restartBtnY + 27, '#fff', 14, 'center');
+    drawText('TORNA DA VANNI', W/2, restartBtnY + 27, '#fff', 14, 'center');
 
     if (keys['Enter'] || keys['Space'] || (restartHover && mouseClick)) {
-      // Full reset: back to level 0 with all progress lost
-      lives = 3;
-      coins = 0;
-      player.weapon = 0;
-      weapons = [starterWeapons[0]];
-      weaponTier = 0;
-      jumpTier = 0; dodgeTier = 0; speedTier = 0;
-      player.maxHp = 120;
-      player.maxStamina = 100;
-      player.speed = 4.0;
-      player.upgrades = [];
-      player.consumables = [];
-      player.consumableTimers = {};
-      helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
-      bossDefeated = [false, false, false, false, false];
+      lives = 3; // reset lives for next attempt
       state = 'hub';
       resetPlayer();
       bossIntro = false;
