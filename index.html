@@ -7158,17 +7158,24 @@ function drawUpgradeScreen() {
     });
     if (line.trim()) drawText(line.trim(), cx + cw/2, lineY, '#aaa', 10, 'center');
 
-    // Click to select
+    // Click/tap to highlight (not apply)
     if (isHover && mouseClick) {
-      applyUpgrade(u);
-      state = 'hub';
-      mouseClick = false;
-      return;
+      upgradeSelection = i;
     }
   }
 
-  // Enter to select
-  if (keysJustPressed['Enter'] || keysJustPressed['Space']) {
+  // Confirm button (visible on mobile, also works with keyboard)
+  const confirmW = 200, confirmH = 40;
+  const confirmX = W/2 - confirmW/2, confirmY = H - 58;
+  const confirmHover = mouseX >= confirmX && mouseX <= confirmX + confirmW && mouseY >= confirmY && mouseY <= confirmY + confirmH;
+  const selColor = catColors[upgradeChoices[upgradeSelection]?.cat] || '#ffd700';
+  drawRect(confirmX, confirmY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.1)');
+  drawRect(confirmX, confirmY, confirmW, 2, selColor);
+  drawText('CONFERMA', W/2, confirmY + 27, confirmHover ? '#1a1a2e' : '#fff', 16, 'center');
+
+  // Enter/Space/click confirm button to apply
+  const confirmTap = confirmHover && mouseClick;
+  if (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || confirmTap) {
     if (upgradeChoices[upgradeSelection]) {
       applyUpgrade(upgradeChoices[upgradeSelection]);
       state = 'hub';
