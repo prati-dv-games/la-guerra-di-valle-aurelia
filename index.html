@@ -694,6 +694,8 @@ let sabiSabi = null;
 let sabiTotti = null;
 let sabiMessages = [];
 let sabiPreviousState = 'menu';
+let sabiDialogueCount = 0;
+let sabiSwordUnlocked = false;
 
 // Upgrade system
 let upgradeChoices = []; // 3 choices shown after level victory
@@ -1366,9 +1368,33 @@ function drawConte(p) {
         ctx.rotate(swingAngle * flip * -1);
         ctx.fillRect(0, -3, weap.range * 0.6 * flip, 6);
         ctx.restore();
+        // Sbombo sword sparkle trail
+        if (weap.special === 'sbombo') {
+          ctx.fillStyle = '#ff69b4';
+          for (let s = 0; s < 4; s++) {
+            const sx = Math.random() * weap.range * 0.8 * flip;
+            const sy = (Math.random() - 0.5) * 20;
+            ctx.fillRect(wx + sx, wy + sy, 3, 3);
+          }
+        }
       }
     }
   });
+
+  // Sbombo sword floating hearts aura
+  if (weapons[p.weapon] && weapons[p.weapon].special === 'sbombo') {
+    for (let h = 0; h < 3; h++) {
+      const hAngle = gameTime * 0.04 + h * (Math.PI * 2 / 3);
+      const hx = p.x + Math.cos(hAngle) * 22;
+      const hy = p.y - p.h / 2 + Math.sin(hAngle * 1.5) * 10 + bob;
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = '#ff69b4';
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('\u2665', hx, hy);
+      ctx.globalAlpha = 1;
+    }
+  }
 
   // Ultra golden glow aura
   if (p.ultraActive) {
@@ -1805,6 +1831,25 @@ function drawProjectiles() {
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (p.type === 'sbombo_wave') {
+      ctx.globalAlpha = p.life / 40;
+      // Pink heart-shaped shockwave
+      ctx.fillStyle = '#ff69b4';
+      ctx.beginPath();
+      ctx.arc(p.x - 5, p.y - 3, 10, 0, Math.PI * 2);
+      ctx.arc(p.x + 5, p.y - 3, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(p.x - 14, p.y);
+      ctx.lineTo(p.x, p.y + 14);
+      ctx.lineTo(p.x + 14, p.y);
+      ctx.fill();
+      // Inner glow
+      ctx.fillStyle = '#ffd54f';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y - 2, 6, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
     } else {
@@ -2465,6 +2510,32 @@ function launchComboHit(stepIndex) {
     }
   });
 
+  // Sbombo Sword: shockwave + heal + particles on every hit
+  if (weap.special === 'sbombo') {
+    projectiles.push({
+      x: player.x + player.facing * 30,
+      y: player.y - 28,
+      vx: player.facing * 7,
+      vy: 0,
+      life: 40,
+      damage: dmg * 0.6,
+      hostile: false,
+      type: 'sbombo_wave',
+      poiseDmg: 15,
+      piercing: true
+    });
+    player.hp = Math.min(player.maxHp, player.hp + 5);
+    screenShake = 4;
+    spawnParticles(player.x + player.facing * 40, player.y - 30, '#ff69b4', 8, 5);
+    // Ultra: massive AoE every 3rd hit
+    if (player.ultraActive && stepIndex % 3 === 2) {
+      projectiles.push({ x: player.x, y: player.y - 28, vx: -10, vy: 0, life: 50, damage: dmg, hostile: false, type: 'sbombo_wave', poiseDmg: 25, piercing: true });
+      projectiles.push({ x: player.x, y: player.y - 28, vx: 10, vy: 0, life: 50, damage: dmg, hostile: false, type: 'sbombo_wave', poiseDmg: 25, piercing: true });
+      screenShake = 12;
+      spawnParticles(player.x, player.y - 30, '#ffd700', 20, 8);
+    }
+  }
+
   // La Lupa legendaryShockwave: shockwave during Ultra
   if (weap.special === 'legendaryShockwave' && player.ultraActive) {
     projectiles.push({
@@ -2650,7 +2721,7 @@ function playerJumpAttack() {
 function checkBulletHits() {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i];
-    if (p.hostile || (p.type !== 'bullet' && p.type !== 'shockwave')) continue;
+    if (p.hostile || (p.type !== 'bullet' && p.type !== 'shockwave' && p.type !== 'sbombo_wave')) continue;
 
     const targets = [...goons.filter(g => !g.dead)];
     // Only target boss after intro (don't hit offscreen boss during waves)
@@ -4820,7 +4891,7 @@ function drawHub() {
   drawRect(shopBx, shopBy, 150, 32, shopHover ? '#d84315' : '#bf360c');
   drawRect(shopBx, shopBy, 150, 2, '#ff6e40');
   drawText('ARMERIA [S]', shopBx + 75, shopBy + 22, '#fff', 13, 'center');
-  if ((shopHover && mouseClick) || keys['KeyS']) {
+  if (!showCredits && ((shopHover && mouseClick) || keys['KeyS'])) {
     state = 'shop';
     shopTab = 0;
     mouseClick = false;
@@ -4832,7 +4903,7 @@ function drawHub() {
   drawRect(movesBx, movesBy, 160, 32, movesHover ? '#1565c0' : '#0d47a1');
   drawRect(movesBx, movesBy, 160, 2, '#42a5f5');
   drawText('MOSSE [TAB]', movesBx + 80, movesBy + 22, '#fff', 13, 'center');
-  if ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP']) {
+  if (!showCredits && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
     toggleMovesScreen();
     mouseClick = false;
   }
@@ -4843,23 +4914,25 @@ function drawHub() {
   drawText('SCEGLI BATTAGLIA', 60, 455, '#e94560', 13);
 
   // Keyboard navigation
-  if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) {
+  if (!showCredits && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
     hubSelection = Math.max(0, hubSelection - 1);
     playSFX('hit');
   }
-  if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) {
+  if (!showCredits && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
     hubSelection = Math.min(levels.length - 1, hubSelection + 1);
     playSFX('hit');
   }
   // Number keys to jump to level
+  if (!showCredits) {
   for (let n = 0; n < levels.length; n++) {
     if (keysJustPressed['Digit' + (n+1)]) {
       hubSelection = n;
       playSFX('hit');
     }
   }
+  }
   // Enter to start selected level
-  if (keysJustPressed['Enter'] || keysJustPressed['Space']) {
+  if (!showCredits && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
     const selLocked = hubSelection > 0 && !bossDefeated[hubSelection - 1];
     if (!selLocked) {
       currentLevel = hubSelection;
@@ -7310,11 +7383,52 @@ function drawSabi() {
   // Trigger joke on Space press
   if (keysJustPressed['Space']) {
     if (distToSabi < 60) {
-      const joke = sabiJokesSabi[Math.floor(Math.random() * sabiJokesSabi.length)];
-      // Remove any existing sabi message
-      sabiMessages = sabiMessages.filter(m => m.target !== 'sabi');
-      sabiMessages.push({ text: joke, target: 'sabi', timer: 0 });
-      playSFX('coin');
+      if (!sabiSwordUnlocked) {
+        sabiDialogueCount++;
+        if (sabiDialogueCount >= 10) {
+          // === SBOMBO SWORD UNLOCK ===
+          sabiSwordUnlocked = true;
+          sabiMessages = sabiMessages.filter(m => m.target !== 'sabi');
+          sabiMessages.push({ text: 'Bobbi, ti meriti questo... LA SPADA DELLO SBOMBO!', target: 'sabi', timer: 0 });
+          playSFX('victory_jingle');
+          screenFlash = 30;
+          flashColor = '#ffd700';
+          screenShake = 12;
+          spawnParticles(sabiSabi.x, sabiSabi.y - 30, '#ffd700', 25, 8);
+          spawnParticles(sabiSabi.x, sabiSabi.y - 30, '#ff69b4', 20, 6);
+          // Replace weapon with Sbombo Sword
+          weapons[0] = {
+            name: 'Spada dello Sbombo',
+            damage: 80,
+            range: 90,
+            speed: 4,
+            crit: 50,
+            comboHits: 6,
+            poise: 30,
+            activeFrames: 10,
+            comboWindow: 18,
+            endLag: 6,
+            special: 'sbombo',
+            color: '#ff69b4',
+            desc: 'La leggendaria spada di Sbomboland',
+            icon: '\u2665',
+            glow: true
+          };
+          weaponTier = 3;
+        } else {
+          const joke = sabiJokesSabi[Math.floor(Math.random() * sabiJokesSabi.length)];
+          sabiMessages = sabiMessages.filter(m => m.target !== 'sabi');
+          sabiMessages.push({ text: joke, target: 'sabi', timer: 0 });
+          playSFX('coin');
+        }
+      } else {
+        // Post-unlock dialogue
+        const postUnlock = ['Usa la Spada dello Sbombo, Bobbi!', 'Vai e sbomba tutti!', 'La spada e\' parte di te ora...', 'Nessuno puo\' fermarti!', 'Sbomba con amore <3'];
+        const msg = postUnlock[Math.floor(Math.random() * postUnlock.length)];
+        sabiMessages = sabiMessages.filter(m => m.target !== 'sabi');
+        sabiMessages.push({ text: msg, target: 'sabi', timer: 0 });
+        playSFX('coin');
+      }
     }
     if (distToTotti < 60) {
       const joke = sabiJokesTotti[Math.floor(Math.random() * sabiJokesTotti.length)];
@@ -7340,6 +7454,13 @@ function drawSabi() {
   const titleBob = Math.sin(sabiTimer * 0.03) * 4;
   drawText('~ SBOMBOLAND ~', W / 2, 30 + titleBob, '#ff69b4', 22, 'center');
   drawText('~ SBOMBOLAND ~', W / 2 + 1, 31 + titleBob, '#ffd54f', 22, 'center');
+
+  // Sbombo counter
+  if (!sabiSwordUnlocked) {
+    drawText('Sbombi: ' + sabiDialogueCount + '/10', W - 90, 30, '#ff69b4', 11, 'center');
+  } else {
+    drawText('\u2665 SPADA SBLOCCATA \u2665', W - 100, 30, '#ffd700', 11, 'center');
+  }
 
   // Bottom hints
   drawText('ESC per tornare al gioco', W / 2, H - 20, 'rgba(255,255,255,0.6)', 10, 'center');
