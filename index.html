@@ -442,21 +442,92 @@ const TRACKS = {
     bassWave: 'sawtooth'
   },
 
-  // Boss buildup: ominous tension during boss intro cinematic
-  boss_buildup: {
+  // LaFed buildup: cocky swagger, rhythmic hip-hop drums feel
+  boss_buildup_0: {
+    tempo: 90,
+    melody: [
+      [NOTE.E4,0.5],[NOTE.R,0.5],[NOTE.E4,0.5],[NOTE.R,1.5],[NOTE.G4,0.5],[NOTE.R,0.5],
+      [NOTE.E4,0.5],[NOTE.R,0.5],[NOTE.A4,1],[NOTE.R,1],[NOTE.G4,0.5],[NOTE.E4,0.5],
+      [NOTE.A4,0.5],[NOTE.R,0.5],[NOTE.A4,0.5],[NOTE.R,0.5],[NOTE.Bb4,1],[NOTE.A4,1],
+      [NOTE.G4,0.5],[NOTE.E4,0.5],[NOTE.D4,0.5],[NOTE.E4,0.5],[NOTE.A4,2],
+    ],
+    bass: [
+      [NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.E3,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],
+      [NOTE.G3,0.5],[NOTE.R,0.5],[NOTE.G3,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.E3,0.5],[NOTE.R,0.5],
+      [NOTE.A2,1],[NOTE.R,1],[NOTE.E3,1],[NOTE.R,1],
+      [NOTE.A2,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.E3,0.5],[NOTE.A2,1],[NOTE.R,1],
+    ],
+    melodyWave: 'square',
+    bassWave: 'square'
+  },
+
+  // Gioacchino buildup: dark prison march, heavy stomps
+  boss_buildup_1: {
+    tempo: 70,
+    melody: [
+      [NOTE.D4,2],[NOTE.R,2],[NOTE.D4,1],[NOTE.F4,1],[NOTE.R,2],
+      [NOTE.A3,1],[NOTE.R,1],[NOTE.Bb3,1],[NOTE.A3,1],[NOTE.R,2],[NOTE.D4,2],
+      [NOTE.F4,1],[NOTE.E4,0.5],[NOTE.D4,0.5],[NOTE.Cs4,2],[NOTE.D4,2],
+      [NOTE.A3,1],[NOTE.D4,1],[NOTE.F4,1],[NOTE.A4,1],[NOTE.R,2],[NOTE.D4,2],
+    ],
+    bass: [
+      [NOTE.D3,2],[NOTE.R,2],[NOTE.D3,2],[NOTE.R,2],
+      [NOTE.A2,2],[NOTE.R,2],[NOTE.D3,1],[NOTE.R,1],[NOTE.D3,1],[NOTE.R,1],
+      [NOTE.D3,1],[NOTE.R,0.5],[NOTE.D3,0.5],[NOTE.R,1],[NOTE.A2,1],[NOTE.D3,1],[NOTE.R,1],
+      [NOTE.D3,0.5],[NOTE.R,0.5],[NOTE.D3,0.5],[NOTE.R,0.5],[NOTE.A2,1],[NOTE.D3,1],[NOTE.R,2],
+    ],
+    melodyWave: 'sawtooth',
+    bassWave: 'triangle'
+  },
+
+  // Dale buildup: exotic capoeira percussion, rhythmic and tense
+  boss_buildup_2: {
+    tempo: 80,
+    melody: [
+      [NOTE.E4,0.5],[NOTE.R,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.R,0.5],[NOTE.D4,0.5],[NOTE.R,0.5],
+      [NOTE.A3,1],[NOTE.R,1],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,1],
+      [NOTE.A4,0.5],[NOTE.R,0.5],[NOTE.G4,0.5],[NOTE.F4,0.5],[NOTE.E4,1],[NOTE.R,1],
+      [NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.A4,1],[NOTE.Ab4,0.5],[NOTE.A4,0.5],
+    ],
+    bass: [
+      [NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],
+      [NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],
+      [NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.E3,0.5],[NOTE.R,0.5],
+      [NOTE.A2,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,1],
+    ],
+    melodyWave: 'triangle',
+    bassWave: 'square'
+  },
+
+  // Ciccio buildup: furnace inferno, rising heat, heavy tremolo
+  boss_buildup_3: {
+    tempo: 95,
+    melody: [
+      [NOTE.A3,1],[NOTE.R,1],[NOTE.A3,0.5],[NOTE.Bb3,0.5],[NOTE.A3,0.5],[NOTE.R,0.5],
+      [NOTE.C4,1],[NOTE.R,1],[NOTE.C4,0.5],[NOTE.D4,0.5],[NOTE.C4,0.5],[NOTE.R,0.5],
+      [NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],
+      [NOTE.A4,1],[NOTE.Bb4,0.5],[NOTE.A4,0.5],[NOTE.E4,1],[NOTE.A4,1],
+    ],
+    bass: [
+      [NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],
+      [NOTE.A2,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.A2,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],
+      [NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],
+      [NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,0.5],[NOTE.E3,0.5],[NOTE.A2,1],[NOTE.E3,1],
+    ],
+    melodyWave: 'sawtooth',
+    bassWave: 'sawtooth'
+  },
+
+  // Pisellino buildup: manic chaos, unhinged tritones, building dread
+  boss_buildup_4: {
     tempo: 85,
     melody: [
-      // Ominous low hit... silence... another hit
       [NOTE.A3,2],[NOTE.R,2],[NOTE.Bb3,1],[NOTE.A3,1],[NOTE.R,2],
-      // Rising tension motif
       [NOTE.E4,1],[NOTE.R,1],[NOTE.F4,1],[NOTE.E4,0.5],[NOTE.Eb4,0.5],[NOTE.E4,2],
-      // Dread hits — tritone
       [NOTE.A3,1],[NOTE.R,1],[NOTE.Eb4,2],[NOTE.R,1],[NOTE.A3,1],
-      // Climactic build
       [NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.A4,2],[NOTE.Bb4,1],[NOTE.A4,1],
     ],
     bass: [
-      // Heartbeat pulse
       [NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],
       [NOTE.E3,1],[NOTE.R,1],[NOTE.E3,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],
       [NOTE.A2,1],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,1],[NOTE.E3,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],
@@ -1462,6 +1533,32 @@ function drawBossChar(b, level) {
     ctx.fillRect(bx, by, b.w, b.h);
     ctx.globalAlpha = 1.0;
   }
+  // Super armor glow during charge attacks (orange/red pulsing aura)
+  if (b.bossState === 'attack' && b.currentMove && b.currentMove.superArmor) {
+    const armorPulse = 0.2 + Math.sin(gameTime * 0.15) * 0.1;
+    ctx.globalAlpha = armorPulse;
+    ctx.fillStyle = '#ff6f00';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y - b.h / 2, b.w * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#f44336';
+    ctx.fillRect(bx - 3, by - 3, b.w + 6, b.h + 6);
+    ctx.globalAlpha = 1.0;
+  }
+
+  // Ciccio tank mode fire aura (phase 3)
+  if (b.ciccioTank) {
+    const firePulse = 0.15 + Math.sin(gameTime * 0.1) * 0.08;
+    ctx.globalAlpha = firePulse;
+    ctx.fillStyle = '#ff6f00';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y - b.h / 2, b.w * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+    // Fire particles constantly
+    if (gameTime % 4 === 0) spawnParticles(b.x + (Math.random()-0.5)*b.w, b.y - Math.random()*b.h, '#f44336', 1, 2);
+  }
 
   // Boss HP bar with phase markers
   const barW = 260;
@@ -2322,6 +2419,24 @@ function launchComboHit(stepIndex) {
   if (mariusoActive && mariuso && !mariuso.dead) checkTarget(mariuso);
 
   hitTargets.forEach(t => {
+    // === SUPER ARMOR CHECK: boss charging with armor deflects hits ===
+    if (t === boss && t.isBoss && boss.bossState === 'attack' && boss.currentMove && boss.currentMove.superArmor) {
+      // Boss absorbs hit: reduced damage, no poise damage, reflects pain back
+      const reflectDmg = Math.floor(dmg * 0.25);
+      t.hp -= dmg * 0.3; // boss takes only 30% damage
+      t.hitFlash = 5;
+      // Player gets hurt by reflect
+      hurtPlayer(reflectDmg);
+      // Visuals: armor sparks + bounce-back
+      spawnParticles(t.x, t.y - (t.h || 50) / 2, '#ff6f00', 8, 4);
+      spawnDamageNumber(t.x, t.y - (t.h || 50), 'SUPER ARMOR!', '#ff6f00');
+      spawnDamageNumber(player.x, player.y - player.h, '-' + reflectDmg, '#f44336');
+      screenShake = 6;
+      playSFX('stomp');
+      player.vx = -player.facing * 5; // knockback the player
+      return; // skip normal hit processing for this target
+    }
+
     // Same-target damage penalty: -20% per consecutive hit, floor 30%
     if (t === player.lastHitTarget) {
       player.sameTargetHits++;
@@ -2338,6 +2453,11 @@ function launchComboHit(stepIndex) {
     if (t.isBoss) {
       matchupMult = getBossMatchupMult();
       finalDmg *= matchupMult;
+    }
+    // Ciccio tank mode: 50% damage reduction in phase 3
+    if (t.isBoss && t.ciccioTank) {
+      finalDmg *= 0.5;
+      spawnParticles(t.x, t.y - (t.h || 50) / 2, '#ff6f00', 2, 1);
     }
     // Executioner: 2.0x on enemies below 25% HP
     if (isExecutioner && t.hp < (t.maxHp || 100) * 0.25) {
@@ -2663,6 +2783,18 @@ function playerJumpAttack() {
 
   targets.forEach(t => {
     if (Math.abs(attackX - t.x) < range * 0.7 + (t.w || 30) / 2 && Math.abs(player.y - t.y) < 60) {
+      // Super armor: overhead bounces off charging boss
+      if (t === boss && t.isBoss && boss.bossState === 'attack' && boss.currentMove && boss.currentMove.superArmor) {
+        t.hp -= dmg * 0.3;
+        t.hitFlash = 5;
+        hurtPlayer(Math.floor(dmg * 0.2));
+        spawnParticles(t.x, t.y - (t.h || 50) / 2, '#ff6f00', 8, 4);
+        spawnDamageNumber(t.x, t.y - (t.h || 50), 'SUPER ARMOR!', '#ff6f00');
+        player.vx = -player.facing * 5;
+        screenShake = 6;
+        playSFX('stomp');
+        return;
+      }
       const launchBonus = (t.launched && t.launched > 0) ? 1.5 : 1;
       t.hp -= dmg * launchBonus;
       let didStagger = false;
@@ -2732,6 +2864,15 @@ function checkBulletHits() {
     let hitSomething = false;
     for (const t of targets) {
       if (Math.abs(p.x - t.x) < 20 && Math.abs(p.y - (t.y - (t.h||50)/2)) < 30) {
+        // Super armor: projectiles deflect off charging boss
+        if (t === boss && t.isBoss && boss.bossState === 'attack' && boss.currentMove && boss.currentMove.superArmor) {
+          t.hp -= (p.damage || weapons[0].damage) * 0.3;
+          t.hitFlash = 3;
+          spawnParticles(t.x, t.y - (t.h || 50) / 2, '#ff6f00', 4, 2);
+          spawnDamageNumber(t.x, t.y - (t.h || 50), 'DEFLECT!', '#ff6f00');
+          if (!p.piercing) { hitSomething = true; }
+          continue;
+        }
         let dmg = p.damage || weapons[0].damage;
         // Apply boss weapon matchup to projectiles
         let projMatchup = 1;
@@ -2739,6 +2880,8 @@ function checkBulletHits() {
           projMatchup = getBossMatchupMult();
           dmg *= projMatchup;
         }
+        // Ciccio tank mode: 50% bullet damage reduction
+        if (t.isBoss && t.ciccioTank) dmg *= 0.5;
         t.hp -= dmg;
         let didStagger = false;
         // Apply poise damage
@@ -2947,14 +3090,20 @@ function updateBossAI() {
       '"STO PER CONTO MIO NOW bro! This is MINE!"'
     ];
     triggerPhaseTransition(phase3Texts[currentLevel], '#f44336');
-    // Ciccio phase 3: size increase
+    // Ciccio phase 3: massive size + tank mode + fire aura
     if (currentLevel === 3) {
       boss.w = 72;
       boss.h = 78;
-      boss.maxPoise = 85;
-      boss.poise = 85;
-      spawnParticles(boss.x, boss.y - 40, '#ff6f00', 20, 6);
-      showQuickText('"SONO DIVENTATO ENORME!"', '#ff3d00');
+      boss.maxPoise = 120; // massive poise — very hard to stagger
+      boss.poise = 120;
+      boss.poiseRecovery = 0.8; // fast poise regen
+      boss.ciccioTank = true; // flag for 50% damage reduction
+      spawnParticles(boss.x, boss.y - 40, '#ff6f00', 25, 8);
+      spawnParticles(boss.x, boss.y - 30, '#f44336', 15, 6);
+      screenFlash = 8;
+      flashColor = '#ff6f00';
+      screenShake = 16;
+      showQuickText('"SONO DIVENTATO ENORME! ER FORNO BRUCIA!"', '#ff3d00');
     }
     // Level 4: summon Mariuso in phase 3
     if (currentLevel === 4 && !mariusoActive) {
@@ -2977,9 +3126,15 @@ function updateBossAI() {
 
   switch(boss.bossState) {
     case 'idle':
-      // Circle player, pick next move
-      if (dist > 80) boss.x += Math.sign(dx) * boss.speed * 0.8;
-      else if (dist < 50) boss.x -= Math.sign(dx) * boss.speed * 0.5;
+      // SYNERGY: Pisellino hangs back when Mariuso is active (let uncle do melee)
+      if (currentLevel === 4 && mariusoActive && mariuso && !mariuso.dead) {
+        if (dist < 150) boss.x -= Math.sign(dx) * boss.speed * 0.6; // retreat
+        else if (dist > 250) boss.x += Math.sign(dx) * boss.speed * 0.3; // keep in range for shots
+      } else {
+        // Normal approach
+        if (dist > 80) boss.x += Math.sign(dx) * boss.speed * 0.8;
+        else if (dist < 50) boss.x -= Math.sign(dx) * boss.speed * 0.5;
+      }
       // Slight weave
       boss.x += Math.sin(boss.specialTimer * 0.03) * 0.5;
 
@@ -3067,7 +3222,7 @@ function executeBossMove(move, dx, dist) {
 const BOSS_MOVES = {
   // LaFedeltà — rugby rapper narcisista
   0: [
-    { name: 'rugby_tackle', phase: 1, telegraphFrames: 20, attackFrames: 30, recoveryFrames: 35, weight: 4, minDist: 60,
+    { name: 'rugby_tackle', phase: 1, telegraphFrames: 20, attackFrames: 30, recoveryFrames: 35, weight: 4, minDist: 60, superArmor: true,
       execute(dx, dist, timer, data) {
         // Wind up low, then charge across screen
         if (timer > 25) {
@@ -3096,7 +3251,7 @@ const BOSS_MOVES = {
         // Clamp to screen
         boss.x = Math.max(30, Math.min(W - 30, boss.x));
       }},
-    { name: 'shoulder_charge', phase: 1, telegraphFrames: 14, attackFrames: 18, recoveryFrames: 28, weight: 3, minDist: 40,
+    { name: 'shoulder_charge', phase: 1, telegraphFrames: 14, attackFrames: 18, recoveryFrames: 28, weight: 3, minDist: 40, superArmor: true,
       execute(dx, dist, timer, data) {
         // Short burst forward with shoulder
         boss.x += boss.facing * 6;
@@ -3125,7 +3280,7 @@ const BOSS_MOVES = {
           if (dist < 70) { hurtPlayer(22); }
         }
       }},
-    { name: 'rugby_blitz', phase: 2, telegraphFrames: 22, attackFrames: 40, recoveryFrames: 40, weight: 3, minDist: 80,
+    { name: 'rugby_blitz', phase: 2, telegraphFrames: 22, attackFrames: 40, recoveryFrames: 40, weight: 3, minDist: 80, superArmor: true,
       execute(dx, dist, timer, data) {
         // Phase 2+: charges back and forth twice
         if (!data.charges) data.charges = 0;
@@ -3195,7 +3350,7 @@ const BOSS_MOVES = {
   ],
   // Gioacchino — heavy enforcer
   1: [
-    { name: 'ground_pound', phase: 1, telegraphFrames: 18, attackFrames: 50, recoveryFrames: 40, weight: 2, minDist: 40,
+    { name: 'ground_pound', phase: 1, telegraphFrames: 18, attackFrames: 50, recoveryFrames: 40, weight: 2, minDist: 40, superArmor: true,
       execute(dx, dist, timer, data) {
         if (timer === 45) boss.y -= 70;
         if (timer === 20) {
@@ -3205,7 +3360,7 @@ const BOSS_MOVES = {
           spawnParticles(boss.x, boss.y, '#795548', 20, 6);
         }
       }},
-    { name: 'charge_tackle', phase: 1, telegraphFrames: 18, attackFrames: 25, recoveryFrames: 35, weight: 2, minDist: 80,
+    { name: 'charge_tackle', phase: 1, telegraphFrames: 18, attackFrames: 25, recoveryFrames: 35, weight: 2, minDist: 80, superArmor: true,
       execute(dx, dist, timer, data) {
         boss.x += boss.facing * 8;
         if (Math.abs(boss.x - player.x) < 40 && Math.abs(boss.y - player.y) < 40) {
@@ -3217,7 +3372,7 @@ const BOSS_MOVES = {
         if (timer === 20 && dist < 80) { hurtPlayer(25); screenShake = 5; spawnParticles(player.x, player.y - 20, '#795548', 5); }
         if (timer === 10 && dist < 80 && boss.bossPhase >= 2) { hurtPlayer(18); screenShake = 4; showQuickText('"DOPPIO BASTONE!"', '#6d4c41'); }
       }},
-    { name: 'grab_slam', phase: 2, telegraphFrames: 20, attackFrames: 30, recoveryFrames: 35, weight: 2, maxDist: 60,
+    { name: 'grab_slam', phase: 2, telegraphFrames: 20, attackFrames: 30, recoveryFrames: 35, weight: 2, maxDist: 60, superArmor: true,
       execute(dx, dist, timer, data) {
         if (timer === 25 && dist < 55 && !data.grabbed) {
           data.grabbed = true;
@@ -3261,7 +3416,7 @@ const BOSS_MOVES = {
   ],
   // Dale — agile capoeira fighter, acrobatic and unpredictable
   2: [
-    { name: 'flying_kick', phase: 1, telegraphFrames: 8, attackFrames: 20, recoveryFrames: 30, weight: 3, minDist: 80,
+    { name: 'flying_kick', phase: 1, telegraphFrames: 8, attackFrames: 20, recoveryFrames: 30, weight: 3, minDist: 80, superArmor: true,
       execute(dx, dist, timer, data) {
         boss.x += boss.facing * 12;
         if (timer > 14) boss.y -= 3; // rises
@@ -3302,7 +3457,7 @@ const BOSS_MOVES = {
           spawnParticles(boss.x + boss.facing * 40, boss.y, '#90a4ae', 6, 3);
         }
       }},
-    { name: 'wall_bounce', phase: 2, telegraphFrames: 10, attackFrames: 30, recoveryFrames: 30, weight: 3, minDist: 60,
+    { name: 'wall_bounce', phase: 2, telegraphFrames: 10, attackFrames: 30, recoveryFrames: 30, weight: 3, minDist: 60, superArmor: true,
       execute(dx, dist, timer, data) {
         // Charges to wall, bounces off, attacks from other side
         if (!data.phase) data.phase = 0;
@@ -3375,7 +3530,7 @@ const BOSS_MOVES = {
         }
         boss.x = Math.max(30, Math.min(W - 30, boss.x));
       }},
-    { name: 'berserker_rush', phase: 3, telegraphFrames: 10, attackFrames: 40, recoveryFrames: 35, weight: 4, maxDist: 150,
+    { name: 'berserker_rush', phase: 3, telegraphFrames: 10, attackFrames: 40, recoveryFrames: 35, weight: 4, maxDist: 150, superArmor: true,
       execute(dx, dist, timer, data) {
         // Phase 3: wild zigzag rush with multiple hits
         if (!data.zigDir) data.zigDir = 1;
@@ -3403,17 +3558,17 @@ const BOSS_MOVES = {
           showQuickText('"VIENI QUA!"', '#f44336');
         }
       }},
-    { name: 'body_slam', phase: 1, telegraphFrames: 15, attackFrames: 20, recoveryFrames: 35, weight: 2, maxDist: 70,
+    { name: 'body_slam', phase: 1, telegraphFrames: 15, attackFrames: 20, recoveryFrames: 35, weight: 2, maxDist: 70, superArmor: true,
       execute(dx, dist, timer, data) {
         if (timer === 10 && dist < 70) { hurtPlayer(boss.bossPhase >= 3 ? 32 : 26); screenShake = 12; spawnParticles(boss.x, boss.y, '#f44336', 12, 5); }
       }},
-    { name: 'chain_spin', phase: 2, telegraphFrames: 18, attackFrames: 30, recoveryFrames: 35, weight: 2,
+    { name: 'chain_spin', phase: 2, telegraphFrames: 18, attackFrames: 30, recoveryFrames: 35, weight: 2, superArmor: true,
       execute(dx, dist, timer, data) {
         // 360 AoE, must dodge through or stay far
         if (timer % 10 === 0 && dist < 120) { hurtPlayer(20); screenShake = 5; }
         spawnParticles(boss.x + Math.cos(timer * 0.5) * 60, boss.y - 20 + Math.sin(timer * 0.5) * 30, '#f44336', 2, 2);
       }},
-    { name: 'earthquake', phase: 3, telegraphFrames: 18, attackFrames: 40, recoveryFrames: 40, weight: 3,
+    { name: 'earthquake', phase: 3, telegraphFrames: 18, attackFrames: 40, recoveryFrames: 40, weight: 3, superArmor: true,
       execute(dx, dist, timer, data) {
         // 3 successive shockwaves
         if ((timer === 35 || timer === 25 || timer === 15) && player.grounded) {
@@ -3501,7 +3656,7 @@ const BOSS_MOVES = {
         }
         if (timer === 4 && Math.abs(boss.x - player.x) < 60) { hurtPlayer(28); screenShake = 5; }
       }},
-    { name: 'desperate_dual', phase: 3, telegraphFrames: 12, attackFrames: 30, recoveryFrames: 25, weight: 4, maxDist: 80,
+    { name: 'desperate_dual', phase: 3, telegraphFrames: 12, attackFrames: 30, recoveryFrames: 25, weight: 4, maxDist: 80, superArmor: true,
       execute(dx, dist, timer, data) {
         boss.x += boss.facing * 4;
         if (timer % 5 === 0 && dist < 65) {
@@ -3550,7 +3705,7 @@ const BOSS_MOVES = {
 
 // Old individual boss AI functions removed — replaced by state machine above
 
-// Regina AI helper (L1 boss phase 2+)
+// Regina AI helper (L1 boss phase 2+) — SYNERGY: hides behind Gioacchino, fires from cover
 function updateReginaAI() {
   regina.hitFlash = Math.max(0, regina.hitFlash - 1);
   if (regina.stunTimer > 0) { regina.stunTimer--; return; }
@@ -3568,16 +3723,40 @@ function updateReginaAI() {
   if (regina.lastHitTimer > 60 && regina.poise < regina.maxPoise && regina.poiseBreakCooldown <= 0) {
     regina.poise = Math.min(regina.maxPoise, regina.poise + regina.poiseRecovery);
   }
+
+  // === SYNERGY: Regina positions BEHIND Gioacchino (opposite side from player) ===
+  if (boss && !boss.dead) {
+    const behindX = boss.x - Math.sign(player.x - boss.x) * 60; // behind boss relative to player
+    const targetX = Math.max(40, Math.min(W - 40, behindX));
+    regina.x += (targetX - regina.x) * 0.06; // smooth follow
+  } else {
+    // Boss dead: Regina panics, backs away
+    if (Math.abs(player.x - regina.x) < 150) regina.x -= Math.sign(player.x - regina.x) * 1.5;
+  }
+
   regina.throwTimer++;
-  if (regina.throwTimer % 100 === 0) {
+  // Throw rate: faster when Gioacchino is attacking (covering fire)
+  const bossAttacking = boss && !boss.dead && boss.bossState === 'attack';
+  const throwInterval = bossAttacking ? 50 : 80; // much faster during boss attacks
+  if (regina.throwTimer % throwInterval === 0) {
     const targetY = player.y - player.h / 2;
     const originY = regina.y - 25;
     const angle = Math.atan2(targetY - originY, player.x - regina.x);
-    projectiles.push({ x: regina.x, y: originY, vx: Math.cos(angle) * 3.5, vy: Math.sin(angle) * 3.5, life: 120, damage: 12, hostile: true, type: 'meat' });
+    projectiles.push({ x: regina.x, y: originY, vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4, life: 120, damage: 14, hostile: true, type: 'meat' });
     spawnParticles(regina.x, originY, '#d32f2f', 3, 2);
+    // During boss attack: also fire a second angled shot
+    if (bossAttacking) {
+      projectiles.push({ x: regina.x, y: originY, vx: Math.cos(angle + 0.3) * 3.5, vy: Math.sin(angle + 0.3) * 3.5, life: 100, damage: 10, hostile: true, type: 'meat' });
+    }
   }
-  if (Math.abs(player.x - regina.x) > 180) regina.x += Math.sign(player.x - regina.x) * 1.2;
-  else if (Math.abs(player.x - regina.x) < 100) regina.x -= Math.sign(player.x - regina.x) * 0.8;
+
+  // === SYNERGY: Retaliation shot when player hits Gioacchino ===
+  if (boss && !boss.dead && boss.lastHitTimer < 2 && regina.throwTimer > 10) {
+    const retAngle = Math.atan2((player.y - 20) - regina.y, player.x - regina.x);
+    projectiles.push({ x: regina.x, y: regina.y - 25, vx: Math.cos(retAngle) * 5, vy: Math.sin(retAngle) * 5, life: 80, damage: 16, hostile: true, type: 'meat' });
+    spawnParticles(regina.x, regina.y - 25, '#e91e63', 4, 2);
+    regina.throwTimer = 0; // reset throw cooldown
+  }
 
   if (regina.hp <= 0) {
     regina.dead = true;
@@ -3588,7 +3767,7 @@ function updateReginaAI() {
   }
 }
 
-// Mariuso AI helper (L4 boss phase 3)
+// Mariuso AI helper (L4 boss phase 3) — SYNERGY: pincer attacks with Pisellino
 function updateMariusoAI() {
   mariuso.hitFlash = Math.max(0, mariuso.hitFlash - 1);
   if (mariuso.stunTimer > 0) { mariuso.stunTimer--; return; }
@@ -3606,17 +3785,55 @@ function updateMariusoAI() {
   if (mariuso.lastHitTimer > 60 && mariuso.poise < mariuso.maxPoise && mariuso.poiseBreakCooldown <= 0) {
     mariuso.poise = Math.min(mariuso.maxPoise, mariuso.poise + mariuso.poiseRecovery);
   }
+
+  // === SYNERGY: Mariuso rushes in while Pisellino keeps distance (pincer) ===
+  if (!mariuso.pincerTimer) mariuso.pincerTimer = 0;
+  mariuso.pincerTimer++;
+
   const mdx = player.x - mariuso.x;
   const mdist = Math.abs(mdx);
-  mariuso.x += Math.sign(mdx) * 2.8;
+
+  // Mariuso aggressively chases player
+  mariuso.x += Math.sign(mdx) * 3.2;
+
   mariuso.attackTimer = Math.max(0, mariuso.attackTimer - 1);
   if (mdist < 55 && mariuso.attackTimer === 0) {
-    hurtPlayer(26);
-    mariuso.attackTimer = 35;
+    hurtPlayer(28);
+    mariuso.attackTimer = 30;
     screenShake = 8;
     spawnParticles(player.x, player.y - 20, '#7b1fa2', 8);
     showQuickText('"MARIUSO COLPISCE!"', '#ce93d8');
   }
+
+  // === SYNERGY: Pisellino teleports behind player for pincer every 200 frames ===
+  if (mariuso.pincerTimer % 200 === 0 && boss && !boss.dead && boss.bossState === 'idle' && mdist < 80) {
+    // Pisellino teleports behind the player while Mariuso attacks from front
+    const behindPlayer = player.x - Math.sign(mdx) * 100;
+    boss.x = Math.max(50, Math.min(W - 50, behindPlayer));
+    boss.facing = Math.sign(player.x - boss.x);
+    spawnParticles(boss.x, boss.y - 30, '#b0bec5', 10, 4);
+    screenShake = 5;
+    showQuickText('"PINZA BRO! PINZA!"', '#b0bec5');
+    // Pisellino immediately attacks
+    boss.currentMove = pickBossMove(currentLevel, boss.bossPhase, Math.abs(player.x - boss.x));
+    boss.bossState = 'telegraph';
+    boss.stateTimer = Math.floor((boss.currentMove.telegraphFrames || 15) * 0.4); // very fast telegraph
+    boss.moveData = {};
+  }
+
+  // === SYNERGY: When Mariuso gets staggered, Pisellino teleports to cover him ===
+  if (mariuso.staggerTimer === 27 && boss && !boss.dead) { // just started stagger
+    boss.x = mariuso.x + Math.sign(mariuso.x - player.x) * 50;
+    boss.x = Math.max(50, Math.min(W - 50, boss.x));
+    boss.facing = Math.sign(player.x - boss.x);
+    spawnParticles(boss.x, boss.y - 30, '#b0bec5', 8, 3);
+    showQuickText('"STAY AWAY FROM MY UNCLE!"', '#b0bec5');
+    // Fire covering shots
+    for (let i = 0; i < 3; i++) {
+      projectiles.push({ x: boss.x, y: boss.y - 35, vx: boss.facing * 7 + (i - 1) * 2, vy: (Math.random() - 0.5) * 3, life: 60, damage: 14, hostile: true, type: 'bullet', color: '#b0bec5' });
+    }
+  }
+
   if (mariuso.hp <= 0) {
     mariuso.dead = true;
     spawnParticles(mariuso.x, mariuso.y - 30, '#7b1fa2', 20);
@@ -6174,64 +6391,97 @@ function updateLevel() {
     }
   }
 
-  // Boss intro walk-in — progressive hype buildup per level
+  // Boss intro walk-in — unique cinematic per boss
   if (bossIntro && bossIntroTimer > 0) {
     const introMax = [120, 150, 180, 200, 240][currentLevel] || 150;
     const introProgress = 1 - (bossIntroTimer / introMax); // 0 → 1
-    boss.x += (650 - boss.x) * 0.04; // slower approach for drama
     bossIntroTimer--;
 
-    // Level 0: Simple — name appears
-    // Level 1: Screen darkens, name + subtitle
-    // Level 2: Darkens more, ground shake rumble, name + subtitle + taunt
-    // Level 3: Heavy shake, sparks, dramatic slow-walk
-    // Level 4: Full cinematic — darkness, flashes, heavy buildup
+    // === Per-boss walk-in behavior ===
+    if (currentLevel === 0) {
+      // LaFed: cocky swagger walk, bouncing rhythm
+      boss.x += (650 - boss.x) * 0.05;
+      if (gameTime % 12 < 6) boss.y = 430 - 3; else boss.y = 430; // swagger bounce
+      if (gameTime % 8 === 0) spawnParticles(boss.x, boss.y, '#ffd54f', 1, 1); // gold sparkles
+    } else if (currentLevel === 1) {
+      // Gioacchino: heavy stomps, screen darkens
+      boss.x += (650 - boss.x) * 0.03; // slow menacing approach
+      if (gameTime % 20 === 0) { screenShake = 6; spawnParticles(boss.x, boss.y, '#795548', 4, 3); playSFX('stomp'); }
+    } else if (currentLevel === 2) {
+      // Dale: acrobatic entrance — flips in fast
+      if (introProgress < 0.5) {
+        boss.x += (650 - boss.x) * 0.08; // fast approach
+        if (gameTime % 6 === 0) boss.y = 430 - 40; else boss.y = 430; // flip animation
+        if (gameTime % 4 === 0) spawnParticles(boss.x, boss.y - 20, '#90a4ae', 3, 3);
+      } else {
+        boss.x += (650 - boss.x) * 0.03;
+        if (gameTime % 10 === 0) spawnParticles(boss.x, boss.y, '#90a4ae', 2, 2);
+      }
+      if (Math.random() < 0.08) screenShake = Math.max(screenShake, 4);
+    } else if (currentLevel === 3) {
+      // Ciccio: ground-shaking heavy walk, fire particles, forno glow
+      boss.x += (650 - boss.x) * 0.025;
+      if (gameTime % 15 === 0) { screenShake = 8; playSFX('stomp'); }
+      if (gameTime % 4 === 0) spawnParticles(boss.x, boss.y - 20, '#ff6f00', 2 + Math.floor(introProgress * 4), 3);
+      if (gameTime % 3 === 0) spawnParticles(boss.x + (Math.random()-0.5)*30, boss.y - 40, '#f44336', 1, 2); // fire
+      if (Math.random() < 0.05) { screenFlash = 2; flashColor = '#ff6f00'; }
+    } else if (currentLevel === 4) {
+      // Pisellino: full cinematic — darkness, lightning, manic energy
+      boss.x += (650 - boss.x) * 0.04;
+      if (Math.random() < 0.04) { screenFlash = 3; flashColor = '#e94560'; }
+      if (Math.random() < 0.15) screenShake = Math.max(screenShake, 3 + Math.floor(introProgress * 8));
+      if (gameTime % 5 === 0) spawnParticles(boss.x, boss.y, '#b0bec5', 2 + Math.floor(introProgress * 5), 3);
+      if (introProgress > 0.7 && gameTime % 3 === 0) spawnParticles(boss.x, boss.y - 40, '#e94560', 3, 4); // red sparks
+    }
 
-    // Progressive screen shake during walk-in
-    if (currentLevel >= 2 && Math.random() < 0.15 * (currentLevel - 1)) {
-      screenShake = Math.max(screenShake, 2 + currentLevel);
-    }
-    // Ground dust particles during walk-in (more for later bosses)
-    if (currentLevel >= 1 && gameTime % (6 - currentLevel) === 0) {
-      spawnParticles(boss.x, boss.y, '#8d6e63', 1 + currentLevel, 2);
-    }
-    // Lightning flashes for level 4
-    if (currentLevel >= 4 && Math.random() < 0.03) {
-      screenFlash = 3; flashColor = '#e94560';
-    }
-
-    // Early text: level-specific pre-boss quote
+    // === Per-boss text sequences ===
     if (bossIntroTimer === Math.floor(introMax * 0.7)) {
       const preQuotes = [
-        '"Ao\', chi e\' sto tipo?"',
-        '"Attento Conte... c\'e\' qualcuno..."',
-        '"Senti quel rumore? Sta arrivando..."',
-        '"L\'aria puzza di pizza... e di guai!"',
-        '"Lo senti? Il boss dei boss... Pisellino!"'
+        '"Ao\', chi e\' sto tipo che se crede figo?"',
+        '"Attento Conte... senti quei passi pesanti..."',
+        '"Sta arrivando... si muove come un\'ombra!"',
+        '"L\'aria puzza di pizza bruciata... e di guai!"',
+        '"Lo senti? Er boss dei boss... Pisellino!"'
       ];
       showQuickText(preQuotes[currentLevel], '#ff8a80');
     }
 
-    // Boss name + subtitle at halfway
+    // Boss name + subtitle at 40%
     if (bossIntroTimer === Math.floor(introMax * 0.4)) {
       const lvl = levels[currentLevel];
-      screenShake = 8 + currentLevel * 3;
+      const shakeAmounts = [8, 12, 14, 18, 22];
+      screenShake = shakeAmounts[currentLevel];
       playSFX('boss_appear');
       spawnParticles(boss.x, boss.y - boss.h / 2, lvl.bossColor || '#e94560', 15 + currentLevel * 5, 6);
+      // Boss-specific dramatic SFX
+      if (currentLevel === 1) playSFX('stomp'); // extra stomp for Gioacchino
+      if (currentLevel === 3) { screenFlash = 4; flashColor = '#ff6f00'; } // fire flash for Ciccio
     }
 
-    // Boss taunt at end (level 2+)
-    if (bossIntroTimer === 20 && currentLevel >= 2) {
-      const taunts = levels[currentLevel].bossLines;
-      if (taunts && taunts.length > 0) {
-        showQuickText(taunts[Math.floor(Math.random() * taunts.length)], levels[currentLevel].bossColor || '#e94560');
-      }
+    // Boss-specific taunt near end
+    if (bossIntroTimer === 25) {
+      const introTaunts = [
+        '"Yo! So\' LaFed e sto per placcatte!"',
+        '"In gabbia sognavo sto momento..."',
+        '"DALE! Nessuno batte er Dale!"',
+        '"ER FORNO E\' APERTO! Preparate a brucia\'!"',
+        '"Sup bro... ready to get DESTROYED?"'
+      ];
+      showQuickText(introTaunts[currentLevel], levels[currentLevel].bossColor || '#e94560');
     }
 
-    // Final dramatic shake on arrival
+    // Final dramatic moment on arrival
     if (bossIntroTimer === 1) {
-      screenShake = 10 + currentLevel * 4;
-      if (currentLevel >= 3) { screenFlash = 6; flashColor = levels[currentLevel].bossColor || '#e94560'; }
+      const finalShake = [10, 14, 16, 22, 26];
+      screenShake = finalShake[currentLevel];
+      if (currentLevel >= 2) { screenFlash = 6; flashColor = levels[currentLevel].bossColor || '#e94560'; }
+      // Boss-specific arrival effect
+      if (currentLevel === 0) spawnParticles(boss.x, boss.y - 30, '#ffd54f', 20, 6); // gold explosion
+      if (currentLevel === 1) { spawnParticles(boss.x, boss.y, '#795548', 25, 7); playSFX('stomp'); } // heavy landing
+      if (currentLevel === 2) spawnParticles(boss.x, boss.y - 40, '#90a4ae', 20, 8); // wind burst
+      if (currentLevel === 3) { spawnParticles(boss.x, boss.y - 30, '#ff6f00', 30, 8); spawnParticles(boss.x, boss.y, '#f44336', 20, 6); } // fire explosion
+      if (currentLevel === 4) { spawnParticles(boss.x, boss.y - 30, '#e94560', 30, 8); spawnParticles(boss.x, boss.y - 50, '#b0bec5', 20, 6); } // chaos burst
+      boss.y = 430; // ensure grounded
     }
   }
 
@@ -7587,7 +7837,8 @@ function update() {
         const bossTrackMap = ['boss_lafed', 'boss_gioacchino', 'boss_dale', 'boss_ciccio', 'boss_pisellino'];
         playTrack(bossTrackMap[currentLevel] || 'boss_lafed');
       } else if (bossIntro && bossIntroTimer > 0) {
-        playTrack('boss_buildup');
+        const buildupMap = ['boss_buildup_0', 'boss_buildup_1', 'boss_buildup_2', 'boss_buildup_3', 'boss_buildup_4'];
+        playTrack(buildupMap[currentLevel] || 'boss_buildup_4');
       } else {
         playTrack('level');
       }
