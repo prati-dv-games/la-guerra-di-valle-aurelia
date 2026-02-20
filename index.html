@@ -54,9 +54,9 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 // Virtual button definitions
 const touchButtons = {
   // Combat buttons (bottom-right, triangle layout)
-  attack:  { x: W - 80, y: H - 100, w: 65, h: 55, key: 'KeyZ', label: 'Z', color: '#e94560', justPress: true },
-  dodge:   { x: W - 155, y: H - 100, w: 65, h: 55, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  jump:    { x: W - 120, y: H - 170, w: 65, h: 55, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
+  attack:  { x: W - 80, y: H - 100, w: 65, h: 55, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  dodge:   { x: W - 155, y: H - 100, w: 65, h: 55, key: 'KeyX', label: 'DODGE', color: '#2196f3', justPress: true },
+  jump:    { x: W - 120, y: H - 170, w: 65, h: 55, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
   // Movement (bottom-left)
   left:    { x: 15, y: H - 100, w: 55, h: 50, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
   right:   { x: 80, y: H - 100, w: 55, h: 50, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
@@ -5380,7 +5380,7 @@ function drawMovesScreen() {
   drawSection(20, 60, 430, 112, 'ATTACCO', '#e94560', [
     ['Z / Spazio', 'Colpisci. Premi piu\' volte = combo chain'],
     ['Q', 'ULTRA — barra piena → attiva (1.5x danno, velocita\', 5 sec)'],
-    ['W poi Z', 'Overhead — colpo dall\'alto, 2x danno postura'],
+    ['W+Z (tastiera)', 'Overhead — colpo dall\'alto, 2x danno postura'],
     ['Z in aria', 'Attacco aereo'],
     ['X', 'Schivata (durante windup nemico = COUNTER)'],
   ], '#ff8a65');
@@ -5388,7 +5388,7 @@ function drawMovesScreen() {
   // GRAB
   drawSection(20, 182, 430, 68, 'GRAB', '#64b5f6', [
     ['Z vicino', 'Afferra nemico stordito'],
-    ['', 'Z = lancia nemico | W poi Z = slam'],
+    ['', 'Z = lancia | W+Z = slam (tastiera)'],
   ], '#90caf9');
 
   // MOVIMENTO
@@ -7234,7 +7234,7 @@ function updatePlayerInput() {
 
       // Grab actions
       if (keysJustPressed['KeyZ'] || keysJustPressed['Space']) {
-        const holdUp = keys['ArrowUp'] || keys['KeyW'];
+        const holdUp = !isTouchDevice && (keys['ArrowUp'] || keys['KeyW']);
         if (holdUp) {
           // Slam: high single-target damage, ground bounce
           const slamDmg = weapons[player.weapon].damage * 2.5;
@@ -7328,12 +7328,12 @@ function updatePlayerInput() {
 
   // Combo chain attack system — requires keysJustPressed (no hold-to-spam)
   if (keysJustPressed['KeyZ'] || keysJustPressed['Space']) {
-    const holdUp = keys['ArrowUp'] || keys['KeyW'];
+    const holdUp = !isTouchDevice && (keys['ArrowUp'] || keys['KeyW']);
 
     if (!player.grounded) {
       playerJumpAttack();
     } else if (holdUp && player.endLagTimer <= 0 && player.comboStep === 0) {
-      // Up + Attack = Overhead slam
+      // Up + Attack = Overhead slam (keyboard only)
       playerOverhead();
     } else {
       // Check for grab: attack near staggered enemy
