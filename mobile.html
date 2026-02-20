@@ -416,7 +416,7 @@ html, body {
       <div class="kb-key" data-key="N">N</div>
       <div class="kb-key" data-key="M">M</div>
       <div class="kb-key special del" data-key="DEL">DEL</div>
-      <div class="kb-key special close-kb" data-key="ESC">ESC</div>
+      <div class="kb-key special close-kb" data-key="CLOSE">X</div>
     </div>
   </div>
 </div>
@@ -632,18 +632,31 @@ html, body {
   }, { passive: false });
 
   // ── Code keyboard overlay for credits ──
+  let kbPollTimer = null;
+
   function showCodeKeyboard() {
     kbInput = '';
     updateKbDisplay();
     codeKeyboard.classList.add('visible');
     kbVisible = true;
-    updateRects(); // recache since keyboard changes layout
+    updateRects();
+    // Poll game state: auto-hide when credits close (code activated)
+    clearInterval(kbPollTimer);
+    kbPollTimer = setInterval(() => {
+      try {
+        const win = iframe.contentWindow;
+        if (win && win.showCredits === false && kbVisible) {
+          hideCodeKeyboard();
+        }
+      } catch(e) {}
+    }, 300);
   }
 
   function hideCodeKeyboard() {
     codeKeyboard.classList.remove('visible');
     kbVisible = false;
     kbInput = '';
+    clearInterval(kbPollTimer);
     updateRects();
   }
 
@@ -667,10 +680,8 @@ html, body {
     setTimeout(() => el.classList.remove('pressed'), 120);
 
     const key = el.dataset.key;
-    if (key === 'ESC') {
+    if (key === 'CLOSE') {
       hideCodeKeyboard();
-      sendKey('Escape', 'keydown');
-      setTimeout(() => sendKey('Escape', 'keyup'), 50);
       return;
     }
     if (key === 'DEL') {
