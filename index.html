@@ -48,80 +48,6 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 
-// ── Gamepad support (PS5 DualSense / any standard gamepad) ──
-const gpPrev = {};  // previous frame button states for edge detection
-const gpMap = [
-  // [buttonIndex, keyCode(s)]
-  [0,  ['KeyZ', 'Space']],   // Cross → Attack / Confirm
-  [1,  ['KeyX']],            // Circle → Dodge
-  [2,  ['KeyV']],            // Square → Ultra
-  [3,  ['KeyW', 'ArrowUp']], // Triangle → Jump
-  [4,  ['Digit1']],          // L1 → Helper 1 (Pirox)
-  [5,  ['Digit2']],          // R1 → Helper 2 (Tommy)
-  [6,  ['Digit3']],          // L2 → Helper 3 (Cicca)
-  [7,  ['Digit4']],          // R2 → Helper 4 (Il Mostro)
-  [8,  ['Tab']],             // Create/Share → Moves screen
-  [9,  ['Escape']],          // Options → Back / Pause
-  [10, ['KeyC']],            // L3 → Consumable 1
-  [11, ['KeyC']],            // R3 → Consumable 2
-  [12, ['ArrowUp']],         // D-pad Up
-  [13, ['ArrowDown']],       // D-pad Down
-  [14, ['KeyA', 'ArrowLeft']],  // D-pad Left
-  [15, ['KeyD', 'ArrowRight']], // D-pad Right
-];
-const GP_DEADZONE = 0.35;
-
-function pollGamepad() {
-  const gp = navigator.getGamepads ? navigator.getGamepads()[0] : null;
-  if (!gp) return;
-
-  // Buttons
-  for (const [idx, keyCodes] of gpMap) {
-    if (idx >= gp.buttons.length) continue;
-    const pressed = gp.buttons[idx].pressed;
-    const wasPressed = !!gpPrev[idx];
-    for (const code of keyCodes) {
-      if (pressed && !wasPressed) keysJustPressed[code] = true;
-      if (pressed) keys[code] = true;
-      else if (wasPressed) keys[code] = false;
-    }
-    gpPrev[idx] = pressed;
-  }
-
-  // Left stick → movement (horizontal: KeyA/KeyD, vertical: KeyW for jump)
-  const lx = gp.axes[0] || 0;
-  const ly = gp.axes[1] || 0;
-  // Horizontal
-  const prevLx = gpPrev['lx'] || 0;
-  if (lx < -GP_DEADZONE) {
-    if (prevLx >= -GP_DEADZONE) keysJustPressed['KeyA'] = true;
-    keys['KeyA'] = true; keys['ArrowLeft'] = true;
-  } else if (prevLx < -GP_DEADZONE) {
-    keys['KeyA'] = false; keys['ArrowLeft'] = false;
-  }
-  if (lx > GP_DEADZONE) {
-    if (prevLx <= GP_DEADZONE) keysJustPressed['KeyD'] = true;
-    keys['KeyD'] = true; keys['ArrowRight'] = true;
-  } else if (prevLx > GP_DEADZONE) {
-    keys['KeyD'] = false; keys['ArrowRight'] = false;
-  }
-  gpPrev['lx'] = lx;
-  // Vertical (stick up = jump)
-  const prevLy = gpPrev['ly'] || 0;
-  if (ly < -GP_DEADZONE) {
-    if (prevLy >= -GP_DEADZONE) keysJustPressed['KeyW'] = true;
-    keys['KeyW'] = true; keys['ArrowUp'] = true;
-  } else if (prevLy < -GP_DEADZONE) {
-    keys['KeyW'] = false; keys['ArrowUp'] = false;
-  }
-  if (ly > GP_DEADZONE) {
-    keys['ArrowDown'] = true;
-  } else if (prevLy > GP_DEADZONE) {
-    keys['ArrowDown'] = false;
-  }
-  gpPrev['ly'] = ly;
-}
-
 let mouseX = 0, mouseY = 0, mouseClick = false;
 canvas.addEventListener('mousemove', e => {
   const r = canvas.getBoundingClientRect();
@@ -9607,7 +9533,6 @@ function draw() {
 }
 
 function gameLoop() {
-  pollGamepad();
   if (hitstopFrames > 0) {
     hitstopFrames--;
     draw(); // Still draw, but freeze gameplay for impact feel
