@@ -942,6 +942,10 @@ const UPGRADE_POOL = [
   { name: '+25% Regen Stamina', cat: 'stat', desc: 'La stamina si ricarica 25% piu\' veloce', effect: 'stregen', icon: 'R' },
   { name: '+10% Velocita\'', cat: 'stat', desc: 'Ti muovi 10% piu\' veloce', effect: 'spd10', icon: '>' },
   { name: '+15% Critico', cat: 'stat', desc: 'Tutte le armi +15% chance critico', effect: 'crit15', icon: 'C' },
+  { name: 'Pelle Dura', cat: 'stat', desc: 'Ricevi 15% danno in meno', effect: 'armor15', icon: 'D' },
+  { name: 'Colpo Pesante', cat: 'stat', desc: '+25% danno poise (stagger piu\' veloce)', effect: 'poise25', icon: 'P' },
+  { name: 'Scatto Aereo', cat: 'mossa', desc: 'Schiva in aria (X in volo)', effect: 'airdash', icon: 'A' },
+  { name: 'Combo Extra', cat: 'mossa', desc: '+1 colpo a tutte le combo', effect: 'comboext', icon: 'E' },
   // Potenziamenti Ultra — attivi solo durante modalita' Ultra (Q)
   { name: 'Ultra Fuoco', cat: 'mod', desc: 'Ultra: ogni colpo brucia il nemico (3s)', effect: 'ultraFire', icon: 'F' },
   { name: 'Ultra Ghiaccio', cat: 'mod', desc: 'Ultra: ogni colpo rallenta il nemico del 30% (3s)', effect: 'ultraIce', icon: 'I' },
@@ -2817,6 +2821,7 @@ function isDodgeInvincible() {
 function hurtPlayer(dmg) {
   if (player.invincible > 0 || isDodgeInvincible() || player.dead) return;
   dmg *= DIFF_DMG[difficulty];
+  if (player.upgrades.some(u => u.effect === 'armor15')) dmg *= 0.85;
   player.hp -= dmg;
   player.invincible = 20;
   levelDamageTaken += dmg;
@@ -2931,6 +2936,8 @@ function launchComboHit(stepIndex) {
   const consumableDmg = (player.consumableTimers.dmgBoost > 0) ? 1.3 : 1;
   const ultraMult = player.ultraActive ? 1.5 : 1;
   let dmg = weap.damage * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * consumableDmg * ultraMult;
+  const poiseMult = player.upgrades.some(u => u.effect === 'poise25') ? 1.25 : 1;
+  const effectivePoise = Math.round(weap.poise * poiseMult);
 
   // Executioner special: 2.0x on enemies <25% HP during Ultra
   const isExecutioner = weap.special === 'executioner' && player.ultraActive;
@@ -2968,7 +2975,7 @@ function launchComboHit(stepIndex) {
       hostile: false,
       type: 'bullet',
       piercing: isPiercing,
-      poiseDmg: weap.poise
+      poiseDmg: effectivePoise
     });
     playSFX('hit');
     return;
@@ -3081,10 +3088,10 @@ function launchComboHit(stepIndex) {
         didKnockdown = true;
       } else if (t.poiseBreakCooldown > 0) {
         // During poise break cooldown: hits deal damage but can't reduce poise below 1
-        t.poise = Math.max(1, t.poise - weap.poise);
+        t.poise = Math.max(1, t.poise - effectivePoise);
         spawnArmorSpark(t.x, t.y - (t.h || 50) / 2);
       } else {
-        t.poise -= weap.poise;
+        t.poise -= effectivePoise;
         if (t.poise <= 0 && (!t.staggerTimer || t.staggerTimer <= 0)) {
           // POISE BREAK → stagger
           t.staggerTimer = 28;
@@ -3294,7 +3301,7 @@ function playerOverhead() {
           t.consecutiveHitCount++;
           t.lastHitByPlayerTimer = 0;
         }
-        const poiseDmg = weap.poise * 2;
+        const poiseDmg = effectivePoise * 2;
         if (t.poiseBreakCooldown > 0) {
           t.poise = Math.max(1, t.poise - poiseDmg);
           spawnArmorSpark(t.x, t.y - (t.h || 50) / 2);
@@ -3362,7 +3369,7 @@ function playerJumpAttack() {
     projectiles.push({
       x: player.x + player.facing * 20, y: player.y - 20,
       vx: player.facing * 10, vy: 3,
-      life: 40, damage: dmg, hostile: false, type: 'bullet', poiseDmg: weap.poise
+      life: 40, damage: dmg, hostile: false, type: 'bullet', poiseDmg: effectivePoise
     });
     return;
   }
@@ -3396,10 +3403,10 @@ function playerJumpAttack() {
           t.lastHitByPlayerTimer = 0;
         }
         if (t.poiseBreakCooldown > 0) {
-          t.poise = Math.max(1, t.poise - weap.poise);
+          t.poise = Math.max(1, t.poise - effectivePoise);
           spawnArmorSpark(t.x, t.y - (t.h || 50) / 2);
         } else {
-          t.poise -= weap.poise;
+          t.poise -= effectivePoise;
           if (t.poise <= 0 && (!t.staggerTimer || t.staggerTimer <= 0)) {
             t.staggerTimer = 28;
             t.poise = 0;
@@ -7041,6 +7048,8 @@ function applyUpgrade(upgrade) {
     case 'stregen': break; // applied in regen calc
     case 'spd10': player.speed *= 1.1; break;
     case 'crit15': break; // applied in crit calc
+    case 'armor15': break; // applied in hurtPlayer
+    case 'poise25': break; // applied in attack calc
     case 'comboext': weapons[0].comboHits++; break;
     // move/mod effects are checked during gameplay
   }
