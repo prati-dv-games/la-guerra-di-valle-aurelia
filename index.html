@@ -942,11 +942,6 @@ const UPGRADE_POOL = [
   { name: '+25% Regen Stamina', cat: 'stat', desc: 'La stamina si ricarica 25% piu\' veloce', effect: 'stregen', icon: 'R' },
   { name: '+10% Velocita\'', cat: 'stat', desc: 'Ti muovi 10% piu\' veloce', effect: 'spd10', icon: '>' },
   { name: '+15% Critico', cat: 'stat', desc: 'Tutte le armi +15% chance critico', effect: 'crit15', icon: 'C' },
-  // Mosse Nuove
-  { name: 'Scatto Aereo', cat: 'mossa', desc: 'Schiva in aria (X in volo)', effect: 'airdash', icon: 'A' },
-  { name: 'Schianto a Terra', cat: 'mossa', desc: 'Giu\'+Attacco in aria schianta giu\'', effect: 'groundslam', icon: 'G' },
-  { name: 'Parata', cat: 'mossa', desc: 'Schiva al momento giusto = stagger gratis', effect: 'parry', icon: 'P' },
-  { name: 'Combo Extra', cat: 'mossa', desc: '+1 colpo a tutte le combo', effect: 'comboext', icon: 'E' },
   // Potenziamenti Ultra — attivi solo durante modalita' Ultra (Q)
   { name: 'Ultra Fuoco', cat: 'mod', desc: 'Ultra: ogni colpo brucia il nemico (3s)', effect: 'ultraFire', icon: 'F' },
   { name: 'Ultra Ghiaccio', cat: 'mod', desc: 'Ultra: ogni colpo rallenta il nemico del 30% (3s)', effect: 'ultraIce', icon: 'I' },
@@ -5988,7 +5983,7 @@ function drawMovesScreen() {
   drawSection(20, 60, 430, 112, 'ATTACCO', '#e94560', [
     ['Z / Spazio', 'Colpisci. Premi piu\' volte = combo chain'],
     ['Q', 'ULTRA — barra piena → attiva (1.5x danno, velocita\', 5 sec)'],
-    ['W+Z (tastiera)', 'Overhead — colpo dall\'alto, 2x danno postura'],
+    ['W+Z', 'Overhead — colpo dall\'alto, 2x danno postura'],
     ['Z in aria', 'Attacco aereo'],
     ['X', 'Schivata (durante windup nemico = COUNTER)'],
   ], '#ff8a65');
@@ -6015,12 +6010,12 @@ function drawMovesScreen() {
   // SPECIALI ARMA
   drawSection(460, 60, 420, 148, 'SPECIALI ARMA (attivi durante Ultra)', '#ff8a65', [
     ['Sanpietrino', 'Crit cresce ad ogni colpo del combo'],
-    ['Cacciavite', 'Ultra: sanguinamento su ogni colpo'],
+    ['Cacciavite', 'Sanguinamento su ogni colpo'],
     ['Spranga', 'Colpo 1 lungo, Colpo 2 entrambi i lati'],
     ['Fionda', 'Il 3o colpo perfora i nemici'],
-    ['Machete', 'Ultra: 2x danno su nemici sotto 25% HP'],
-    ['Catena', 'Ultra: attira nemici vicini'],
-    ['La Lupa', 'Ultra: onda d\'urto devastante'],
+    ['Machete', '2x danno su nemici sotto 25% HP'],
+    ['Catena', 'Attira nemici vicini'],
+    ['La Lupa', 'Onda d\'urto devastante'],
   ], '#ffcc80');
 
   // HELPER
