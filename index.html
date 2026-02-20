@@ -839,6 +839,8 @@ window.addEventListener('keydown', e => {
 // ==========================================
 let state = 'menu'; // menu, difficultySelect, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, gameover, victory
 let difficulty = 'medium'; // 'easy', 'medium', 'hard'
+const DIFF_HP = { easy: 0.7, medium: 0.9, hard: 1.0 };
+const DIFF_DMG = { easy: 0.6, medium: 0.85, hard: 0.935 };
 let tutorialStep = 0;
 let tutorialDummy = null;
 let tutorialTimer = 0;
@@ -1286,8 +1288,8 @@ let hazards = [];
 const HAZARD_DEFS = [
   // L0: Puddle — slows movement 30%
   { type: 'puddle', x: 450, y: 426, w: 100, h: 8, color: '#1565c0', label: 'PUDDLE' },
-  // L1: Fruit cart — destructible, drops health
-  { type: 'cart', x: 600, y: 400, w: 50, h: 30, color: '#8d6e63', label: 'CART', hp: 30, maxHp: 30 },
+  // L1: No hazard
+  null,
   // L2: Dumpster fire — periodic fire burst
   { type: 'fire', x: 350, y: 410, w: 40, h: 20, color: '#bf360c', label: 'FIRE', timer: 0 },
   // L3: Ledge — enemies near edge can be knocked off
@@ -1317,13 +1319,8 @@ function updateHazards() {
       } else {
         player.hazardSlow = false;
       }
-      goons.forEach(g => {
-        if (!g.dead && Math.abs(g.x - (h.x + h.w/2)) < h.w/2 + 15) {
-          g.hazardSlow = true;
-        } else {
-          g.hazardSlow = false;
-        }
-      });
+      // Goons are not affected by puddles
+      goons.forEach(g => { g.hazardSlow = false; });
     }
     if (h.type === 'cart') {
       if (h.hp <= 0) return; // already destroyed
@@ -2809,7 +2806,7 @@ function isDodgeInvincible() {
 
 function hurtPlayer(dmg) {
   if (player.invincible > 0 || isDodgeInvincible() || player.dead) return;
-  if (difficulty === 'easy') dmg *= 0.6;
+  dmg *= DIFF_DMG[difficulty];
   player.hp -= dmg;
   player.invincible = 20;
   levelDamageTaken += dmg;
@@ -3536,7 +3533,7 @@ function createBoss(levelIdx) {
   const b = {
     x: 700, y: 430, w: 44, h: 60,
     vx: 0, vy: 0,
-    hp: lvl.bossHp * (difficulty === 'easy' ? 0.7 : 1), maxHp: lvl.bossHp * (difficulty === 'easy' ? 0.7 : 1),
+    hp: lvl.bossHp * DIFF_HP[difficulty], maxHp: lvl.bossHp * DIFF_HP[difficulty],
     speed: 2.2 + levelIdx * 0.3,
     facing: -1,
     attackTimer: 0,
@@ -3653,7 +3650,7 @@ function updateBossAI() {
       reginaActive = true;
       regina = {
         x: W + 50, y: 430, w: 32, h: 50,
-        hp: 120 * (difficulty === 'easy' ? 0.7 : 1), maxHp: 120 * (difficulty === 'easy' ? 0.7 : 1),
+        hp: 120 * DIFF_HP[difficulty], maxHp: 120 * DIFF_HP[difficulty],
         hitFlash: 0, stunTimer: 0, dead: false,
         throwTimer: 0, entering: true,
         poise: 30, maxPoise: 30, poiseRecovery: 0.45, staggerTimer: 0, lastHitTimer: 999,
@@ -3694,7 +3691,7 @@ function updateBossAI() {
       mariusoActive = true;
       mariuso = {
         x: W + 60, y: 430, w: 50, h: 60,
-        hp: 200 * (difficulty === 'easy' ? 0.7 : 1), maxHp: 200 * (difficulty === 'easy' ? 0.7 : 1),
+        hp: 200 * DIFF_HP[difficulty], maxHp: 200 * DIFF_HP[difficulty],
         hitFlash: 0, stunTimer: 0, dead: false,
         attackTimer: 0, isBoss: false, entering: true,
         poise: 50, maxPoise: 50, poiseRecovery: 0.45, staggerTimer: 0, lastHitTimer: 999,
@@ -4216,7 +4213,7 @@ const BOSS_MOVES = {
             const t = types[Math.floor(Math.random() * types.length)];
             goons.push({
               x: boss.x + (i === 0 ? -80 : 80), y: GROUND_Y, w: t.w, h: t.h,
-              hp: t.hp * 0.6 * (difficulty === 'easy' ? 0.7 : 1), maxHp: t.hp * 0.6 * (difficulty === 'easy' ? 0.7 : 1), speed: t.speed, damage: t.dmg,
+              hp: t.hp * 0.6 * DIFF_HP[difficulty], maxHp: t.hp * 0.6 * DIFF_HP[difficulty], speed: t.speed, damage: t.dmg,
               attackTimer: 60 + Math.random() * 60, hitFlash: 0, stunTimer: 0, dead: false,
               color: t.color, hat: t.hat, name: t.name, type: t.type, shootTimer: 0,
               flankDir: Math.random() > 0.5 ? 1 : -1, knockbackVx: 0, windupTimer: 0,
@@ -4517,7 +4514,7 @@ function spawnGoons(count) {
       y: GROUND_Y,
       entering: true, // walk-in flag
       w: t.w, h: t.h,
-      hp: t.hp * (difficulty === 'easy' ? 0.7 : 1), maxHp: t.hp * (difficulty === 'easy' ? 0.7 : 1),
+      hp: t.hp * DIFF_HP[difficulty], maxHp: t.hp * DIFF_HP[difficulty],
       speed: t.speed,
       damage: t.dmg,
       attackTimer: 60 + Math.random() * 60,
@@ -5184,9 +5181,9 @@ function drawDifficultySelect() {
     { name: 'FACILE', color: '#4caf50', desc: 'Modalità Parioli',
       detail: 'Per goderti la storia del Conte senza troppo stress.', icon: '\u263A' },
     { name: 'MEDIO', color: '#ff9800', desc: 'Modalità Prati',
-      detail: 'L\'esperienza bilanciata. Duro ma giusto.', icon: '\u2694' },
+      detail: 'L\'esperienza standard. Nemici meno duri, danno ridotto.', icon: '\u2694' },
     { name: 'DIFFICILE', color: '#f44336', desc: 'Modalità Tor Bella',
-      detail: 'Per i veri guerrieri di Valle Aurelia. Nessuna pieta\'.', icon: '\u2620' }
+      detail: 'Nemici piu\' forti e aggressivi. Nessuna pieta\'.', icon: '\u2620' }
   ];
 
   // Navigation
