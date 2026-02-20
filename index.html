@@ -2,12 +2,13 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>La Guerra di Valle Aurelia</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: monospace; overflow: hidden; }
-canvas { border: 3px solid #e94560; image-rendering: pixelated; }
+html, body { background: #1a1a2e; width: 100%; height: 100%; overflow: hidden; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+body { display: flex; justify-content: center; align-items: center; font-family: monospace; }
+canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
 #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
 </style>
 </head>
@@ -44,6 +45,21 @@ canvas.addEventListener('click', e => {
   mouseY = (e.clientY - r.top) * (H / r.height);
   mouseClick = true;
 });
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const r = canvas.getBoundingClientRect();
+  mouseX = (t.clientX - r.left) * (W / r.width);
+  mouseY = (t.clientY - r.top) * (H / r.height);
+  mouseClick = true;
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const r = canvas.getBoundingClientRect();
+  mouseX = (t.clientX - r.left) * (W / r.width);
+  mouseY = (t.clientY - r.top) * (H / r.height);
+}, { passive: false });
 
 // ==========================================
 // MUSIC & SOUND ENGINE (Web Audio API)
@@ -89,6 +105,7 @@ canvas.addEventListener('touchstart', tryInitAudio, { once: false });
 
 // Note frequencies
 const NOTE = {
+  E2:82.41,A2:110.00,Bb2:116.54,
   C3:130.81,D3:146.83,Eb3:155.56,E3:164.81,F3:174.61,Fs3:185.00,G3:196.00,Ab3:207.65,A3:220.00,Bb3:233.08,B3:246.94,
   C4:261.63,Cs4:277.18,D4:293.66,Eb4:311.13,E4:329.63,F4:349.23,Fs4:369.99,G4:392.00,Ab4:415.30,A4:440.00,Bb4:466.16,B4:493.88,
   C5:523.25,Cs5:554.37,D5:587.33,Eb5:622.25,E5:659.26,F5:698.46,Fs5:739.99,G5:783.99,Ab5:830.61,A5:880.00,Bb5:932.33,B5:987.77,
@@ -425,6 +442,30 @@ const TRACKS = {
     bassWave: 'sawtooth'
   },
 
+  // Boss buildup: ominous tension during boss intro cinematic
+  boss_buildup: {
+    tempo: 85,
+    melody: [
+      // Ominous low hit... silence... another hit
+      [NOTE.A3,2],[NOTE.R,2],[NOTE.Bb3,1],[NOTE.A3,1],[NOTE.R,2],
+      // Rising tension motif
+      [NOTE.E4,1],[NOTE.R,1],[NOTE.F4,1],[NOTE.E4,0.5],[NOTE.Eb4,0.5],[NOTE.E4,2],
+      // Dread hits — tritone
+      [NOTE.A3,1],[NOTE.R,1],[NOTE.Eb4,2],[NOTE.R,1],[NOTE.A3,1],
+      // Climactic build
+      [NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.E4,0.5],[NOTE.F4,0.5],[NOTE.A4,2],[NOTE.Bb4,1],[NOTE.A4,1],
+    ],
+    bass: [
+      // Heartbeat pulse
+      [NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],
+      [NOTE.E3,1],[NOTE.R,1],[NOTE.E3,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],
+      [NOTE.A2,1],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,1],[NOTE.E3,1],[NOTE.A2,1],[NOTE.R,1],[NOTE.A2,1],[NOTE.R,1],
+      [NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.A2,0.5],[NOTE.R,0.5],[NOTE.E3,0.5],[NOTE.R,0.5],[NOTE.E3,0.5],[NOTE.R,0.5],[NOTE.A2,1],[NOTE.E3,1],
+    ],
+    melodyWave: 'sawtooth',
+    bassWave: 'triangle'
+  },
+
   // Victory: triumphant Roman fanfare, major key celebration
   victory: {
     tempo: 140,
@@ -462,6 +503,35 @@ const TRACKS = {
     ],
     melodyWave: 'triangle',
     bassWave: 'sine'
+  },
+
+  // Sabi mode: cute, warm, playful Animal Crossing / Stardew Valley vibe
+  sabi: {
+    tempo: 110,
+    melody: [
+      // Playful C major arpeggios — bouncy and cheerful
+      [NOTE.C5,0.5],[NOTE.E5,0.5],[NOTE.G5,0.5],[NOTE.C6,0.5],
+      [NOTE.B5,0.5],[NOTE.G5,0.5],[NOTE.E5,0.5],[NOTE.D5,0.5],
+      [NOTE.F5,0.5],[NOTE.A5,0.5],[NOTE.C6,0.5],[NOTE.A5,0.5],
+      [NOTE.G5,1],[NOTE.E5,0.5],[NOTE.C5,0.5],
+      [NOTE.D5,0.5],[NOTE.F5,0.5],[NOTE.A5,0.5],[NOTE.G5,0.5],
+      [NOTE.E5,0.5],[NOTE.C5,0.5],[NOTE.D5,0.5],[NOTE.E5,0.5],
+      [NOTE.C5,0.5],[NOTE.G4,0.5],[NOTE.A4,0.5],[NOTE.B4,0.5],
+      [NOTE.C5,1],[NOTE.E5,0.5],[NOTE.G5,0.5],
+    ],
+    bass: [
+      // Gentle bouncy bass
+      [NOTE.C3,1],[NOTE.G3,0.5],[NOTE.C3,0.5],
+      [NOTE.E3,1],[NOTE.G3,0.5],[NOTE.E3,0.5],
+      [NOTE.F3,1],[NOTE.C3,0.5],[NOTE.F3,0.5],
+      [NOTE.G3,1],[NOTE.C3,0.5],[NOTE.G3,0.5],
+      [NOTE.A3,1],[NOTE.E3,0.5],[NOTE.A3,0.5],
+      [NOTE.F3,1],[NOTE.G3,0.5],[NOTE.C3,0.5],
+      [NOTE.D3,1],[NOTE.G3,0.5],[NOTE.D3,0.5],
+      [NOTE.C3,1],[NOTE.G3,0.5],[NOTE.C3,0.5],
+    ],
+    melodyWave: 'square',
+    bassWave: 'triangle'
   }
 };
 
@@ -616,6 +686,14 @@ let reginaActive = false;
 let regina = null;
 let mariusoActive = false;
 let mariuso = null;
+
+// Sabi mode state
+let sabiTimer = 0;
+let sabiCicca = null;
+let sabiSabi = null;
+let sabiTotti = null;
+let sabiMessages = [];
+let sabiPreviousState = 'menu';
 
 // Upgrade system
 let upgradeChoices = []; // 3 choices shown after level victory
@@ -4025,6 +4103,22 @@ function drawMenu() {
       spawnParticles(W/2, H/2, '#ffd700', 40, 10);
     }
 
+    // Check for SABI code
+    if (codeInput === 'SABI') {
+      showCredits = false;
+      codeInput = '';
+      sabiTimer = 0;
+      sabiCicca = { x: 200, y: GROUND_Y, vx: 0, facing: 1, animTimer: 0 };
+      sabiSabi = { x: 450, y: GROUND_Y, animTimer: 0, petting: false };
+      sabiTotti = { x: 650, y: GROUND_Y, animTimer: 0, wagging: true, fetching: false };
+      sabiMessages = [];
+      sabiPreviousState = state;
+      state = 'sabi';
+      screenFlash = 15;
+      flashColor = '#ff69b4';
+      playSFX('coin');
+    }
+
     // Block menu interaction while credits open
     return;
   }
@@ -4199,18 +4293,19 @@ function drawTutorial() {
     drawText(step.text, W/2, 40, '#fff', 14, 'center');
     drawText(step.hint, W/2, 60, '#aaa', 11, 'center');
 
-    // Auto-advance or manual advance (ENTER only, not Space)
+    // Auto-advance or manual advance
     const hasCheck = step.check;
+    const confirmPressed = keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'];
     if (hasCheck) {
       if (tutorialChecks[step.check]) {
-        drawText('Bravo! [ENTER]', W/2, 74, '#4caf50', 10, 'center');
-        if (keysJustPressed['Enter']) { tutorialStep++; }
+        drawText('Bravo! [Z/ENTER]', W/2, 74, '#4caf50', 10, 'center');
+        if (confirmPressed) { tutorialStep++; }
       }
     } else {
       if (Math.floor(gameTime / 30) % 2 === 0) {
-        drawText('[ENTER]', W/2, 74, '#888', 10, 'center');
+        drawText('[Z/ENTER]', W/2, 74, '#888', 10, 'center');
       }
-      if (keysJustPressed['Enter']) { tutorialStep++; }
+      if (confirmPressed) { tutorialStep++; }
     }
   }
 
@@ -4379,14 +4474,21 @@ function drawWeaponSelect() {
     drawText(sw.desc, cx + cardW/2, cy + cardH - 20, selected ? '#ccc' : '#555', 8, 'center');
   }
 
-  // Confirm prompt
+  // Confirm button (tappable on mobile)
+  const confirmBtnW = 200, confirmBtnH = 36;
+  const confirmBtnX = W/2 - confirmBtnW/2, confirmBtnY = H - 55;
+  const confirmHover = mouseX >= confirmBtnX && mouseX <= confirmBtnX + confirmBtnW && mouseY >= confirmBtnY && mouseY <= confirmBtnY + confirmBtnH;
   const pulse = Math.sin(gameTime * 0.08) * 0.3 + 0.7;
   ctx.globalAlpha = pulse;
-  drawText('ENTER = Conferma | Frecce/1-4 = Seleziona', W/2, H - 25, '#ffd700', 13, 'center');
+  drawRect(confirmBtnX, confirmBtnY, confirmBtnW, confirmBtnH, confirmHover ? '#ffd700' : 'rgba(255,215,0,0.3)');
+  drawRect(confirmBtnX, confirmBtnY, confirmBtnW, 3, '#ffd700');
+  drawText('CONFERMA', W/2, confirmBtnY + 24, confirmHover ? '#1a1a2e' : '#ffd700', 16, 'center');
   ctx.globalAlpha = 1;
+  drawText('Frecce/1-4 = Seleziona', W/2, H - 10, '#666', 10, 'center');
 
-  // Confirm selection (only after guard timer)
-  if (weaponSelectReady && keysJustPressed['Enter']) {
+  // Confirm selection (keyboard, or tap confirm button)
+  const confirmTap = weaponSelectReady && confirmHover && mouseClick;
+  if (weaponSelectReady && (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || confirmTap)) {
     const chosen = JSON.parse(JSON.stringify(starterWeapons[weaponSelectIndex]));
     if (chosen.maxAmmo) chosen.currentAmmo = chosen.maxAmmo;
     weapons = [chosen];
@@ -4889,6 +4991,22 @@ function drawHub() {
       showQuickText('CONTE MODE ACTIVATED! SEI INVINCIBILE!', '#ffd700');
       playSFX('victory_jingle');
       spawnParticles(W/2, H/2, '#ffd700', 40, 10);
+    }
+
+    // Check for SABI code
+    if (codeInput === 'SABI') {
+      showCredits = false;
+      codeInput = '';
+      sabiTimer = 0;
+      sabiCicca = { x: 200, y: GROUND_Y, vx: 0, facing: 1, animTimer: 0 };
+      sabiSabi = { x: 450, y: GROUND_Y, animTimer: 0, petting: false };
+      sabiTotti = { x: 650, y: GROUND_Y, animTimer: 0, wagging: true, fetching: false };
+      sabiMessages = [];
+      sabiPreviousState = state;
+      state = 'sabi';
+      screenFlash = 15;
+      flashColor = '#ff69b4';
+      playSFX('coin');
     }
 
     mouseClick = false;
@@ -6057,10 +6175,16 @@ function updateLevel() {
     dialogueIndex = 0;
     dialogueCallback = () => {
       bossIntro = false;
-      // Calculate grade and show upgrade selection
-      calculateLevelGrade();
-      generateUpgradeChoices();
-      state = 'upgrade';
+      // If all bosses defeated, go straight to credits
+      if (bossDefeated.every(b => b)) {
+        victoryTimer = 0;
+        state = 'victory';
+      } else {
+        // Calculate grade and show upgrade selection
+        calculateLevelGrade();
+        generateUpgradeChoices();
+        state = 'upgrade';
+      }
     };
     state = 'dialogue';
   }
@@ -6854,6 +6978,360 @@ function drawGameOver() {
 }
 
 // ==========================================
+// SABI MODE — Secret Easter Egg
+// ==========================================
+
+const sabiJokesSabi = [
+  "Ciao Ciccone! Benvenuto a Sbomboland!",
+  "Sei il mio Sbombolone preferito!",
+  "Bobbi ti ama tantissimo!",
+  "A Sbomboland si mangia solo carbonara",
+  "Lo Sbombo e' forte in te oggi",
+  "Cicca sei troppo carino miao!",
+];
+
+const sabiJokesTotti = [
+  "*scodinzola furiosamente* BOBBI!",
+  "Totti vuole la pappa! Sempre.",
+  "Lo Sbombo-cane approva!",
+  "Totti: re indiscusso di Sbomboland",
+  "*lecca Cicca con entusiasmo*",
+  "Amstaff mode: ACTIVATED",
+];
+
+function drawCicca(x, y, facing, animTimer) {
+  const bob = Math.sin(animTimer * 0.15) * 2;
+  const bx = x - 12, by = y - 20 + bob;
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(bx - 2, y - 2, 28, 5);
+  // Body — orange tabby
+  drawRect(bx, by + 6, 24, 12, '#ff8a65');
+  drawRect(bx + 2, by + 8, 20, 8, '#ffab91');
+  // Stripes
+  drawRect(bx + 4, by + 7, 3, 10, '#e64a19');
+  drawRect(bx + 10, by + 7, 3, 10, '#e64a19');
+  drawRect(bx + 16, by + 7, 3, 10, '#e64a19');
+  // Head
+  drawRect(bx + 4, by, 16, 10, '#ff8a65');
+  // Ears — pointy triangles
+  drawRect(bx + 4, by - 4, 4, 5, '#ff8a65');
+  drawRect(bx + 5, by - 3, 2, 3, '#ffab91');
+  drawRect(bx + 16, by - 4, 4, 5, '#ff8a65');
+  drawRect(bx + 17, by - 3, 2, 3, '#ffab91');
+  // Eyes — big green
+  drawRect(bx + 7, by + 2, 3, 3, '#4caf50');
+  drawRect(bx + 8, by + 3, 1, 1, '#111');
+  drawRect(bx + 14, by + 2, 3, 3, '#4caf50');
+  drawRect(bx + 15, by + 3, 1, 1, '#111');
+  // Pink nose
+  drawRect(bx + 11, by + 5, 2, 2, '#ff80ab');
+  // Whiskers
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(bx + 5, by + 5); ctx.lineTo(bx - 2, by + 3);
+  ctx.moveTo(bx + 5, by + 6); ctx.lineTo(bx - 2, by + 7);
+  ctx.moveTo(bx + 19, by + 5); ctx.lineTo(bx + 26, by + 3);
+  ctx.moveTo(bx + 19, by + 6); ctx.lineTo(bx + 26, by + 7);
+  ctx.stroke();
+  // Legs
+  drawRect(bx + 2, by + 16, 4, 4, '#ff8a65');
+  drawRect(bx + 18, by + 16, 4, 4, '#ff8a65');
+  // Tail — swaying sine wave
+  const tailSway = Math.sin(animTimer * 0.1) * 6 * facing;
+  drawRect(bx + (facing === 1 ? -2 : 22), by + 8, 3, 2, '#ff8a65');
+  drawRect(bx + (facing === 1 ? -5 : 25) + tailSway * 0.3, by + 6, 3, 2, '#ff8a65');
+  drawRect(bx + (facing === 1 ? -8 : 28) + tailSway, by + 4, 3, 2, '#e64a19');
+}
+
+function drawSabiChar(x, y, animTimer) {
+  const bob = Math.sin(animTimer * 0.04) * 2;
+  const bx = x - 15, by = y - 52 + bob;
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(bx - 2, y - 2, 34, 6);
+  // Use drawPixelChar base — pink dress, light skin
+  drawPixelChar(bx, by, 30, 52, '#ff69b4', '#ffe0b2', (px, py, pw, ph) => {
+    // Blonde hair — long flowing
+    drawRect(px + 2, py - 4, pw - 4, 8, '#ffd54f');
+    drawRect(px, py, 3, 26, '#ffd54f'); // left side hair
+    drawRect(px + pw - 3, py, 3, 26, '#ffd54f'); // right side hair
+    drawRect(px + 2, py, pw - 4, 4, '#ffd54f'); // top hair
+    // Hair highlights
+    drawRect(px + 4, py - 2, 4, 3, '#ffe082');
+    drawRect(px + pw - 8, py - 2, 4, 3, '#ffe082');
+    // Blue eyes — override defaults
+    drawRect(px + 8, py + 8, 5, 5, '#2196f3');
+    drawRect(px + pw - 13, py + 8, 5, 5, '#2196f3');
+    drawRect(px + 10, py + 10, 2, 2, '#0d47a1');
+    drawRect(px + pw - 11, py + 10, 2, 2, '#0d47a1');
+    // Pink cheeks (blush)
+    drawRect(px + 5, py + 14, 4, 2, '#ff8a80');
+    drawRect(px + pw - 9, py + 14, 4, 2, '#ff8a80');
+    // Smile
+    drawRect(px + 11, py + 15, 8, 2, '#e57373');
+    // Heart on dress
+    drawRect(px + 12, py + 30, 3, 3, '#f44336');
+    drawRect(px + 16, py + 30, 3, 3, '#f44336');
+    drawRect(px + 11, py + 33, 9, 3, '#f44336');
+    drawRect(px + 12, py + 36, 7, 2, '#f44336');
+    drawRect(px + 13, py + 38, 5, 1, '#f44336');
+  });
+}
+
+function drawTottiDog(x, y, animTimer, wagSpeed) {
+  const bob = Math.sin(animTimer * 0.06) * 1;
+  const bx = x - 18, by = y - 26 + bob;
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(bx - 2, y - 2, 40, 5);
+  // Body — stocky gray brindle amstaff
+  drawRect(bx, by + 6, 36, 16, '#78909c');
+  drawRect(bx + 2, by + 8, 32, 12, '#546e7a');
+  // Brindle pattern
+  drawRect(bx + 6, by + 9, 4, 8, '#78909c');
+  drawRect(bx + 14, by + 9, 4, 8, '#78909c');
+  drawRect(bx + 22, by + 9, 4, 8, '#78909c');
+  // Chest — lighter
+  drawRect(bx + 8, by + 10, 10, 8, '#90a4ae');
+  // Legs — short and muscular
+  drawRect(bx + 2, by + 20, 6, 6, '#546e7a');
+  drawRect(bx + 10, by + 20, 6, 6, '#546e7a');
+  drawRect(bx + 20, by + 20, 6, 6, '#546e7a');
+  drawRect(bx + 28, by + 20, 6, 6, '#546e7a');
+  // Head — big and broad
+  drawRect(bx + 26, by - 2, 14, 12, '#78909c');
+  drawRect(bx + 28, by, 10, 8, '#90a4ae');
+  // Floppy ears
+  drawRect(bx + 25, by - 4, 4, 6, '#546e7a');
+  drawRect(bx + 38, by - 4, 4, 6, '#546e7a');
+  // Eyes
+  drawRect(bx + 30, by + 1, 3, 3, '#263238');
+  drawRect(bx + 36, by + 1, 3, 3, '#263238');
+  // Nose
+  drawRect(bx + 33, by + 5, 4, 3, '#111');
+  // Tongue out
+  drawRect(bx + 34, by + 8, 3, 4, '#ef5350');
+  // Wagging tail
+  const tailWag = Math.sin(animTimer * 0.2 * wagSpeed) * 8;
+  drawRect(bx - 4, by + 4 + tailWag * 0.3, 6, 3, '#78909c');
+  drawRect(bx - 8, by + 2 + tailWag, 5, 3, '#546e7a');
+}
+
+function drawSpeechBubble(x, y, text, timer) {
+  if (timer > 120) return;
+  const alpha = timer < 80 ? 1 : Math.max(0, 1 - (timer - 80) / 40);
+  ctx.globalAlpha = alpha;
+  ctx.font = '9px monospace';
+  const tw = ctx.measureText(text).width + 16;
+  const bx = Math.max(4, Math.min(W - tw - 4, x - tw / 2));
+  drawRect(bx, y - 28, tw, 20, 'rgba(255,255,255,0.92)');
+  drawRect(bx, y - 28, tw, 2, '#ff69b4');
+  drawText(text, bx + tw / 2, y - 13, '#333', 9, 'center');
+  // Small triangle pointer
+  drawRect(x - 3, y - 8, 6, 4, 'rgba(255,255,255,0.92)');
+  ctx.globalAlpha = 1;
+}
+
+function drawSabi() {
+  sabiTimer++;
+  if (!sabiCicca) return;
+
+  // === Background — Sbomboland sunset sky ===
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+  skyGrad.addColorStop(0, '#7b1fa2');
+  skyGrad.addColorStop(0.3, '#e91e63');
+  skyGrad.addColorStop(0.6, '#ff9800');
+  skyGrad.addColorStop(1, '#ffcc02');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sun
+  ctx.fillStyle = '#fff9c4';
+  ctx.beginPath();
+  ctx.arc(W - 120, 80, 40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff176';
+  ctx.beginPath();
+  ctx.arc(W - 120, 80, 32, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Clouds
+  for (let i = 0; i < 4; i++) {
+    const cx = ((i * 230 + sabiTimer * 0.3) % (W + 100)) - 50;
+    const cy = 40 + i * 25;
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+    ctx.arc(cx + 16, cy - 6, 14, 0, Math.PI * 2);
+    ctx.arc(cx + 30, cy, 16, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Rolling hills (background)
+  ctx.fillStyle = '#66bb6a';
+  ctx.beginPath();
+  ctx.moveTo(0, GROUND_Y - 40);
+  for (let hx = 0; hx <= W; hx += 5) {
+    ctx.lineTo(hx, GROUND_Y - 40 + Math.sin(hx * 0.008) * 25 + Math.sin(hx * 0.02) * 10);
+  }
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+  // Ground
+  drawRect(0, GROUND_Y - 5, W, H - GROUND_Y + 5, '#4caf50');
+  drawRect(0, GROUND_Y - 5, W, 3, '#388e3c');
+
+  // Flowers on the ground
+  for (let i = 0; i < 12; i++) {
+    const fx = (i * 79 + 20) % W;
+    const fy = GROUND_Y - 8 - Math.sin(i * 3.7) * 3;
+    const fc = ['#ff69b4', '#ffeb3b', '#e040fb', '#ff5252', '#81d4fa'][i % 5];
+    drawRect(fx, fy, 4, 4, fc);
+    drawRect(fx + 1, fy - 3, 2, 3, '#66bb6a');
+  }
+
+  // Cozy house silhouette
+  drawRect(60, GROUND_Y - 80, 70, 75, '#5d4037');
+  drawRect(55, GROUND_Y - 80, 80, 5, '#4e342e');
+  // Roof triangle (as rects)
+  drawRect(65, GROUND_Y - 95, 60, 5, '#4e342e');
+  drawRect(72, GROUND_Y - 100, 46, 5, '#4e342e');
+  drawRect(80, GROUND_Y - 105, 30, 5, '#4e342e');
+  drawRect(88, GROUND_Y - 108, 14, 5, '#4e342e');
+  // Window glow
+  drawRect(70, GROUND_Y - 60, 16, 14, '#fff9c4');
+  drawRect(104, GROUND_Y - 60, 16, 14, '#fff9c4');
+  // Door
+  drawRect(85, GROUND_Y - 35, 20, 30, '#3e2723');
+  // Heart on door
+  drawRect(91, GROUND_Y - 28, 3, 3, '#f44336');
+  drawRect(96, GROUND_Y - 28, 3, 3, '#f44336');
+  drawRect(90, GROUND_Y - 25, 10, 3, '#f44336');
+  drawRect(91, GROUND_Y - 22, 8, 2, '#f44336');
+  drawRect(93, GROUND_Y - 20, 4, 1, '#f44336');
+
+  // SBOMBOLAND sign
+  drawRect(750, GROUND_Y - 50, 4, 50, '#795548');
+  drawRect(720, GROUND_Y - 60, 70, 18, '#fff9c4');
+  drawRect(720, GROUND_Y - 60, 70, 2, '#ff69b4');
+  drawText('SBOMBOLAND', 755, GROUND_Y - 47, '#e91e63', 8, 'center');
+
+  // Floating hearts + sparkles
+  for (let i = 0; i < 6; i++) {
+    const hx = (i * 150 + sabiTimer * 0.5 + i * 37) % W;
+    const hy = 160 + Math.sin(sabiTimer * 0.02 + i * 2) * 40;
+    const hs = 3 + Math.sin(sabiTimer * 0.03 + i) * 1;
+    ctx.globalAlpha = 0.4 + Math.sin(sabiTimer * 0.04 + i) * 0.2;
+    drawRect(hx, hy, hs, hs, '#ff69b4');
+    drawRect(hx + hs + 1, hy, hs, hs, '#ff69b4');
+    drawRect(hx - 1, hy + hs, hs * 2 + 2, hs, '#ff69b4');
+    drawRect(hx, hy + hs * 2, hs * 2, hs * 0.6, '#ff69b4');
+    ctx.globalAlpha = 1;
+  }
+  // Sparkles
+  for (let i = 0; i < 5; i++) {
+    const sx = (i * 190 + sabiTimer * 0.7 + i * 53) % W;
+    const sy = 100 + Math.sin(sabiTimer * 0.03 + i * 1.5) * 60;
+    ctx.globalAlpha = 0.3 + Math.sin(sabiTimer * 0.05 + i * 2.1) * 0.3;
+    drawRect(sx, sy, 2, 2, '#fff');
+    drawRect(sx - 1, sy + 1, 1, 1, '#fff9c4');
+    ctx.globalAlpha = 1;
+  }
+
+  // === Draw characters ===
+  drawSabiChar(sabiSabi.x, sabiSabi.y, sabiSabi.animTimer);
+  drawTottiDog(sabiTotti.x, sabiTotti.y, sabiTotti.animTimer, sabiCicca && Math.abs(sabiCicca.x - sabiTotti.x) < 60 ? 3 : 1);
+  drawCicca(sabiCicca.x, sabiCicca.y, sabiCicca.facing, sabiCicca.animTimer);
+
+  // === Player movement (Cicca the cat) ===
+  const speed = 2.5;
+  if (keys['ArrowLeft'] || keys['KeyA']) {
+    sabiCicca.vx = -speed;
+    sabiCicca.facing = -1;
+    sabiCicca.animTimer++;
+  } else if (keys['ArrowRight'] || keys['KeyD']) {
+    sabiCicca.vx = speed;
+    sabiCicca.facing = 1;
+    sabiCicca.animTimer++;
+  } else {
+    sabiCicca.vx = 0;
+  }
+  sabiCicca.x += sabiCicca.vx;
+  sabiCicca.x = Math.max(20, Math.min(W - 20, sabiCicca.x));
+
+  // Update character anim timers
+  sabiSabi.animTimer++;
+  sabiTotti.animTimer++;
+
+  // === Interaction — speech bubbles ===
+  const distToSabi = Math.abs(sabiCicca.x - sabiSabi.x);
+  const distToTotti = Math.abs(sabiCicca.x - sabiTotti.x);
+
+  // Show interaction prompts
+  if (distToSabi < 60) {
+    ctx.globalAlpha = 0.5 + Math.sin(sabiTimer * 0.1) * 0.3;
+    drawText('[SPACE]', sabiSabi.x, sabiSabi.y - 62, '#fff', 8, 'center');
+    ctx.globalAlpha = 1;
+  }
+  if (distToTotti < 60) {
+    ctx.globalAlpha = 0.5 + Math.sin(sabiTimer * 0.1) * 0.3;
+    drawText('[SPACE]', sabiTotti.x, sabiTotti.y - 36, '#fff', 8, 'center');
+    ctx.globalAlpha = 1;
+  }
+
+  // Trigger joke on Space press
+  if (keysJustPressed['Space']) {
+    if (distToSabi < 60) {
+      const joke = sabiJokesSabi[Math.floor(Math.random() * sabiJokesSabi.length)];
+      // Remove any existing sabi message
+      sabiMessages = sabiMessages.filter(m => m.target !== 'sabi');
+      sabiMessages.push({ text: joke, target: 'sabi', timer: 0 });
+      playSFX('coin');
+    }
+    if (distToTotti < 60) {
+      const joke = sabiJokesTotti[Math.floor(Math.random() * sabiJokesTotti.length)];
+      sabiMessages = sabiMessages.filter(m => m.target !== 'totti');
+      sabiMessages.push({ text: joke, target: 'totti', timer: 0 });
+      playSFX('coin');
+    }
+  }
+
+  // Draw and update speech bubbles
+  sabiMessages.forEach(m => {
+    m.timer++;
+    if (m.target === 'sabi') {
+      drawSpeechBubble(sabiSabi.x, sabiSabi.y - 60, m.text, m.timer);
+    } else {
+      drawSpeechBubble(sabiTotti.x, sabiTotti.y - 34, m.text, m.timer);
+    }
+  });
+  sabiMessages = sabiMessages.filter(m => m.timer < 120);
+
+  // === UI text ===
+  // Title — floating
+  const titleBob = Math.sin(sabiTimer * 0.03) * 4;
+  drawText('~ SBOMBOLAND ~', W / 2, 30 + titleBob, '#ff69b4', 22, 'center');
+  drawText('~ SBOMBOLAND ~', W / 2 + 1, 31 + titleBob, '#ffd54f', 22, 'center');
+
+  // Bottom hints
+  drawText('ESC per tornare al gioco', W / 2, H - 20, 'rgba(255,255,255,0.6)', 10, 'center');
+  drawText('Dedicato a Sabina con amore <3', W / 2, H - 8, '#ff69b4', 9, 'center');
+
+  // Arrow keys hint (fades after a few seconds)
+  if (sabiTimer < 180) {
+    ctx.globalAlpha = Math.max(0, 1 - sabiTimer / 180);
+    drawText('Usa le frecce per muovere Cicca!', W / 2, H - 40, '#fff', 10, 'center');
+    ctx.globalAlpha = 1;
+  }
+
+  // === ESC to return ===
+  if (keys['Escape']) {
+    state = sabiPreviousState;
+  }
+}
+
+// ==========================================
 // VICTORY
 // ==========================================
 let victoryTimer = 0; // guard timer to prevent instant restart
@@ -6911,10 +7389,10 @@ function drawVictory() {
   // Only show restart prompt after 3 seconds
   if (victoryTimer > 180) {
     if (Math.floor(gameTime / 30) % 2 === 0) {
-      drawText('Premi ENTER per ricominciare', W/2, H - 20, '#fff', 13, 'center');
+      drawText('Premi Z/ENTER per ricominciare', W/2, H - 20, '#fff', 13, 'center');
     }
 
-    if (keysJustPressed['Enter']) {
+    if (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ']) {
       // Reset everything
       coins = 0;
       player.weapon = 0;
@@ -6956,12 +7434,15 @@ function update() {
       if (bossIntro && bossIntroTimer <= 0) {
         const bossTrackMap = ['boss_lafed', 'boss_gioacchino', 'boss_dale', 'boss_ciccio', 'boss_pisellino'];
         playTrack(bossTrackMap[currentLevel] || 'boss_lafed');
-      } else if (!bossIntro) {
+      } else if (bossIntro && bossIntroTimer > 0) {
+        playTrack('boss_buildup');
+      } else {
         playTrack('level');
       }
       break;
     case 'gameover': playTrack('gameover'); break;
     case 'victory': playTrack('victory'); break;
+    case 'sabi': playTrack('sabi'); break;
   }
 
   switch(state) {
@@ -6976,6 +7457,7 @@ function update() {
     case 'level': updateLevel(); break;
     case 'gameover': break;
     case 'victory': break;
+    case 'sabi': break;
   }
 
   // Screen shake
@@ -7006,6 +7488,7 @@ function draw() {
     case 'level': drawLevel(); break;
     case 'gameover': drawGameOver(); break;
     case 'victory': drawVictory(); break;
+    case 'sabi': drawSabi(); break;
   }
 
   // Screen flash
