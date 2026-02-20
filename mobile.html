@@ -76,21 +76,21 @@ html, body {
   background: rgba(255,255,255,0.12);
   border-radius: 8px;
   color: rgba(255,255,255,0.7);
-  font-size: 18px;
+  font-size: 20px;
   border: 1px solid rgba(255,255,255,0.08);
   pointer-events: none;
-  width: 15vw;
-  height: 13vw;
-  max-width: 64px;
-  max-height: 56px;
+  width: 17vw;
+  height: 15vw;
+  max-width: 72px;
+  max-height: 64px;
 }
 .dpad-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
 #dpad-q {
-  width: 20vw;
-  max-width: 90px;
-  height: 12vw;
-  max-height: 52px;
+  width: 22vw;
+  max-width: 96px;
+  height: 13vw;
+  max-height: 56px;
   background: rgba(255,215,0,0.25);
   border-color: rgba(255,215,0,0.3);
   font-size: 13px;
@@ -117,24 +117,24 @@ html, body {
 
 /* Right side: X and W side by side above ATK, all rectangular */
 #btn-x {
-  bottom: calc(max(3dvh, 6px) + 14vw);
-  right: calc(max(3vw, 6px) + 14vw);
-  width: 13vw; max-width: 56px;
-  height: 12vw; max-height: 52px;
+  bottom: calc(max(3dvh, 6px) + 16vw);
+  right: calc(max(3vw, 6px) + 16vw);
+  width: 15vw; max-width: 64px;
+  height: 14vw; max-height: 60px;
   background: rgba(33,150,243,0.25); border-color: rgba(33,150,243,0.3);
 }
 #btn-w {
-  bottom: calc(max(3dvh, 6px) + 14vw);
+  bottom: calc(max(3dvh, 6px) + 16vw);
   right: max(3vw, 6px);
-  width: 13vw; max-width: 56px;
-  height: 12vw; max-height: 52px;
+  width: 15vw; max-width: 64px;
+  height: 14vw; max-height: 60px;
   background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.3);
 }
 #btn-atk {
   bottom: max(3dvh, 6px);
   right: max(3vw, 6px);
-  width: 27vw; max-width: 116px;
-  height: 13vw; max-height: 56px;
+  width: 31vw; max-width: 132px;
+  height: 14vw; max-height: 60px;
   background: rgba(233,69,96,0.25); border-color: rgba(233,69,96,0.3);
 }
 
@@ -162,11 +162,37 @@ html, body {
 .top-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
 .top-btn.helper { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.2); }
+.top-btn.consumable { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.2); }
 
 #top-1 { left: 2vw; }
 #top-2 { left: calc(2vw + 10vw); }
 #top-3 { left: calc(2vw + 20vw); }
 #top-4 { left: calc(2vw + 30vw); }
+#top-5 { left: calc(2vw + 42vw); }
+#top-6 { left: calc(2vw + 52vw); }
+#top-7 { left: calc(2vw + 62vw); }
+
+/* Credits button — small, bottom center, unobtrusive */
+#btn-credits {
+  position: fixed;
+  bottom: max(1dvh, env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16vw; max-width: 68px;
+  height: 6vw; max-height: 26px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.35);
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', monospace;
+  z-index: 20;
+  pointer-events: none;
+}
+#btn-credits.active { background: rgba(255,255,255,0.2); color: #fff; }
 
 /* Navigation buttons */
 .nav-btn {
@@ -270,15 +296,21 @@ html, body {
 <div class="action-btn" id="btn-w">W</div>
 <div class="action-btn" id="btn-atk">ATK</div>
 
-<!-- Top bar: helpers 1-4 (left), nav (right) -->
+<!-- Top bar: helpers 1-4, consumables 5-7, nav (right) -->
 <div class="top-btn helper" id="top-1">1</div>
 <div class="top-btn helper" id="top-2">2</div>
 <div class="top-btn helper" id="top-3">3</div>
 <div class="top-btn helper" id="top-4">4</div>
+<div class="top-btn consumable" id="top-5">5</div>
+<div class="top-btn consumable" id="top-6">6</div>
+<div class="top-btn consumable" id="top-7">7</div>
 
 <div class="nav-btn" id="btn-enter">OK</div>
 <div class="nav-btn" id="btn-tab">TAB</div>
 <div class="nav-btn" id="btn-esc">ESC</div>
+
+<!-- Credits — small unobtrusive button bottom center -->
+<div id="btn-credits">Crediti</div>
 
 <script>
 (function() {
@@ -304,15 +336,25 @@ html, body {
   reg('btn-x',   ['KeyX']);
   reg('btn-w',   ['KeyW']);
   reg('btn-atk', ['KeyZ', 'Space']);
-  // Top bar — helpers
+  // Top bar — helpers + consumables
   reg('top-1', ['Digit1']);
   reg('top-2', ['Digit2']);
   reg('top-3', ['Digit3']);
   reg('top-4', ['Digit4']);
+  reg('top-5', ['Digit5']);
+  reg('top-6', ['Digit6']);
+  reg('top-7', ['Digit7']);
   // Nav
   reg('btn-enter', ['Enter']);
   reg('btn-tab',   ['Tab']);
   reg('btn-esc',   ['Escape']);
+
+  // Credits — special: simulates a click on the in-game credits button
+  (function() {
+    const el = document.getElementById('btn-credits');
+    if (!el) return;
+    buttons.push({ id: 'btn-credits', keys: [], el, getRect: () => el.getBoundingClientRect(), isCredits: true });
+  })();
 
   function hitTest(x, y) {
     for (const btn of buttons) {
@@ -370,6 +412,21 @@ html, body {
 
   function pressBtn(btn) {
     btn.el.classList.add('active');
+    if (btn.isCredits) {
+      // Click the in-game credits button (bottom-right of 900x550 canvas)
+      try {
+        const canvas = iframe.contentDocument.querySelector('canvas');
+        if (canvas) {
+          const cRect = canvas.getBoundingClientRect();
+          // Credits button in game: x=820-890, y=522-550 (canvas coords ~860, 536)
+          const scaleX = cRect.width / 900, scaleY = cRect.height / 550;
+          const cx = cRect.left + 860 * scaleX, cy = cRect.top + 536 * scaleY;
+          canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: cx, clientY: cy, bubbles: true }));
+          canvas.dispatchEvent(new MouseEvent('click', { clientX: cx, clientY: cy, bubbles: true }));
+        }
+      } catch(e) {}
+      return;
+    }
     btn.keys.forEach(k => {
       if (!activeKeys.has(k)) {
         activeKeys.add(k);
