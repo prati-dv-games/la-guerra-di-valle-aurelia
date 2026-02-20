@@ -230,81 +230,77 @@ const NOTE = {
 };
 
 // Sound effects
+// Create a self-cleaning oscillator+gain pair that disconnects after playing
+let activeSFXCount = 0;
+const MAX_CONCURRENT_SFX = 20;
+function createSFXNode(wave, dest) {
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = wave;
+  o.connect(g); g.connect(dest);
+  activeSFXCount++;
+  o.onended = () => { try { g.disconnect(); o.disconnect(); } catch(e) {} activeSFXCount--; };
+  return { o, g };
+}
+
 function playSFX(type) {
   if (!audioCtx || !audioStarted) return;
+  if (activeSFXCount >= MAX_CONCURRENT_SFX) return; // prevent audio node buildup
   const now = audioCtx.currentTime;
 
   switch(type) {
     case 'hit': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'square';
+      const { o, g } = createSFXNode('square', sfxGain);
       o.frequency.setValueAtTime(200, now);
       o.frequency.exponentialRampToValueAtTime(80, now + 0.1);
       g.gain.setValueAtTime(0.3, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.15);
       break;
     }
     case 'hurt': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sawtooth';
+      const { o, g } = createSFXNode('sawtooth', sfxGain);
       o.frequency.setValueAtTime(300, now);
       o.frequency.exponentialRampToValueAtTime(100, now + 0.2);
       g.gain.setValueAtTime(0.25, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.25);
       break;
     }
     case 'coin': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'square';
+      const { o, g } = createSFXNode('square', sfxGain);
       o.frequency.setValueAtTime(NOTE.E5, now);
       o.frequency.setValueAtTime(NOTE.A5, now + 0.08);
       g.gain.setValueAtTime(0.2, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.2);
       break;
     }
     case 'dodge': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine';
+      const { o, g } = createSFXNode('sine', sfxGain);
       o.frequency.setValueAtTime(400, now);
       o.frequency.exponentialRampToValueAtTime(800, now + 0.1);
       g.gain.setValueAtTime(0.15, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.12);
       break;
     }
     case 'boss_appear': {
       for (let i = 0; i < 4; i++) {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'square';
+        const { o, g } = createSFXNode('square', sfxGain);
         o.frequency.setValueAtTime([NOTE.C4, NOTE.E4, NOTE.G4, NOTE.C5][i], now + i * 0.12);
         g.gain.setValueAtTime(0.2, now + i * 0.12);
         g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.15);
-        o.connect(g); g.connect(sfxGain);
         o.start(now + i * 0.12); o.stop(now + i * 0.12 + 0.2);
       }
       break;
     }
     case 'death': {
       for (let i = 0; i < 5; i++) {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'square';
+        const { o, g } = createSFXNode('square', sfxGain);
         o.frequency.setValueAtTime(300 - i * 40, now + i * 0.15);
         g.gain.setValueAtTime(0.2, now + i * 0.15);
         g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.2);
-        o.connect(g); g.connect(sfxGain);
         o.start(now + i * 0.15); o.stop(now + i * 0.15 + 0.25);
       }
       break;
@@ -312,53 +308,41 @@ function playSFX(type) {
     case 'victory_jingle': {
       const melody = [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6, NOTE.G5, NOTE.C6];
       melody.forEach((f, i) => {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'square';
+        const { o, g } = createSFXNode('square', sfxGain);
         o.frequency.value = f;
         g.gain.setValueAtTime(0.2, now + i * 0.12);
         g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.15);
-        o.connect(g); g.connect(sfxGain);
         o.start(now + i * 0.12); o.stop(now + i * 0.12 + 0.2);
       });
       break;
     }
     case 'helper': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'triangle';
+      const { o, g } = createSFXNode('triangle', sfxGain);
       o.frequency.setValueAtTime(NOTE.G4, now);
       o.frequency.setValueAtTime(NOTE.C5, now + 0.08);
       o.frequency.setValueAtTime(NOTE.E5, now + 0.16);
       g.gain.setValueAtTime(0.2, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.3);
       break;
     }
     case 'perfect_dodge': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'sine';
+      const { o, g } = createSFXNode('sine', sfxGain);
       o.frequency.setValueAtTime(NOTE.C5, now);
       o.frequency.setValueAtTime(NOTE.E5, now + 0.06);
       o.frequency.setValueAtTime(NOTE.G5, now + 0.12);
       o.frequency.setValueAtTime(NOTE.C6, now + 0.18);
       g.gain.setValueAtTime(0.25, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.3);
       break;
     }
     case 'stomp': {
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = 'square';
+      const { o, g } = createSFXNode('square', sfxGain);
       o.frequency.setValueAtTime(120, now);
       o.frequency.exponentialRampToValueAtTime(50, now + 0.15);
       g.gain.setValueAtTime(0.25, now);
       g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      o.connect(g); g.connect(sfxGain);
       o.start(now); o.stop(now + 0.2);
       break;
     }
@@ -741,8 +725,8 @@ function stopMusic() {
   clearTimeout(melodyTimeout);
   clearTimeout(bassTimeout);
   try {
-    if (activeMelodyOsc) { activeMelodyOsc.stop(); activeMelodyOsc = null; }
-    if (activeBassOsc) { activeBassOsc.stop(); activeBassOsc = null; }
+    if (activeMelodyOsc) { activeMelodyOsc.onended = null; activeMelodyOsc.stop(); activeMelodyOsc.disconnect(); activeMelodyOsc = null; }
+    if (activeBassOsc) { activeBassOsc.onended = null; activeBassOsc.stop(); activeBassOsc.disconnect(); activeBassOsc = null; }
     if (activeMelodyGain) { activeMelodyGain.disconnect(); activeMelodyGain = null; }
     if (activeBassGain) { activeBassGain.disconnect(); activeBassGain = null; }
   } catch(e) {}
@@ -782,7 +766,8 @@ function playTrack(name) {
     const durMs = dur * beatLen * 1000;
 
     try {
-      if (activeMelodyOsc) activeMelodyOsc.stop();
+      if (activeMelodyOsc) { activeMelodyOsc.stop(); activeMelodyOsc.disconnect(); }
+      if (activeMelodyGain) { activeMelodyGain.disconnect(); }
     } catch(e) {}
 
     if (freq > 0) {
@@ -796,6 +781,7 @@ function playTrack(name) {
       osc.connect(gain);
       gain.connect(musicGain);
       osc.start();
+      osc.onended = () => { try { gain.disconnect(); osc.disconnect(); } catch(e) {} };
       activeMelodyOsc = osc;
       activeMelodyGain = gain;
       setTimeout(() => { try { osc.stop(); } catch(e) {} }, durMs + 50);
@@ -814,7 +800,8 @@ function playTrack(name) {
     const durMs = dur * beatLen * 1000;
 
     try {
-      if (activeBassOsc) activeBassOsc.stop();
+      if (activeBassOsc) { activeBassOsc.stop(); activeBassOsc.disconnect(); }
+      if (activeBassGain) { activeBassGain.disconnect(); }
     } catch(e) {}
 
     if (freq > 0) {
@@ -827,6 +814,7 @@ function playTrack(name) {
       osc.connect(gain);
       gain.connect(musicGain);
       osc.start();
+      osc.onended = () => { try { gain.disconnect(); osc.disconnect(); } catch(e) {} };
       activeBassOsc = osc;
       activeBassGain = gain;
       setTimeout(() => { try { osc.stop(); } catch(e) {} }, durMs + 50);
