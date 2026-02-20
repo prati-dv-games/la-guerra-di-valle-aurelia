@@ -733,6 +733,7 @@ let activeBassGain = null;
 let currentTrackName = '';
 let musicHeartbeat = 0; // frames since last melody note scheduled
 let lastMusicCheckTime = 0;
+let musicGeneration = 0; // incremented on each playTrack call to kill old scheduler chains
 
 function stopMusic() {
   musicPlaying = false;
@@ -765,11 +766,14 @@ function playTrack(name) {
 
   currentTrackName = name;
   musicPlaying = true;
+  musicGeneration++; // kill any old scheduler chains
+  const gen = musicGeneration;
 
   const beatLen = 60 / track.tempo;
 
   // Play melody voice
   function scheduleMelody(noteIndex) {
+    if (gen !== musicGeneration) return; // old chain from previous playTrack — die
     if (!musicPlaying || currentTrackName !== name) return;
     if (noteIndex >= track.melody.length) noteIndex = 0;
     musicHeartbeat = 0; // reset heartbeat on each note
@@ -802,6 +806,7 @@ function playTrack(name) {
 
   // Play bass voice
   function scheduleBass(noteIndex) {
+    if (gen !== musicGeneration) return; // old chain from previous playTrack — die
     if (!musicPlaying || currentTrackName !== name) return;
     if (noteIndex >= track.bass.length) noteIndex = 0;
 
