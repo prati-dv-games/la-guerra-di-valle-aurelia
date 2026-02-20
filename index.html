@@ -9228,8 +9228,8 @@ function drawSabi() {
     ctx.globalAlpha = 1;
   }
 
-  // Trigger joke on Space press
-  if (keysJustPressed['Space']) {
+  // Trigger joke on Space/ATK press
+  if (keysJustPressed['Space'] || keysJustPressed['KeyZ']) {
     if (distToSabi < 60) {
       if (!sabiSwordUnlocked) {
         sabiDialogueCount++;
