@@ -844,6 +844,7 @@ let showCredits = false;
 let codeInput = '';
 let currentLevel = 0;
 let coins = 0;
+let lives = 3;
 let totalKills = 0;
 let dialogueLines = [];
 let dialogueIndex = 0;
@@ -1039,9 +1040,16 @@ let weaponSelectTimer = 0;
 
 // Weapon upgrade tier (0-3)
 let weaponTier = 0;
-const WEAPON_UPGRADE_COSTS = [150, 300, 500];
+const WEAPON_UPGRADE_COSTS = [200, 400, 650];
 
-// Shop tab: 0 = Potenzia Arma, 1 = Potenzia Helper, 2 = La Ruota
+// Player stat upgrade tiers (0-3 each), purchased in shop tab 3
+let jumpTier = 0, dodgeTier = 0, speedTier = 0;
+const STAT_UPGRADE_COSTS = [200, 400, 700];
+const JUMP_FORCES = [-13.0, -14.2, -15.4, -16.5];
+const DODGE_COOLDOWNS = [48, 40, 33, 26];
+const SPEED_VALUES = [4.0, 4.4, 4.8, 5.3];
+
+// Shop tab: 0 = Potenzia Arma, 1 = Potenzia Helper, 2 = La Ruota, 3 = Potenzia Stats
 let shopTab = 0;
 
 // Gacha state
@@ -1049,7 +1057,7 @@ let gachaSpinning = false;
 let gachaSpinTimer = 0;
 let gachaResult = null;
 let gachaResultTimer = 0;
-const GACHA_COST = 150;
+const GACHA_COST = 200;
 
 const gachaJokes = [
   '"Aho, ma che te credevi? T\'hanno fregato!"',
@@ -1072,29 +1080,29 @@ const consumableItems = [
 ];
 
 const helpers = [
-  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 60,
+  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 100,
     tiers: [
-      { cost: 80, desc: 'Stun +50%, area piu\' grande' },
-      { cost: 180, desc: 'Spacca poise: 3x danno poise' },
-      { cost: 320, desc: 'Raduno: nemici stunnati -30% poise' }
+      { cost: 120, desc: 'Stun +50%, area piu\' grande' },
+      { cost: 250, desc: 'Spacca poise: 3x danno poise' },
+      { cost: 450, desc: 'Raduno: nemici stunnati -30% poise' }
     ]},
-  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 60,
+  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 100,
     tiers: [
-      { cost: 80, desc: 'Danno +50%, attacca piu\' spesso' },
-      { cost: 180, desc: 'Combo assist: attacca staggerati' },
-      { cost: 320, desc: 'Grido: +30% danno per 4s ogni 30s' }
+      { cost: 120, desc: 'Danno +50%, attacca piu\' spesso' },
+      { cost: 250, desc: 'Combo assist: attacca staggerati' },
+      { cost: 450, desc: 'Grido: +30% danno per 4s ogni 30s' }
     ]},
-  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#212121', icon: 'C', tier: 0, unlocked: false, unlockCost: 60,
+  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#212121', icon: 'C', tier: 0, unlocked: false, unlockCost: 100,
     tiers: [
-      { cost: 80, desc: 'Cura +50%' },
-      { cost: 180, desc: 'Buff attacco: +20% danno per 5s' },
-      { cost: 320, desc: 'Revive: auto-cura se muori (1x)' }
+      { cost: 120, desc: 'Cura +50%' },
+      { cost: 250, desc: 'Buff attacco: +20% danno per 5s' },
+      { cost: 450, desc: 'Revive: auto-cura se muori (1x)' }
     ]},
-  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 60,
+  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 100,
     tiers: [
-      { cost: 80, desc: 'Durata speed +50%' },
-      { cost: 180, desc: 'Speed +20% velocita\' attacco' },
-      { cost: 320, desc: 'Scia: lasci danno quando boost' }
+      { cost: 120, desc: 'Durata speed +50%' },
+      { cost: 250, desc: 'Speed +20% velocita\' attacco' },
+      { cost: 450, desc: 'Scia: lasci danno quando boost' }
     ]},
 ];
 let helperReviveUsed = false; // Cicca tier 3 one-time per level
@@ -2309,7 +2317,9 @@ function updateCoinPickups() {
 
     // Player pickup (30px radius)
     if (!player.dead && Math.abs(c.x - player.x) < 30 && Math.abs(c.y - player.y + 20) < 30) {
-      const coinValue = Math.floor(c.value * player.scoreMultiplier);
+      // Replay penalty: replaying beaten levels gives 40% coins
+      const replayMult = isReplayLevel ? 0.4 : 1.0;
+      const coinValue = Math.floor(c.value * player.scoreMultiplier * replayMult);
       coins += coinValue;
       levelScore += coinValue * 2;
       playSFX('coin');
@@ -2481,7 +2491,7 @@ function activateHelper(idx) {
             g.hp -= baseDmg * 0.5;
             g.hitFlash = 10;
             spawnDamageNumber(g.x, g.y - (g.h || 50), Math.floor(baseDmg * 0.5), '#ff6e40');
-            if (g.hp <= 0) { g.dead = true; totalKills++; spawnCoinPickup(g.x, g.y - 20, 8); }
+            if (g.hp <= 0) { g.dead = true; totalKills++; spawnCoinPickup(g.x, g.y - 20, 6); }
           }
         });
       }
@@ -3318,7 +3328,7 @@ function playerJumpAttack() {
         t.dead = true;
         totalKills++;
         spawnParticles(t.x, t.y - 25, '#ffd700', 12);
-        spawnCoinPickup(t.x, t.y - 20, 8 + Math.floor(Math.random() * 4));
+        spawnCoinPickup(t.x, t.y - 20, 6 + Math.floor(Math.random() * 3));
         spawnCoinPickup(t.x, t.y - 30, 4);
         playSFX('coin');
       }
@@ -3394,7 +3404,7 @@ function checkBulletHits() {
           t.dead = true;
           totalKills++;
           spawnParticles(t.x, t.y - 25, '#ffd700', 12);
-          spawnCoinPickup(t.x, t.y - 20, 8 + Math.floor(Math.random() * 4));
+          spawnCoinPickup(t.x, t.y - 20, 6 + Math.floor(Math.random() * 3));
           playSFX('coin');
         }
         playSFX('hit');
@@ -4327,6 +4337,35 @@ function aiGioacchino() {}
 // GOON AI
 // ==========================================
 // Enemy types per level
+// Goon nickname pools per type — randomly assigned on spawn for personality
+const GOON_NICKNAMES = {
+  0: { // Via Plava: Lazio ultras
+    rusher: ['Zorzetto', 'Bianchino', 'Er Laziale', 'Aquilotto', 'Polverino'],
+    tank: ['Bulldozer', 'Er Muro', 'Bestione', 'Zampone', 'Testacalda'],
+  },
+  1: { // Down Under Pub
+    drunk: ['Vino Rosso', 'Sbronzetto', 'Er Barcollone', 'Gino Pinta', 'Ciuccio'],
+    tank: ['Buttafuori', 'Nerone', 'Portone', 'Er Gorilla', 'Black'],
+    thrower: ['Shaker', 'Er Cocktail', 'Barman', 'Colpo Secco', 'Oliva'],
+  },
+  2: { // Piazza Bainsizza: street
+    rusher: ['Coltellaccio', 'Stradaiolo', 'Fumetto', 'Selciato', 'Rattazzo'],
+    flanker: ['Ombra', 'Sveltino', 'Er Fantasma', 'Furetto', 'Sguscio'],
+    tank: ['Macigno', 'Er Grosso', 'Bidone', 'Masso', 'Colosseo'],
+  },
+  3: { // Pizzarium: pizza fighters
+    thrower: ['Mozzarella', 'Pomodorino', 'Farina', 'Lievitino', 'Condimento'],
+    rusher: ['Motorino', 'Express', 'Scooterino', 'Freccia', 'Consegna'],
+    tank: ['Forno', 'Impasto', 'Sfornata', 'Pala', 'Lievito Madre'],
+  },
+  4: { // Piazza Mazzini: elite
+    rusher: ['Soldatino', 'Recluta', 'Caporale', 'Fucile', 'Er Marziale'],
+    ranged: ['Mirino', 'Sniper', 'Occhio', 'Grilletto', 'Silenzio'],
+    tank: ['Corazza', 'Bunker', 'Er Blindato', 'Fortezza', 'Trincea'],
+    flanker: ['Pestifero', 'Monello', 'Lametta', 'Scattino', 'Trottolino'],
+  }
+};
+
 const ENEMY_TYPES = {
   // Level 0 - Via Plava: rugby hooligans + Lazio tifosi
   0: [
@@ -4368,6 +4407,9 @@ function spawnGoons(count) {
     const t = types[i % types.length];
     // Spawn offscreen and walk in (alternating sides)
     const spawnSide = (i % 2 === 0) ? W + 40 + i * 30 : -40 - i * 30;
+    // Assign a random nickname from the level's pool
+    const nickPool = GOON_NICKNAMES[currentLevel] && GOON_NICKNAMES[currentLevel][t.type];
+    const nickname = nickPool ? nickPool[Math.floor(Math.random() * nickPool.length)] : t.name;
     goons.push({
       x: spawnSide,
       y: GROUND_Y,
@@ -4382,7 +4424,8 @@ function spawnGoons(count) {
       dead: false,
       color: t.color,
       hat: t.hat,
-      name: t.name,
+      name: nickname,
+      typeName: t.name,
       type: t.type,
       shootTimer: 0,
       flankDir: Math.random() > 0.5 ? 1 : -1,
@@ -4495,7 +4538,7 @@ function updateGoons() {
           g.dead = true;
           totalKills++;
           spawnParticles(g.x, g.y - 25, '#ffd700', 12);
-          spawnCoinPickup(g.x, g.y - 20, 8 + Math.floor(Math.random() * 4));
+          spawnCoinPickup(g.x, g.y - 20, 6 + Math.floor(Math.random() * 3));
           playSFX('coin');
         }
       }
@@ -4687,6 +4730,23 @@ function drawGoon(g) {
     if (g.type === 'ranged') {
       drawRect(px + 6, py + 8, w - 12, 3, '#b71c1c');
     }
+    // Level-specific accessories
+    if (currentLevel === 0) {
+      // Lazio scarf on rushers
+      if (g.type === 'rusher') drawRect(px + 2, py + 19, w - 4, 3, '#87ceeb');
+    } else if (currentLevel === 1) {
+      // Pub apron string on drunks
+      if (g.type === 'drunk') drawRect(px + w/2 - 1, py + 20, 2, h - 24, '#8d6e63');
+    } else if (currentLevel === 3) {
+      // Flour stains on pizza workers
+      if (g.type === 'thrower' || g.type === 'tank') {
+        drawRect(px + 8, py + 25, 4, 3, 'rgba(255,255,255,0.5)');
+        drawRect(px + w - 14, py + 30, 5, 3, 'rgba(255,255,255,0.5)');
+      }
+    } else if (currentLevel === 4) {
+      // Armband on elite soldiers
+      if (g.type === 'rusher') drawRect(px, py + 16, 4, 6, '#e94560');
+    }
   });
   ctx.globalAlpha = 1;
 
@@ -4742,8 +4802,18 @@ function drawGoon(g) {
     drawText('STAGGER', x + g.w/2, y - 18, '#ff9800', 8, 'center');
     ctx.globalAlpha = 1;
   }
-  // Name tag
-  drawText(g.name || '', x + g.w/2, y - 14, '#aaa', 7, 'center');
+  // Name tag — styled with type color background
+  if (g.name && g.staggerTimer <= 0) {
+    const nameW = g.name.length * 5 + 8;
+    const nameX = x + g.w/2 - nameW/2;
+    const nameColor = g.type === 'tank' ? '#c62828' : g.type === 'flanker' ? '#7b1fa2' :
+      g.type === 'thrower' ? '#e65100' : g.type === 'ranged' ? '#311b92' :
+      g.type === 'drunk' ? '#795548' : '#37474f';
+    ctx.globalAlpha = 0.85;
+    drawRect(nameX, y - 24, nameW, 12, nameColor);
+    ctx.globalAlpha = 1;
+    drawText(g.name, x + g.w/2, y - 14, '#fff', 8, 'center');
+  }
 }
 
 // ==========================================
@@ -5448,10 +5518,18 @@ function drawMovesScreen() {
 
   // Current weapon info at bottom
   const w = weapons[player.weapon] || weapons[0];
+  // Determine rarity
+  let rarityLetter = 'C', rarityColor = '#9e9e9e', rarityName = 'Comune';
+  if (rareWeapons.some(rw => rw.name === w.name)) { rarityLetter = 'R'; rarityColor = '#2196f3'; rarityName = 'Raro'; }
+  else if (legendaryWeapons.some(lw => lw.name === w.name)) { rarityLetter = 'L'; rarityColor = '#ffd700'; rarityName = 'Leggendario'; }
+
   drawRect(20, 424, W - 40, 50, '#1a1a2e');
   drawRect(20, 424, W - 40, 2, w.color || '#888');
-  drawText('ARMA ATTUALE: ' + w.name, 36, 444, '#fff', 12);
-  drawText(w.desc, 36, 462, '#aaa', 9);
+  // Rarity badge
+  drawRect(22, 428, 22, 22, rarityColor);
+  drawText(rarityLetter, 33, 444, '#000', 14, 'center');
+  drawText('ARMA ATTUALE: ' + w.name, 52, 444, '#fff', 12);
+  drawText(rarityName, 52, 462, rarityColor, 9);
   drawText('DMG ' + w.damage + '  |  RNG ' + w.range + '  |  CRIT ' + w.crit + '%  |  COMBO ' + w.comboHits + ' colpi', 400, 444, '#ffcc80', 9);
   drawText('Speciale: ' + (w.special || 'nessuno'), 400, 462, '#ff8a65', 9);
 
@@ -5891,11 +5969,11 @@ function drawShop() {
   drawText('COINS: ' + coins, W/2, 44, '#ffd700', 14, 'center');
 
   // === TAB BUTTONS ===
-  const tabNames = ['POTENZIA ARMA', 'POTENZIA HELPER', 'LA RUOTA'];
-  const tabColors = ['#ff8a65', '#e040fb', '#ffd700'];
-  const tabW = 270, tabH = 28, tabY = 56;
-  for (let t = 0; t < 3; t++) {
-    const tx = 30 + t * (tabW + 10);
+  const tabNames = ['ARMA', 'HELPER', 'LA RUOTA', 'STATS'];
+  const tabColors = ['#ff8a65', '#e040fb', '#ffd700', '#4caf50'];
+  const tabW = 200, tabH = 28, tabY = 56;
+  for (let t = 0; t < 4; t++) {
+    const tx = 25 + t * (tabW + 10);
     const active = shopTab === t;
     const hover = mouseX > tx && mouseX < tx + tabW && mouseY > tabY && mouseY < tabY + tabH;
     drawRect(tx, tabY, tabW, tabH, active ? tabColors[t] : hover ? '#333' : '#222');
@@ -5909,12 +5987,14 @@ function drawShop() {
   if (keysJustPressed['Digit1']) shopTab = 0;
   if (keysJustPressed['Digit2']) shopTab = 1;
   if (keysJustPressed['Digit3']) shopTab = 2;
+  if (keysJustPressed['Digit4']) shopTab = 3;
 
   const panelY = 92;
 
   if (shopTab === 0) drawShopWeapon(panelY);
   else if (shopTab === 1) drawShopHelper(panelY);
-  else drawShopGacha(panelY);
+  else if (shopTab === 2) drawShopGacha(panelY);
+  else drawShopStats(panelY);
 
   // Back button
   const backHover = mouseX > 30 && mouseX < 150 && mouseY > H - 38 && mouseY < H - 10;
@@ -5945,8 +6025,14 @@ function drawShopWeapon(py) {
     ctx.globalAlpha = 1;
   }
 
-  drawText(w.name + ' — ' + tierNames[weaponTier], 60, py + 20, '#fff', 16);
-  drawText(w.desc, 60, py + 38, '#aaa', 10);
+  // Rarity badge in shop
+  let shopRarLetter = 'C', shopRarColor = '#9e9e9e';
+  if (rareWeapons.some(rw => rw.name === w.name)) { shopRarLetter = 'R'; shopRarColor = '#2196f3'; }
+  else if (legendaryWeapons.some(lw => lw.name === w.name)) { shopRarLetter = 'L'; shopRarColor = '#ffd700'; }
+  drawRect(48, py + 6, 20, 20, shopRarColor);
+  drawText(shopRarLetter, 58, py + 21, '#000', 12, 'center');
+  drawText(w.name + ' — ' + tierNames[weaponTier], 76, py + 20, '#fff', 16);
+  drawText(w.desc, 76, py + 38, '#aaa', 10);
 
   // Stats display
   const sx = 60, sy = py + 55;
@@ -6267,6 +6353,80 @@ function useConsumable(slot) {
   playSFX('coin');
 }
 
+// --- Tab 3: Stats Upgrade ---
+function drawShopStats(py) {
+  drawText('POTENZIA IL CONTE', W/2, py + 15, '#4caf50', 16, 'center');
+
+  const stats = [
+    { name: 'SALTO', desc: 'Salto piu\' alto', tier: jumpTier, icon: 'W',
+      color: '#4caf50', tierDescs: ['Salto base', 'Salto +9%', 'Salto +18%', 'Salto +27%'] },
+    { name: 'SCHIVATA', desc: 'Cooldown schivata ridotto', tier: dodgeTier, icon: 'X',
+      color: '#2196f3', tierDescs: ['Cooldown base', 'Cooldown -17%', 'Cooldown -31%', 'Cooldown -46%'] },
+    { name: 'VELOCITA\'', desc: 'Movimento piu\' veloce', tier: speedTier, icon: '>',
+      color: '#ff9800', tierDescs: ['Velocita\' base', 'Velocita\' +10%', 'Velocita\' +20%', 'Velocita\' +33%'] },
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    const s = stats[i];
+    const sx = 40 + i * 280;
+    const sy = py + 35;
+    const boxW = 260, boxH = 360;
+
+    drawRect(sx, sy, boxW, boxH, '#1a1a2e');
+    drawRect(sx, sy, boxW, 3, s.color);
+    ctx.strokeStyle = '#333';
+    ctx.strokeRect(sx, sy, boxW, boxH);
+
+    // Icon + name
+    drawText(s.icon, sx + boxW/2, sy + 40, s.color, 28, 'center');
+    drawText(s.name, sx + boxW/2, sy + 62, '#fff', 14, 'center');
+    drawText(s.desc, sx + boxW/2, sy + 78, '#aaa', 9, 'center');
+
+    // Level pips
+    for (let t = 0; t < 3; t++) {
+      const pipX = sx + boxW/2 - 30 + t * 22;
+      drawRect(pipX, sy + 88, 16, 8, t < s.tier ? s.color : '#333');
+    }
+    drawText('Lv.' + s.tier + '/3', sx + boxW/2, sy + 112, s.color, 10, 'center');
+
+    // Current effect
+    drawText(s.tierDescs[s.tier], sx + boxW/2, sy + 130, '#81c784', 9, 'center');
+
+    // Upgrade tiers
+    for (let t = 0; t < 3; t++) {
+      const uy = sy + 148 + t * 60;
+      const unlocked = s.tier > t;
+      const isNext = s.tier === t;
+      const cost = STAT_UPGRADE_COSTS[t];
+      const canBuy = isNext && coins >= cost;
+      const hover = mouseX > sx + 10 && mouseX < sx + boxW - 10 && mouseY > uy && mouseY < uy + 50;
+
+      drawRect(sx + 10, uy, boxW - 20, 50, unlocked ? '#1b5e20' : hover && canBuy ? '#333' : '#1a1a1a');
+      drawRect(sx + 10, uy, 3, 50, unlocked ? '#4caf50' : isNext ? s.color : '#333');
+
+      drawText('Lv.' + (t+1), sx + 25, uy + 20, unlocked ? '#4caf50' : isNext ? '#fff' : '#555', 11);
+      drawText(stats[i].tierDescs[t+1], sx + 25, uy + 36, unlocked ? '#81c784' : '#777', 8);
+
+      if (unlocked) {
+        drawText('SBLOCCATO', sx + boxW - 50, uy + 28, '#4caf50', 9, 'center');
+      } else if (isNext) {
+        drawText(cost + ' COINS', sx + boxW - 50, uy + 28, canBuy ? '#ffd700' : '#666', 10, 'center');
+        if (hover && mouseClick && canBuy) {
+          coins -= cost;
+          if (i === 0) { jumpTier++; }
+          else if (i === 1) { dodgeTier++; }
+          else { speedTier++; player.speed = SPEED_VALUES[speedTier]; }
+          playSFX('coin');
+          spawnParticles(sx + boxW/2, uy + 25, s.color, 15, 4);
+          mouseClick = false;
+        }
+      } else {
+        drawText('BLOCCATO', sx + boxW - 50, uy + 28, '#444', 9, 'center');
+      }
+    }
+  }
+}
+
 // ==========================================
 // UPGRADE SELECTION (after level victory)
 // ==========================================
@@ -6302,13 +6462,38 @@ function calculateLevelGrade() {
 }
 
 function generateUpgradeChoices() {
-  // Pick 3 random upgrades not already owned
+  // Grade-based rewards: more choices for better grades
+  const grade = lastLevelGrade;
+  const gradeBonus = { S: 80, A: 50, B: 25, C: 10, D: 0 };
+  const bonus = gradeBonus[grade] || 0;
+  if (bonus > 0) {
+    coins += bonus;
+    spawnParticles(W/2, 80, '#ffd700', bonus > 20 ? 20 : 10, 4);
+  }
+  lastLevelBreakdown.coinBonus = bonus;
+
+  // Pick upgrades not already owned — S/A get 4 choices, others get 3
+  const numChoices = (grade === 'S' || grade === 'A') ? 4 : 3;
   const owned = player.upgrades.map(u => u.effect);
-  const available = UPGRADE_POOL.filter(u => !owned.includes(u.effect));
+  let available = UPGRADE_POOL.filter(u => !owned.includes(u.effect));
+
+  // S grade: bias toward mossa/mod upgrades (the powerful ones)
+  if (grade === 'S' && available.length > numChoices) {
+    const powerful = available.filter(u => u.cat === 'mossa' || u.cat === 'mod');
+    const basic = available.filter(u => u.cat === 'stat');
+    // Guarantee at least 1 powerful if available
+    if (powerful.length > 0) {
+      const shuffledPowerful = powerful.sort(() => Math.random() - 0.5);
+      const shuffledBasic = basic.sort(() => Math.random() - 0.5);
+      available = [...shuffledPowerful, ...shuffledBasic];
+    }
+  } else {
+    available = available.sort(() => Math.random() - 0.5);
+  }
+
   upgradeChoices = [];
-  const shuffled = available.sort(() => Math.random() - 0.5);
-  for (let i = 0; i < Math.min(3, shuffled.length); i++) {
-    upgradeChoices.push(shuffled[i]);
+  for (let i = 0; i < Math.min(numChoices, available.length); i++) {
+    upgradeChoices.push(available[i]);
   }
   upgradeSelection = 0;
 }
@@ -6340,10 +6525,11 @@ function drawUpgradeScreen() {
     drawText('Tempo: ' + b.elapsed + 's', W/2 + 60, 44, '#ccc', 9, 'center');
     drawText('Danno subito: ' + b.dmgTaken, W/2 + 60, 58, '#ccc', 9, 'center');
     drawText('Bonus tempo: x' + b.timeBonus.toFixed(1), W/2 + 60, 72, '#ccc', 9, 'center');
+    if (b.coinBonus > 0) drawText('+' + b.coinBonus + ' COINS bonus!', W/2 + 60, 86, '#ffd700', 9, 'center');
   }
 
   drawText('SCEGLI UN POTENZIAMENTO', W/2, 100, '#ffd700', 22, 'center');
-  drawText('Scegli 1 su 3', W/2, 120, '#aaa', 12, 'center');
+  drawText('Scegli 1 su ' + upgradeChoices.length, W/2, 120, '#aaa', 12, 'center');
 
   // Keyboard nav
   if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) upgradeSelection = Math.max(0, upgradeSelection - 1);
@@ -6351,11 +6537,17 @@ function drawUpgradeScreen() {
 
   const catColors = { stat: '#4caf50', mossa: '#2196f3', mod: '#ff9800' };
 
+  // Dynamic layout: 3 choices = 240px spacing, 4 choices = 200px spacing
+  const nc = upgradeChoices.length;
+  const cw = nc <= 3 ? 210 : 190;
+  const spacing = nc <= 3 ? 240 : 210;
+  const startX = Math.floor((W - nc * spacing + (spacing - cw)) / 2);
+
   for (let i = 0; i < upgradeChoices.length; i++) {
     const u = upgradeChoices[i];
-    const cx = 120 + i * 240;
+    const cx = startX + i * spacing;
     const cy = 140;
-    const cw = 210, ch = 260;
+    const ch = 260;
     const isHover = mouseX > cx && mouseX < cx + cw && mouseY > cy && mouseY < cy + ch;
     const isSelected = i === upgradeSelection;
 
@@ -6426,8 +6618,11 @@ function drawUpgradeScreen() {
 // ==========================================
 // START LEVEL
 // ==========================================
+let isReplayLevel = false; // true if replaying a beaten level
+
 function startLevel(idx) {
   currentLevel = idx;
+  isReplayLevel = bossDefeated[idx]; // track if this was already beaten
   state = 'dialogue';
   resetPlayer();
   player.x = 100;
@@ -6894,6 +7089,7 @@ function updateLevel() {
   if (player.dead) {
     // Game over after a delay
     if (player.invincible < -60) {
+      lives--;
       state = 'gameover';
     }
     player.invincible--;
@@ -7051,11 +7247,11 @@ function updateLevel() {
   if (boss && boss.hp <= 0 && !boss.dead) {
     boss.dead = true;
     bossDefeated[currentLevel] = true;
-    // Boss coin drops (physical pickups)
-    const bossCoins = 40 + currentLevel * 30; // 40, 70, 100, 130, 160
+    // Boss coin drops (physical pickups) — first clear gives big bonus
+    const bossCoins = isReplayLevel ? 15 + currentLevel * 10 : 50 + currentLevel * 35;
     spawnCoinPickup(boss.x, boss.y - 30, bossCoins);
     // Level clear bonus
-    const clearBonus = 10 + currentLevel * 5;
+    const clearBonus = isReplayLevel ? 5 : 15 + currentLevel * 8;
     spawnCoinPickup(boss.x, boss.y - 40, clearBonus);
     screenShake = 25;
     screenFlash = 20;
@@ -7064,11 +7260,12 @@ function updateLevel() {
     playSFX('victory_jingle');
 
     // Victory dialogue
+    const totalBossCoins = bossCoins + clearBonus;
     dialogueLines = [
       levels[currentLevel].boss.toUpperCase() + ' SCONFITTO!',
       ...levels[currentLevel].defeatLines,
       'Il Conte conquista ' + levels[currentLevel].name + '!',
-      '+' + (40 + currentLevel * 30 + 10 + currentLevel * 5) + ' COINS'
+      '+' + totalBossCoins + ' COINS' + (isReplayLevel ? ' (replay)' : ' (prima vittoria!)')
     ];
     dialogueIndex = 0;
     dialogueCallback = () => {
@@ -7204,7 +7401,7 @@ function updatePlayerInput() {
 
   // Jump (blocked during end-lag)
   if ((keys['ArrowUp'] || keys['KeyW']) && player.grounded && player.endLagTimer <= 0) {
-    player.vy = JUMP_FORCE;
+    player.vy = JUMP_FORCES[jumpTier];
     player.grounded = false;
   }
 
@@ -7243,7 +7440,7 @@ function updatePlayerInput() {
   if ((keys['KeyX'] || keys['ShiftLeft']) && !player.dodging && player.dodgeCooldown <= 0 && player.endLagTimer <= 0 && !player.grabbing) {
     player.dodging = true;
     player.dodgeTimer = 12;
-    player.dodgeCooldown = 48;
+    player.dodgeCooldown = DODGE_COOLDOWNS[dodgeTier];
     player.vx = player.facing * 8;
     player.stamina = Math.max(0, player.stamina - 22);
     player.staminaRegenDelay = 30;
@@ -7665,6 +7862,10 @@ function drawHUD() {
   // Weapon name row
   const curWeap = weapons[player.weapon];
   drawText(curWeap.name, 14, 57, '#ffcc80', 9);
+  // Lives display — small hearts
+  for (let li = 0; li < 3; li++) {
+    drawText(li < lives ? '\u2665' : '\u2661', 14 + li * 14, 72, li < lives ? '#e94560' : '#444', 9);
+  }
   // Dodge & Jump indicators — right side of panel
   if (player.dodgeCooldown > 0) {
     drawText('[X]' + Math.ceil(player.dodgeCooldown / 6) / 10 + 's', 130, 57, '#555', 7);
@@ -7873,39 +8074,100 @@ function drawGameOver() {
   ctx.fillStyle = 'rgba(10,0,0,0.95)';
   ctx.fillRect(0, 0, W, H);
 
-  drawText('GAME OVER', W/2, 150, '#e53935', 36, 'center');
+  if (lives <= 0) {
+    // TOTAL DEFEAT — Pisellino mocks you
+    drawText('SCONFITTA TOTALE', W/2, 100, '#e53935', 32, 'center');
 
-  // Pisellino special taunts
-  if (currentLevel === 4) {
-    const taunt = piselloTaunts[Math.floor(gameTime / 300) % piselloTaunts.length];
-    drawText(taunt, W/2, 220, '#b0bec5', 14, 'center');
-    drawText('- Pisellino', W/2, 245, '#78909c', 11, 'center');
+    // Lives skulls
+    drawText('VITE FINITE', W/2, 135, '#888', 12, 'center');
+
+    // Pisellino's victory speech
+    const finalTaunts = [
+      '"Ahahah Conte, sei finito! Prati e\' nostra!"',
+      '"Valle Aurelia ha conquistato Prati!"',
+      '"Torna quando impari a mena\', Contino!"',
+      '"Game over per davvero stavolta, bro!"',
+    ];
+    const taunt = finalTaunts[Math.floor(gameTime / 240) % finalTaunts.length];
+    drawText(taunt, W/2, 200, '#ff8a65', 14, 'center');
+    drawText('- Pisellino', W/2, 225, '#ff6e40', 11, 'center');
+
+    drawText('"Prati adesso e\' di Valle Aurelia.', W/2, 270, '#e94560', 13, 'center');
+    drawText('Tornatene a Via Plava, perdente."', W/2, 290, '#e94560', 13, 'center');
+
+    // Restart from beginning button
+    const restartBtnW = 260, restartBtnH = 40;
+    const restartBtnX = W/2 - restartBtnW/2, restartBtnY = 340;
+    const restartHover = mouseX >= restartBtnX && mouseX <= restartBtnX + restartBtnW && mouseY >= restartBtnY && mouseY <= restartBtnY + restartBtnH;
+    drawRect(restartBtnX, restartBtnY, restartBtnW, restartBtnH, restartHover ? '#e94560' : 'rgba(233,69,96,0.3)');
+    drawRect(restartBtnX, restartBtnY, restartBtnW, 2, '#e94560');
+    drawText('RICOMINCIA DA VIA PLAVA', W/2, restartBtnY + 27, '#fff', 14, 'center');
+
+    if (keys['Enter'] || keys['Space'] || (restartHover && mouseClick)) {
+      // Full reset: back to level 0 with all progress lost
+      lives = 3;
+      coins = 0;
+      player.weapon = 0;
+      weapons = [starterWeapons[0]];
+      weaponTier = 0;
+      jumpTier = 0; dodgeTier = 0; speedTier = 0;
+      player.maxHp = 120;
+      player.maxStamina = 100;
+      player.speed = 4.0;
+      player.upgrades = [];
+      player.consumables = [];
+      player.consumableTimers = {};
+      helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
+      bossDefeated = [false, false, false, false, false];
+      state = 'hub';
+      resetPlayer();
+      bossIntro = false;
+    }
   } else {
-    drawText('Il Conte cade a ' + levels[currentLevel].name, W/2, 220, '#aaa', 14, 'center');
-  }
+    // Still have lives — normal game over
+    drawText('GAME OVER', W/2, 120, '#e53935', 36, 'center');
 
-  // Retry button (tappable)
-  const retryBtnW = 180, retryBtnH = 36;
-  const retryBtnX = W/2 - retryBtnW/2, retryBtnY = 320;
-  const retryHover = mouseX >= retryBtnX && mouseX <= retryBtnX + retryBtnW && mouseY >= retryBtnY && mouseY <= retryBtnY + retryBtnH;
-  drawRect(retryBtnX, retryBtnY, retryBtnW, retryBtnH, retryHover ? '#e94560' : 'rgba(233,69,96,0.3)');
-  drawRect(retryBtnX, retryBtnY, retryBtnW, 2, '#e94560');
-  drawText('RIPROVA', W/2, retryBtnY + 25, '#fff', 16, 'center');
+    // Lives display
+    for (let i = 0; i < 3; i++) {
+      const lx = W/2 - 40 + i * 30;
+      drawRect(lx, 145, 20, 20, i < lives ? '#e94560' : '#333');
+      drawText(i < lives ? '\u2665' : '\u2661', lx + 10, 161, i < lives ? '#fff' : '#555', 14, 'center');
+    }
+    drawText('Vite rimaste: ' + lives, W/2, 185, '#ff8a80', 11, 'center');
 
-  const backBtnW = 180, backBtnH = 36;
-  const backBtnX = W/2 - backBtnW/2, backBtnY = 370;
-  const backHover = mouseX >= backBtnX && mouseX <= backBtnX + backBtnW && mouseY >= backBtnY && mouseY <= backBtnY + backBtnH;
-  drawRect(backBtnX, backBtnY, backBtnW, backBtnH, backHover ? '#555' : 'rgba(255,255,255,0.1)');
-  drawText('TORNA A VANNI', W/2, backBtnY + 25, '#aaa', 13, 'center');
+    // Pisellino special taunts
+    if (currentLevel === 4) {
+      const taunt = piselloTaunts[Math.floor(gameTime / 300) % piselloTaunts.length];
+      drawText(taunt, W/2, 220, '#b0bec5', 14, 'center');
+      drawText('- Pisellino', W/2, 245, '#78909c', 11, 'center');
+    } else {
+      drawText('Il Conte cade a ' + levels[currentLevel].name, W/2, 220, '#aaa', 14, 'center');
+    }
 
-  if (keys['Enter'] || keys['Space'] || (retryHover && mouseClick)) {
-    startLevel(currentLevel);
+    // Retry button (tappable)
+    const retryBtnW = 180, retryBtnH = 36;
+    const retryBtnX = W/2 - retryBtnW/2, retryBtnY = 290;
+    const retryHover = mouseX >= retryBtnX && mouseX <= retryBtnX + retryBtnW && mouseY >= retryBtnY && mouseY <= retryBtnY + retryBtnH;
+    drawRect(retryBtnX, retryBtnY, retryBtnW, retryBtnH, retryHover ? '#e94560' : 'rgba(233,69,96,0.3)');
+    drawRect(retryBtnX, retryBtnY, retryBtnW, 2, '#e94560');
+    drawText('RIPROVA', W/2, retryBtnY + 25, '#fff', 16, 'center');
+
+    const backBtnW = 180, backBtnH = 36;
+    const backBtnX = W/2 - backBtnW/2, backBtnY = 340;
+    const backHover = mouseX >= backBtnX && mouseX <= backBtnX + backBtnW && mouseY >= backBtnY && mouseY <= backBtnY + backBtnH;
+    drawRect(backBtnX, backBtnY, backBtnW, backBtnH, backHover ? '#555' : 'rgba(255,255,255,0.1)');
+    drawText('TORNA A VANNI', W/2, backBtnY + 25, '#aaa', 13, 'center');
+
+    if (keys['Enter'] || keys['Space'] || (retryHover && mouseClick)) {
+      startLevel(currentLevel);
+    }
+    if (keys['Escape'] || (backHover && mouseClick)) {
+      state = 'hub';
+      resetPlayer();
+      bossIntro = false;
+    }
   }
-  if (keys['Escape'] || (backHover && mouseClick)) {
-    state = 'hub';
-    resetPlayer();
-    bossIntro = false;
-  }
+  mouseClick = false;
 }
 
 // ==========================================
@@ -8381,14 +8643,16 @@ function drawVictory() {
       player.weapon = 0;
       weapons = [starterWeapons[0]];
       weaponTier = 0;
+      jumpTier = 0; dodgeTier = 0; speedTier = 0;
       player.maxHp = 120;
       player.maxStamina = 100;
       player.speed = 4.0;
       player.upgrades = [];
       player.consumables = [];
       player.consumableTimers = {};
-      helpers.forEach(h => h.tier = 0);
+      helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
       bossDefeated = [false, false, false, false, false];
+      lives = 3;
       firstTime = true;
       victoryTimer = 0;
       state = 'menu';
