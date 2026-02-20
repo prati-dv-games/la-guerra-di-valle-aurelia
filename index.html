@@ -7148,6 +7148,11 @@ function updatePlayerInput() {
     player.grounded = false;
   }
 
+  // Variable jump height: releasing jump early cuts upward velocity (short hop vs full jump)
+  if (!player.grounded && player.vy < -4 && !(keys['ArrowUp'] || keys['KeyW'])) {
+    player.vy = -4; // cap upward speed for short hop
+  }
+
   // Apply variable gravity (lighter going up, heavier coming down)
   if (!player.grounded) {
     const grav = player.vy < 0 ? GRAVITY : FALL_GRAVITY;
