@@ -63,8 +63,7 @@ canvas.addEventListener('click', e => {
 // Touch device detection
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 const mobileMenuStates = new Set([
-  'menu', 'helperSelect',
-  'shop', 'upgrade', 'hub', 'moves', 'tutorial'
+  'menu', 'shop', 'upgrade', 'hub', 'moves', 'tutorial'
 ]);
 // When inside mobile.html iframe, the HTML overlay handles all controls — disable canvas touch buttons
 const inMobileWrapper = (window.self !== window.top);
