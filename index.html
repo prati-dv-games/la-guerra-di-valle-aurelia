@@ -79,10 +79,14 @@ const touchButtons = {
   jump:    { x: W - 98,  y: H - 174, w: 90, h: 64, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
   attack:  { x: W - 160, y: H - 96, w: 92, h: 74, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Helpers — bottom center between left and right controls
-  helper1: { x: 305, y: H - 80, w: 60, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
-  helper2: { x: 375, y: H - 80, w: 60, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
-  helper3: { x: 445, y: H - 80, w: 60, h: 46, key: 'Digit3', label: '3', color: '#4caf50', justPress: true },
-  helper4: { x: 515, y: H - 80, w: 60, h: 46, key: 'Digit4', label: '4', color: '#4caf50', justPress: true },
+  helper1: { x: 270, y: H - 80, w: 55, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
+  helper2: { x: 330, y: H - 80, w: 55, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
+  helper3: { x: 390, y: H - 80, w: 55, h: 46, key: 'Digit3', label: '3', color: '#4caf50', justPress: true },
+  helper4: { x: 450, y: H - 80, w: 55, h: 46, key: 'Digit4', label: '4', color: '#4caf50', justPress: true },
+  // Consumables — right of helpers, slightly separated
+  cons5:   { x: 525, y: H - 80, w: 50, h: 46, key: 'Digit5', label: '5', color: '#9c27b0', justPress: true },
+  cons6:   { x: 579, y: H - 80, w: 50, h: 46, key: 'Digit6', label: '6', color: '#9c27b0', justPress: true },
+  cons7:   { x: 633, y: H - 80, w: 50, h: 46, key: 'Digit7', label: '7', color: '#9c27b0', justPress: true },
   // Utility
   tab:     { x: W - 95, y: 36, w: 38, h: 28, key: 'Tab', label: 'TAB', color: '#555', justPress: true },
   enter:   { x: W/2 - 50, y: H - 50, w: 100, h: 38, key: 'Enter', label: 'OK', color: '#4caf50', justPress: true },
@@ -104,7 +108,7 @@ function hitTestButton(tx, ty) {
 }
 
 function getTouchButtonsForState() {
-  if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'tab', 'pause'];
+  if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'cons5', 'cons6', 'cons7', 'tab', 'pause'];
   if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'enter'];
   if (state === 'sabi') return ['left', 'right', 'attack', 'pause'];
   if (state === 'hub' || state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
