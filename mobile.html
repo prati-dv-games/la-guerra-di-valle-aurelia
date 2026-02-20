@@ -2,66 +2,70 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>La Guerra di Valle Aurelia - Mobile</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>La Guerra di Valle Aurelia</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-  width: 100%; height: 100%;
+  width: 100%; height: 100dvh;
   overflow: hidden;
   position: fixed;
-  touch-action: none;
   background: #000;
   font-family: 'Courier New', monospace;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #game-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #000;
 }
 
 #game {
   border: none;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   display: block;
+  touch-action: none;
 }
 
-/* Touch controls overlay */
-#controls {
+/* Transparent touch layer over everything */
+#touch-layer {
   position: fixed;
   top: 0; left: 0;
   width: 100vw;
-  height: 100vh;
-  pointer-events: none;
+  height: 100dvh;
   z-index: 10;
-}
-
-#controls > * {
-  pointer-events: auto;
+  touch-action: none;
 }
 
 /* D-pad */
 #dpad {
   position: fixed;
-  bottom: 4vh;
-  left: 3vw;
-  width: 36vw;
-  height: 36vw;
-  max-width: 160px;
-  max-height: 160px;
+  bottom: max(2dvh, env(safe-area-inset-bottom, 0px));
+  left: max(2vw, env(safe-area-inset-left, 0px));
+  width: 34vw;
+  height: 34vw;
+  max-width: 150px;
+  max-height: 150px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
   gap: 2px;
+  z-index: 20;
+  pointer-events: none;
 }
 
 .dpad-btn {
@@ -71,12 +75,12 @@ html, body {
   background: rgba(255,255,255,0.12);
   border-radius: 8px;
   color: rgba(255,255,255,0.7);
-  font-size: 20px;
-  touch-action: none;
+  font-size: 18px;
   border: 1px solid rgba(255,255,255,0.08);
+  pointer-events: none; /* visual only — touch-layer handles hit detection */
 }
 .dpad-btn:empty { background: transparent; border: none; }
-.dpad-btn.active { background: rgba(255,255,255,0.35); }
+.dpad-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
 #dpad-up    { grid-column: 2; grid-row: 1; }
 #dpad-left  { grid-column: 1; grid-row: 2; }
@@ -89,8 +93,8 @@ html, body {
   position: fixed;
   width: 13vw;
   height: 13vw;
-  max-width: 58px;
-  max-height: 58px;
+  max-width: 56px;
+  max-height: 56px;
   border-radius: 50%;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.1);
@@ -100,37 +104,39 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none;
   font-family: 'Courier New', monospace;
+  z-index: 20;
+  pointer-events: none;
 }
-.action-btn.active { background: rgba(255,255,255,0.35); }
+.action-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
-#btn-z   { bottom: 6vh;  right: 5vw; background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.3); }
-#btn-x   { bottom: 6vh;  right: calc(5vw + 14vw); background: rgba(33,150,243,0.25); border-color: rgba(33,150,243,0.3); }
-#btn-q   { bottom: calc(6vh + 14vw); right: calc(5vw + 7vw); background: rgba(233,69,96,0.25); border-color: rgba(233,69,96,0.3); }
-#btn-wz  { bottom: calc(6vh + 14vw + 14vw); right: calc(5vw + 7vw); background: rgba(255,193,7,0.25); border-color: rgba(255,193,7,0.3); font-size: 10px; }
+#btn-z   { bottom: max(4dvh, 8px);  right: max(4vw, 8px); background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.3); }
+#btn-x   { bottom: max(4dvh, 8px);  right: calc(max(4vw, 8px) + 14vw); background: rgba(33,150,243,0.25); border-color: rgba(33,150,243,0.3); }
+#btn-q   { bottom: calc(max(4dvh, 8px) + 14vw); right: calc(max(4vw, 8px) + 7vw); background: rgba(233,69,96,0.25); border-color: rgba(233,69,96,0.3); }
+#btn-wz  { bottom: calc(max(4dvh, 8px) + 28vw); right: calc(max(4vw, 8px) + 7vw); background: rgba(255,193,7,0.25); border-color: rgba(255,193,7,0.3); font-size: 10px; }
 
 /* Top bar buttons */
 .top-btn {
   position: fixed;
-  top: 1vh;
+  top: max(1dvh, env(safe-area-inset-top, 0px));
   width: 9vw;
   height: 9vw;
-  max-width: 40px;
-  max-height: 40px;
+  max-width: 38px;
+  max-height: 38px;
   border-radius: 6px;
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.7);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none;
   font-family: 'Courier New', monospace;
+  z-index: 20;
+  pointer-events: none;
 }
-.top-btn.active { background: rgba(255,255,255,0.35); }
+.top-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
 .top-btn.helper { background: rgba(76,175,80,0.15); border-color: rgba(76,175,80,0.2); }
 .top-btn.consumable { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.2); }
@@ -143,13 +149,13 @@ html, body {
 #top-6 { right: calc(2vw + 10vw); }
 #top-7 { right: 2vw; }
 
-/* Navigation buttons (bottom right) */
+/* Navigation buttons */
 .nav-btn {
   position: fixed;
   width: 12vw;
-  height: 8vw;
-  max-width: 54px;
-  max-height: 36px;
+  height: 7vw;
+  max-width: 52px;
+  max-height: 32px;
   border-radius: 6px;
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.08);
@@ -159,22 +165,22 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none;
   font-family: 'Courier New', monospace;
+  z-index: 20;
+  pointer-events: none;
 }
-.nav-btn.active { background: rgba(255,255,255,0.35); }
+.nav-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
-#btn-enter { bottom: calc(6vh + 14vw + 14vw + 14vw); right: 5vw; background: rgba(76,175,80,0.2); }
-#btn-tab   { bottom: calc(6vh + 14vw + 14vw + 14vw); right: calc(5vw + 13vw); }
-#btn-esc   { bottom: calc(6vh + 14vw + 14vw + 14vw + 9vw); right: calc(5vw + 6.5vw); }
+#btn-enter { bottom: calc(max(4dvh, 8px) + 42vw); right: max(4vw, 8px); background: rgba(76,175,80,0.2); }
+#btn-tab   { bottom: calc(max(4dvh, 8px) + 42vw); right: calc(max(4vw, 8px) + 13vw); }
+#btn-esc   { bottom: calc(max(4dvh, 8px) + 50vw); right: calc(max(4vw, 8px) + 6.5vw); }
 
 /* Portrait orientation warning */
 #rotate-msg {
   display: none;
   position: fixed;
   top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100vw; height: 100dvh;
   background: #000;
   color: #e94560;
   font-size: 18px;
@@ -183,249 +189,264 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 20px;
+  text-align: center;
+  padding: 20px;
 }
 #rotate-msg .icon { font-size: 48px; }
 
 @media (orientation: portrait) {
   #rotate-msg { display: flex; }
-  #game-container, #controls { display: none; }
+  #game-container, #touch-layer, .dpad-btn, .action-btn, .top-btn, .nav-btn, #dpad { display: none !important; }
 }
+
+/* Add-to-homescreen hint */
+#a2hs {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.9);
+  border-top: 2px solid #e94560;
+  color: #ccc;
+  font-size: 12px;
+  padding: 10px 16px;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+}
+#a2hs .close-hint { color: #e94560; font-size: 18px; padding: 4px 8px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <div id="rotate-msg">
-  <div class="icon">&#x1F4F1;&#x21BB;</div>
+  <div class="icon">&#x1F4F1; &#x21BB;</div>
   <div>Ruota il telefono in orizzontale</div>
   <div style="font-size:12px;color:#888;">Landscape mode required</div>
+</div>
+
+<div id="a2hs">
+  <span>Per schermo intero: Condividi &#x2192; "Aggiungi a Home" &nbsp;/&nbsp; Share &#x2192; Add to Home Screen</span>
+  <span class="close-hint" id="close-hint">&times;</span>
 </div>
 
 <div id="game-container">
   <iframe id="game" src="index.html" allow="autoplay"></iframe>
 </div>
 
-<div id="controls">
-  <!-- D-pad -->
-  <div id="dpad">
-    <div class="dpad-btn" id="dpad-up" data-keys="KeyW,ArrowUp">&#9650;</div>
-    <div class="dpad-btn" id="dpad-left" data-keys="KeyA,ArrowLeft">&#9664;</div>
-    <div class="dpad-btn" id="dpad-center"></div>
-    <div class="dpad-btn" id="dpad-right" data-keys="KeyD,ArrowRight">&#9654;</div>
-    <div class="dpad-btn" id="dpad-down" data-keys="KeyS,ArrowDown">&#9660;</div>
-  </div>
+<!-- Transparent touch capture layer -->
+<div id="touch-layer"></div>
 
-  <!-- Action buttons -->
-  <div class="action-btn" id="btn-z" data-keys="KeyZ,Space">Z</div>
-  <div class="action-btn" id="btn-x" data-keys="KeyX">X</div>
-  <div class="action-btn" id="btn-q" data-keys="KeyQ">Q</div>
-  <div class="action-btn" id="btn-wz" data-keys="KeyW,KeyZ">W+Z</div>
-
-  <!-- Top bar - helpers -->
-  <div class="top-btn helper" id="top-1" data-keys="Digit1">1</div>
-  <div class="top-btn helper" id="top-2" data-keys="Digit2">2</div>
-  <div class="top-btn helper" id="top-3" data-keys="Digit3">3</div>
-  <div class="top-btn helper" id="top-4" data-keys="Digit4">4</div>
-
-  <!-- Top bar - consumables -->
-  <div class="top-btn consumable" id="top-5" data-keys="Digit5">5</div>
-  <div class="top-btn consumable" id="top-6" data-keys="Digit6">6</div>
-  <div class="top-btn consumable" id="top-7" data-keys="Digit7">7</div>
-
-  <!-- Navigation -->
-  <div class="nav-btn" id="btn-enter" data-keys="Enter">ENTER</div>
-  <div class="nav-btn" id="btn-tab" data-keys="Tab">TAB</div>
-  <div class="nav-btn" id="btn-esc" data-keys="Escape">ESC</div>
+<!-- Visual-only button overlays (pointer-events:none, just for display) -->
+<div id="dpad">
+  <div class="dpad-btn" id="dpad-up">&#9650;</div>
+  <div class="dpad-btn" id="dpad-left">&#9664;</div>
+  <div class="dpad-btn" id="dpad-center"></div>
+  <div class="dpad-btn" id="dpad-right">&#9654;</div>
+  <div class="dpad-btn" id="dpad-down">&#9660;</div>
 </div>
+
+<div class="action-btn" id="btn-z">Z</div>
+<div class="action-btn" id="btn-x">X</div>
+<div class="action-btn" id="btn-q">Q</div>
+<div class="action-btn" id="btn-wz">W+Z</div>
+
+<div class="top-btn helper" id="top-1">1</div>
+<div class="top-btn helper" id="top-2">2</div>
+<div class="top-btn helper" id="top-3">3</div>
+<div class="top-btn helper" id="top-4">4</div>
+<div class="top-btn consumable" id="top-5">5</div>
+<div class="top-btn consumable" id="top-6">6</div>
+<div class="top-btn consumable" id="top-7">7</div>
+
+<div class="nav-btn" id="btn-enter">ENTER</div>
+<div class="nav-btn" id="btn-tab">TAB</div>
+<div class="nav-btn" id="btn-esc">ESC</div>
 
 <script>
 (function() {
   const iframe = document.getElementById('game');
-  const activeKeys = new Set();
+  const touchLayer = document.getElementById('touch-layer');
 
-  // Send keyboard event to iframe
+  // ── Button hit zones ──
+  // Each button: { id, keys[], getRect() }
+  // getRect returns bounding box — computed live to handle resize
+  const buttons = [];
+
+  function reg(id, keys) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    buttons.push({ id, keys, el, getRect: () => el.getBoundingClientRect() });
+  }
+
+  // D-pad
+  reg('dpad-up',    ['KeyW', 'ArrowUp']);
+  reg('dpad-left',  ['KeyA', 'ArrowLeft']);
+  reg('dpad-right', ['KeyD', 'ArrowRight']);
+  reg('dpad-down',  ['KeyS', 'ArrowDown']);
+  // Actions
+  reg('btn-z',  ['KeyZ', 'Space']);
+  reg('btn-x',  ['KeyX']);
+  reg('btn-q',  ['KeyQ']);
+  reg('btn-wz', ['KeyW', 'KeyZ']);
+  // Top bar
+  reg('top-1', ['Digit1']);
+  reg('top-2', ['Digit2']);
+  reg('top-3', ['Digit3']);
+  reg('top-4', ['Digit4']);
+  reg('top-5', ['Digit5']);
+  reg('top-6', ['Digit6']);
+  reg('top-7', ['Digit7']);
+  // Nav
+  reg('btn-enter', ['Enter']);
+  reg('btn-tab',   ['Tab']);
+  reg('btn-esc',   ['Escape']);
+
+  function hitTest(x, y) {
+    for (const btn of buttons) {
+      const r = btn.getRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return btn;
+      }
+    }
+    return null;
+  }
+
+  // ── Key dispatch into iframe ──
+  const keyMap = {
+    'KeyW': 'w', 'KeyA': 'a', 'KeyS': 's', 'KeyD': 'd',
+    'KeyZ': 'z', 'KeyX': 'x', 'KeyQ': 'q',
+    'ArrowUp': 'ArrowUp', 'ArrowDown': 'ArrowDown',
+    'ArrowLeft': 'ArrowLeft', 'ArrowRight': 'ArrowRight',
+    'Space': ' ', 'Enter': 'Enter', 'Tab': 'Tab', 'Escape': 'Escape',
+    'Digit1': '1', 'Digit2': '2', 'Digit3': '3', 'Digit4': '4',
+    'Digit5': '5', 'Digit6': '6', 'Digit7': '7'
+  };
+
   function sendKey(code, type) {
     try {
-      const keyMap = {
-        'KeyW': 'w', 'KeyA': 'a', 'KeyS': 's', 'KeyD': 'd',
-        'KeyZ': 'z', 'KeyX': 'x', 'KeyQ': 'q',
-        'ArrowUp': 'ArrowUp', 'ArrowDown': 'ArrowDown',
-        'ArrowLeft': 'ArrowLeft', 'ArrowRight': 'ArrowRight',
-        'Space': ' ', 'Enter': 'Enter', 'Tab': 'Tab', 'Escape': 'Escape',
-        'Digit1': '1', 'Digit2': '2', 'Digit3': '3', 'Digit4': '4',
-        'Digit5': '5', 'Digit6': '6', 'Digit7': '7'
-      };
-      const event = new KeyboardEvent(type, {
+      iframe.contentWindow.dispatchEvent(new KeyboardEvent(type, {
         code: code,
         key: keyMap[code] || code,
         bubbles: true,
         cancelable: true
-      });
-      iframe.contentWindow.dispatchEvent(event);
-    } catch(e) {
-      // Cross-origin may block — requires same-origin serving
-    }
+      }));
+    } catch(e) {}
   }
 
-  // Parse data-keys attribute into array
-  function getKeys(el) {
-    const attr = el.getAttribute('data-keys');
-    return attr ? attr.split(',') : [];
-  }
-
-  // Track which touches are on which buttons
-  const touchMap = new Map(); // touchId -> { el, keys }
-
-  function handleTouchStart(e) {
-    e.preventDefault();
-    for (const touch of e.changedTouches) {
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (!el || !el.getAttribute('data-keys')) continue;
-      const keys = getKeys(el);
-      touchMap.set(touch.identifier, { el, keys });
-      el.classList.add('active');
-      keys.forEach(k => {
-        if (!activeKeys.has(k)) {
-          activeKeys.add(k);
-          sendKey(k, 'keydown');
-        }
-      });
-    }
-  }
-
-  function handleTouchEnd(e) {
-    e.preventDefault();
-    for (const touch of e.changedTouches) {
-      const entry = touchMap.get(touch.identifier);
-      if (!entry) continue;
-      entry.el.classList.remove('active');
-      // Release keys that no other active touch is holding
-      entry.keys.forEach(k => {
-        let stillHeld = false;
-        for (const [id, other] of touchMap) {
-          if (id !== touch.identifier && other.keys.includes(k)) {
-            stillHeld = true;
-            break;
-          }
-        }
-        if (!stillHeld) {
-          activeKeys.delete(k);
-          sendKey(k, 'keyup');
-        }
-      });
-      touchMap.delete(touch.identifier);
-    }
-  }
-
-  function handleTouchMove(e) {
-    e.preventDefault();
-    // For D-pad: allow sliding between directions
-    for (const touch of e.changedTouches) {
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      const entry = touchMap.get(touch.identifier);
-      if (!entry) continue;
-
-      // If finger moved to a different button
-      if (el !== entry.el) {
-        // Release old keys
-        entry.el.classList.remove('active');
-        entry.keys.forEach(k => {
-          let stillHeld = false;
-          for (const [id, other] of touchMap) {
-            if (id !== touch.identifier && other.keys.includes(k)) {
-              stillHeld = true;
-              break;
-            }
-          }
-          if (!stillHeld) {
-            activeKeys.delete(k);
-            sendKey(k, 'keyup');
-          }
-        });
-
-        // Press new keys if valid button
-        if (el && el.getAttribute('data-keys')) {
-          const newKeys = getKeys(el);
-          entry.el = el;
-          entry.keys = newKeys;
-          el.classList.add('active');
-          newKeys.forEach(k => {
-            if (!activeKeys.has(k)) {
-              activeKeys.add(k);
-              sendKey(k, 'keydown');
-            }
-          });
-        } else {
-          // Finger moved off all buttons
-          touchMap.delete(touch.identifier);
-        }
-      }
-    }
-  }
-
-  // Attach touch listeners to controls overlay
-  const controls = document.getElementById('controls');
-  controls.addEventListener('touchstart', handleTouchStart, { passive: false });
-  controls.addEventListener('touchend', handleTouchEnd, { passive: false });
-  controls.addEventListener('touchcancel', handleTouchEnd, { passive: false });
-  controls.addEventListener('touchmove', handleTouchMove, { passive: false });
-
-  // Forward touch on iframe area as mouse clicks (for menu/shop/hub)
-  const gameContainer = document.getElementById('game-container');
-  gameContainer.addEventListener('touchstart', function(e) {
-    // Only handle touches not on control buttons
-    const el = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    if (el && el.getAttribute('data-keys')) return; // handled by controls
-
+  function sendClick(touchX, touchY) {
     try {
       const rect = iframe.getBoundingClientRect();
-      const touch = e.changedTouches[0];
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-
-      // Scale to game canvas coordinates (900x550)
-      const scaleX = 900 / rect.width;
-      const scaleY = 550 / rect.height;
-      const gameX = x * scaleX;
-      const gameY = y * scaleY;
-
-      const mouseDown = new MouseEvent('mousedown', {
-        clientX: gameX, clientY: gameY,
-        bubbles: true, cancelable: true
-      });
-      const mouseUp = new MouseEvent('mouseup', {
-        clientX: gameX, clientY: gameY,
-        bubbles: true, cancelable: true
-      });
-      const click = new MouseEvent('click', {
-        clientX: gameX, clientY: gameY,
-        bubbles: true, cancelable: true
-      });
-
+      // Pass coordinates relative to iframe viewport — the game's canvas
+      // handler will scale them to game space (900x550) itself
+      const x = touchX - rect.left;
+      const y = touchY - rect.top;
       const canvas = iframe.contentDocument.querySelector('canvas');
-      if (canvas) {
-        canvas.dispatchEvent(mouseDown);
-        setTimeout(() => {
-          canvas.dispatchEvent(mouseUp);
-          canvas.dispatchEvent(click);
-        }, 50);
+      if (!canvas) return;
+      // Canvas fills the iframe, so canvas-relative coords = iframe-relative coords
+      const cRect = canvas.getBoundingClientRect();
+      const cx = touchX - cRect.left;
+      const cy = touchY - cRect.top;
+      canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: cx, clientY: cy, bubbles: true }));
+      canvas.dispatchEvent(new MouseEvent('click', { clientX: cx, clientY: cy, bubbles: true }));
+    } catch(e) {}
+  }
+
+  // ── Touch state tracking ──
+  const activeKeys = new Set();
+  const touchMap = new Map(); // touchId → { btn, keys }
+
+  function pressBtn(btn) {
+    btn.el.classList.add('active');
+    btn.keys.forEach(k => {
+      if (!activeKeys.has(k)) {
+        activeKeys.add(k);
+        sendKey(k, 'keydown');
       }
-    } catch(e) {
-      // Cross-origin protection
+    });
+  }
+
+  function releaseBtn(touchId) {
+    const entry = touchMap.get(touchId);
+    if (!entry) return;
+    entry.btn.el.classList.remove('active');
+    entry.keys.forEach(k => {
+      // Only release if no other touch holds this key
+      let held = false;
+      for (const [id, other] of touchMap) {
+        if (id !== touchId && other.keys.includes(k)) { held = true; break; }
+      }
+      if (!held) {
+        activeKeys.delete(k);
+        sendKey(k, 'keyup');
+      }
+    });
+    touchMap.delete(touchId);
+  }
+
+  // ── Touch layer handles ALL touches ──
+  touchLayer.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+      const btn = hitTest(touch.clientX, touch.clientY);
+      if (btn) {
+        touchMap.set(touch.identifier, { btn, keys: btn.keys });
+        pressBtn(btn);
+      } else {
+        // Not on a button — forward as click to game canvas
+        sendClick(touch.clientX, touch.clientY);
+      }
     }
   }, { passive: false });
 
-  // Prevent default touch behaviors on body
-  document.body.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
-  document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+  touchLayer.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+      const entry = touchMap.get(touch.identifier);
+      if (!entry) continue; // was a click-through touch, ignore move
 
-  // Fullscreen on first tap (iOS Safari)
-  let fullscreenRequested = false;
-  document.addEventListener('touchstart', function() {
-    if (!fullscreenRequested && document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      fullscreenRequested = true;
+      const newBtn = hitTest(touch.clientX, touch.clientY);
+      if (newBtn !== entry.btn) {
+        // Finger slid to a different button (or off buttons)
+        releaseBtn(touch.identifier);
+        if (newBtn) {
+          touchMap.set(touch.identifier, { btn: newBtn, keys: newBtn.keys });
+          pressBtn(newBtn);
+        }
+      }
     }
-  }, { once: true });
+  }, { passive: false });
+
+  touchLayer.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+      releaseBtn(touch.identifier);
+    }
+  }, { passive: false });
+
+  touchLayer.addEventListener('touchcancel', function(e) {
+    e.preventDefault();
+    for (const touch of e.changedTouches) {
+      releaseBtn(touch.identifier);
+    }
+  }, { passive: false });
+
+  // ── Add-to-homescreen hint (only in browser, not standalone) ──
+  const a2hs = document.getElementById('a2hs');
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (!isStandalone) {
+    // Show hint after a short delay
+    setTimeout(() => { a2hs.style.display = 'flex'; }, 2000);
+    document.getElementById('close-hint').addEventListener('click', () => {
+      a2hs.style.display = 'none';
+    });
+    // Auto-hide after 8 seconds
+    setTimeout(() => { a2hs.style.display = 'none'; }, 10000);
+  }
+
+  // ── Scroll address bar away on iOS Safari ──
+  window.addEventListener('load', () => {
+    setTimeout(() => { window.scrollTo(0, 1); }, 100);
+  });
 })();
 </script>
 </body>

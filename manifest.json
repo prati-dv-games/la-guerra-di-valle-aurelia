@@ -1,0 +1,9 @@
+{
+  "name": "La Guerra di Valle Aurelia",
+  "short_name": "Valle Aurelia",
+  "start_url": "./mobile.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
