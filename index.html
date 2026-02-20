@@ -60,7 +60,7 @@ const touchButtons = {
   // Ultra (above combat)
   ultra:   { x: W - 90, y: H - 195, w: 50, h: 32, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
   // Pause (top-right)
-  pause:   { x: W - 45, y: 10, w: 35, h: 25, key: 'Escape', label: 'II', color: '#666', justPress: true }
+  pause:   { x: W - 50, y: 36, w: 35, h: 25, key: 'Escape', label: 'II', color: '#666', justPress: true }
 };
 
 const activeTouches = {};
@@ -7450,10 +7450,11 @@ function drawLevel() {
 
   // Quick text - positioned above helper bar
   if (quickTextTimer > 0) {
+    const qtY = isTouchDevice ? H - 130 : H - 65;
     ctx.globalAlpha = Math.min(1, quickTextTimer / 20);
-    drawRect(W/2 - 260, H - 65, 520, 24, 'rgba(0,0,0,0.85)');
-    drawRect(W/2 - 260, H - 65, 520, 2, quickTextColor);
-    drawText(quickText, W/2, H - 48, quickTextColor, 12, 'center');
+    drawRect(W/2 - 260, qtY, 520, 24, 'rgba(0,0,0,0.85)');
+    drawRect(W/2 - 260, qtY, 520, 2, quickTextColor);
+    drawText(quickText, W/2, qtY + 17, quickTextColor, 12, 'center');
     ctx.globalAlpha = 1;
     quickTextTimer--;
   }
@@ -7624,10 +7625,11 @@ function drawHUD() {
   // === Combo Chain Dots ===
   const weap = weapons[player.weapon];
   const maxHits = weap.comboHits;
+  let rightY = 30; // tracks bottom of last drawn element in top-right column
   if (player.comboStep > 0 || player.endLagTimer > 0) {
-    drawRect(W - 115, 34, 110, 22, 'rgba(0,0,0,0.6)');
+    drawRect(W - 115, rightY + 4, 110, 22, 'rgba(0,0,0,0.6)');
     // Draw dots for each combo step
-    const dotY = 45;
+    const dotY = rightY + 15;
     for (let i = 0; i < maxHits; i++) {
       const dotX = W - 108 + i * 24;
       const filled = i < player.comboStep;
@@ -7652,25 +7654,30 @@ function drawHUD() {
         ctx.stroke();
       }
     }
+    rightY += 28; // past combo dots box
     // End-lag cooldown bar
     if (player.endLagTimer > 0) {
       const lagW = 100 * (player.endLagTimer / weap.endLag);
-      drawRect(W - 113, 67, lagW, 3, '#f44336');
+      drawRect(W - 113, rightY, lagW, 3, '#f44336');
+      rightY += 5;
     }
+  }
+
+  // === Dodge counter (damage boost active) ===
+  if (dodgeCounter > 0) {
+    const dcW = 96 * (dodgeCounter / 90);
+    drawRect(W - 110, rightY + 2, 102, 16, 'rgba(0,0,0,0.5)');
+    drawRect(W - 107, rightY + 4, dcW, 12, '#64b5f6');
+    drawText('COUNTER!', W - 58, rightY + 15, '#64b5f6', 9, 'center');
+    rightY += 20;
   }
 
   // === Chain Count Multiplier ===
   if (player.comboChainCount > 0) {
     const chainMult = Math.min(2.0, 1.0 + player.comboChainCount * 0.5);
-    drawRect(W - 115, 62, 110, 16, 'rgba(0,0,0,0.5)');
-    drawText('CHAIN x' + chainMult.toFixed(1), W - 58, 74, '#ffd700', 10, 'center');
-  }
-  // === Dodge counter (damage boost active) ===
-  if (dodgeCounter > 0) {
-    const dcW = 96 * (dodgeCounter / 90);
-    drawRect(W - 110, 56, 102, 16, 'rgba(0,0,0,0.5)');
-    drawRect(W - 107, 58, dcW, 12, '#64b5f6');
-    drawText('COUNTER!', W - 58, 69, '#64b5f6', 9, 'center');
+    drawRect(W - 115, rightY + 2, 110, 16, 'rgba(0,0,0,0.5)');
+    drawText('CHAIN x' + chainMult.toFixed(1), W - 58, rightY + 14, '#ffd700', 10, 'center');
+    rightY += 20;
   }
 
   // === COMBO COUNTER (center-right) ===
@@ -7678,7 +7685,7 @@ function drawHUD() {
     const comboAlpha = player.comboHitTimer < 60 ? 1 : 1 - (player.comboHitTimer - 60) / 30;
     ctx.globalAlpha = Math.max(0.3, comboAlpha);
     const comboSize = Math.min(36, 20 + player.comboHitCount * 0.5);
-    const comboY = 140;
+    const comboY = rightY + 30;
     const comboX = W - 60;
     // Multiplier color
     const multColor = player.scoreMultiplier >= 3 ? '#f44336' : player.scoreMultiplier >= 2 ? '#ff9800' : player.scoreMultiplier >= 1.5 ? '#ffd700' : '#fff';
@@ -7691,10 +7698,11 @@ function drawHUD() {
   }
 
   // === BOTTOM LEFT: Helper cooldowns ===
-  drawRect(8, H - 38, 220, 30, 'rgba(0,0,0,0.6)');
+  const bottomBarY = isTouchDevice ? H - 110 : H - 38;
+  drawRect(8, bottomBarY, 220, 30, 'rgba(0,0,0,0.6)');
   for (let i = 0; i < 4; i++) {
     const hx = 14 + i * 54;
-    const hy = H - 34;
+    const hy = bottomBarY + 4;
     const ready = helperCooldowns[i] === 0;
     // Background
     drawRect(hx, hy, 48, 22, ready ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.3)');
@@ -7714,10 +7722,10 @@ function drawHUD() {
 
   // === CONSUMABLE SLOTS (bottom right) ===
   if (player.consumables.length > 0) {
-    drawRect(W - 200, H - 38, 192, 30, 'rgba(0,0,0,0.6)');
+    drawRect(W - 200, bottomBarY, 192, 30, 'rgba(0,0,0,0.6)');
     for (let i = 0; i < player.consumables.length; i++) {
       const cx = W - 194 + i * 62;
-      const cy = H - 34;
+      const cy = bottomBarY + 4;
       const effect = player.consumables[i];
       const ci = consumableItems.find(c => c.effect === effect);
       if (ci) {
