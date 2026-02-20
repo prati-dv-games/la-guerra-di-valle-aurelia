@@ -64,17 +64,16 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 
 // Virtual button definitions
 const touchButtons = {
-  // Combat buttons (bottom-right, triangle layout)
-  attack:  { x: W - 80, y: H - 100, w: 65, h: 55, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
-  dodge:   { x: W - 155, y: H - 100, w: 65, h: 55, key: 'KeyX', label: 'DODGE', color: '#2196f3', justPress: true },
-  jump:    { x: W - 120, y: H - 170, w: 65, h: 55, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
-  // Movement (bottom-left)
-  left:    { x: 15, y: H - 100, w: 55, h: 50, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 80, y: H - 100, w: 55, h: 50, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  // Ultra (above combat)
-  ultra:   { x: W - 100, y: H - 230, w: 55, h: 35, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
+  // Left side: movement + attack
+  left:    { x: 10,  y: H - 80, w: 60, h: 55, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 80,  y: H - 80, w: 60, h: 55, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  attack:  { x: 30,  y: H - 142, w: 80, h: 52, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  // Right side: W (jump), X (dodge), Q (ultra)
+  dodge:   { x: W - 170, y: H - 80, w: 70, h: 55, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  jump:    { x: W - 90,  y: H - 80, w: 70, h: 55, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
+  ultra:   { x: W - 140, y: H - 142, w: 70, h: 48, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
   // Pause (top-right)
-  pause:   { x: W - 50, y: 36, w: 35, h: 25, key: 'Escape', label: 'II', color: '#666', justPress: true }
+  pause:   { x: W - 52, y: 36, w: 38, h: 28, key: 'Escape', label: 'II', color: '#666', justPress: true }
 };
 
 const activeTouches = {};
@@ -8409,7 +8408,7 @@ function drawLevel() {
 
   // Quick text - positioned above helper bar
   if (quickTextTimer > 0) {
-    const qtY = isTouchDevice ? H - 160 : H - 65;
+    const qtY = isTouchDevice ? H - 200 : H - 65;
     ctx.globalAlpha = Math.min(1, quickTextTimer / 20);
     drawRect(W/2 - 260, qtY, 520, 24, 'rgba(0,0,0,0.85)');
     drawRect(W/2 - 260, qtY, 520, 2, quickTextColor);
@@ -8668,7 +8667,7 @@ function drawHUD() {
   }
 
   // === BOTTOM LEFT: Helper cooldowns ===
-  const bottomBarY = isTouchDevice ? H - 140 : H - 38;
+  const bottomBarY = isTouchDevice ? H - 175 : H - 38;
   drawRect(8, bottomBarY, 220, 30, 'rgba(0,0,0,0.6)');
   for (let i = 0; i < 4; i++) {
     const hx = 14 + i * 54;
