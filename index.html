@@ -61,6 +61,8 @@ canvas.addEventListener('click', e => {
 });
 // Touch device detection
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+// When inside mobile.html iframe, the HTML overlay handles all controls — disable canvas touch buttons
+const inMobileWrapper = (window.self !== window.top);
 
 // Virtual button definitions
 const touchButtons = {
@@ -1950,7 +1952,7 @@ function drawRangedInHand(ctx, weap, wx, wy, flip, tier, attackTimer) {
 
 // Draw mobile touch buttons overlay
 function drawTouchButtons() {
-  if (!isTouchDevice) return;
+  if (!isTouchDevice || inMobileWrapper) return;
   const btns = getTouchButtonsForState();
   if (btns.length === 0) return;
   ctx.save();
