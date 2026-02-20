@@ -1020,8 +1020,8 @@ const player = {
 
 // 4 starter weapons — player picks one at game start
 const starterWeapons = [
-  { name: 'Sanpietrino',    damage: 14, range: 50,  speed: 7,  crit: 15,
-    comboHits: 4, poise: 6, activeFrames: 6, comboWindow: 13, endLag: 13,
+  { name: 'Sanpietrino',    damage: 16, range: 50,  speed: 7,  crit: 18,
+    comboHits: 4, poise: 8, activeFrames: 6, comboWindow: 13, endLag: 13,
     special: 'critCombo', desc: 'Veloce, 4 colpi. Crit cresce nel combo.',
     color: '#9e9e9e', icon: 'S' },
   { name: 'Cacciavite',     damage: 16, range: 48,  speed: 10, crit: 10,
@@ -1096,7 +1096,7 @@ let gachaSpinning = false;
 let gachaSpinTimer = 0;
 let gachaResult = null;
 let gachaResultTimer = 0;
-const GACHA_COST = 175;
+const GACHA_COST = 120;
 
 const gachaJokes = [
   '"Aho, ma che te credevi? T\'hanno fregato!"',
@@ -2028,13 +2028,15 @@ function drawBossChar(b, level) {
   const telegraphing = b.bossState === 'telegraph';
 
   if (flash) ctx.globalAlpha = 0.5;
-  // Telegraph warning flash (red tint)
-  if (telegraphing && Math.floor(gameTime / 4) % 2 === 0) {
-    ctx.globalAlpha = 0.7;
+  // Telegraph warning — red pulsing tint
+  if (telegraphing) {
+    const telPulse = Math.sin(gameTime * 0.25) * 0.15 + 0.75;
+    ctx.globalAlpha = telPulse;
   }
-  // Recovery visual cue — boss flashes green every 6 frames (safe to punish)
-  if (b.bossState === 'recovery' && Math.floor(gameTime / 6) % 2 === 0) {
-    ctx.globalAlpha = 0.6;
+  // Recovery visual cue — green pulsing (safe to punish)
+  if (b.bossState === 'recovery') {
+    const recPulse = Math.sin(gameTime * 0.2) * 0.15 + 0.75;
+    ctx.globalAlpha = recPulse;
   }
 
   switch(currentLevel) {
@@ -2047,22 +2049,53 @@ function drawBossChar(b, level) {
 
   ctx.globalAlpha = 1.0;
 
-  // Recovery green flash overlay
-  if (b.bossState === 'recovery' && Math.floor(gameTime / 6) % 2 === 0) {
-    ctx.globalAlpha = 0.25;
+  // Telegraph warning overlay — thick red pulsing border + red circle "!"
+  if (telegraphing) {
+    const telPulse = Math.sin(gameTime * 0.25) * 0.2 + 0.7;
+    ctx.globalAlpha = telPulse;
+    ctx.strokeStyle = '#f44336';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(bx - 4, by - 4, b.w + 8, b.h + 8);
+    ctx.lineWidth = 1;
+    // Red circle with "!" above boss
+    ctx.fillStyle = '#d32f2f';
+    ctx.beginPath();
+    ctx.arc(b.x, by - 18, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+    drawText('!', b.x, by - 12, '#fff', 22, 'center');
+  }
+  // Recovery overlay — green glow + border + "PUNISCI!" text
+  if (b.bossState === 'recovery') {
+    const recPulse = Math.sin(gameTime * 0.2) * 0.15 + 0.55;
+    // Green glow around boss
+    ctx.globalAlpha = recPulse * 0.5;
     ctx.fillStyle = '#4caf50';
-    ctx.fillRect(bx, by, b.w, b.h);
+    ctx.beginPath();
+    ctx.arc(b.x, b.y - b.h / 2, b.w * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    // Green border
+    ctx.globalAlpha = recPulse;
+    ctx.strokeStyle = '#4caf50';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bx - 3, by - 3, b.w + 6, b.h + 6);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 1.0;
+    // "PUNISCI!" text above boss
+    const textPulse = Math.sin(gameTime * 0.15) * 0.2 + 0.8;
+    ctx.globalAlpha = textPulse;
+    drawText('PUNISCI!', b.x, by - 16, '#4caf50', 16, 'center');
     ctx.globalAlpha = 1.0;
   }
   // Super armor glow during charge attacks (orange/red pulsing aura)
   if (b.bossState === 'attack' && b.currentMove && b.currentMove.superArmor) {
-    const armorPulse = 0.2 + Math.sin(gameTime * 0.15) * 0.1;
+    const armorPulse = 0.35 + Math.sin(gameTime * 0.15) * 0.15;
     ctx.globalAlpha = armorPulse;
     ctx.fillStyle = '#ff6f00';
     ctx.beginPath();
-    ctx.arc(b.x, b.y - b.h / 2, b.w * 0.8, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y - b.h / 2, b.w * 1.0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.5;
     ctx.fillStyle = '#f44336';
     ctx.fillRect(bx - 3, by - 3, b.w + 6, b.h + 6);
     ctx.globalAlpha = 1.0;
@@ -2882,7 +2915,7 @@ function launchComboHit(stepIndex) {
   // Crit: Sanpietrino critCombo special grows crit chance per step
   let critBonus = 0;
   if (weap.special === 'critCombo') {
-    critBonus = stepIndex === 1 ? 10 : stepIndex >= 2 ? 25 : 0;
+    critBonus = stepIndex === 1 ? 15 : stepIndex >= 2 ? 35 : 0;
   }
   const upgCrit = player.upgrades.some(u => u.effect === 'crit15') ? 15 : 0;
   const isCrit = Math.random() * 100 < ((weap.crit || 0) + critBonus + upgCrit);
@@ -4847,29 +4880,48 @@ function drawGoon(g) {
   });
   ctx.globalAlpha = 1;
 
-  // Windup visual — clean: body tint + "!" + ground line
+  // Windup visual — body tint + red circle "!" + ground line + flash
   if (g.windupTimer > 0) {
     const wp = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
     const shake = (wp > 0.5 ? 1 : 0) * (Math.floor(gameTime) % 2 === 0 ? 1 : -1);
+    const windupFrame = g.windupMax ? (g.windupMax - g.windupTimer) : 0;
 
-    // Subtle body red tint (no giant outline)
-    ctx.globalAlpha = 0.15 + wp * 0.25;
-    drawRect(x + shake, y, g.w, g.h, '#ff1744');
-    ctx.globalAlpha = 1;
-
-    // Thin red line under feet toward attack direction (melee only)
-    if (g.type !== 'thrower' && g.type !== 'ranged') {
-      const atkDir = Math.sign(player.x - g.x) || 1;
-      const lineW = 40 + wp * 25;
-      const lineX = atkDir > 0 ? g.x : g.x - lineW;
-      ctx.globalAlpha = 0.3 + wp * 0.4;
-      drawRect(lineX, GROUND_Y - 1, lineW, 2, '#ff5252');
+    // Bright red flash for first 6 frames of windup
+    if (windupFrame < 6) {
+      ctx.globalAlpha = 0.5 * (1 - windupFrame / 6);
+      drawRect(x - 4, y - 4, g.w + 8, g.h + 8, '#ff1744');
       ctx.globalAlpha = 1;
     }
 
-    // Small "!" above head — no bg box, just the character
+    // Body red tint (stronger)
+    ctx.globalAlpha = 0.30 + wp * 0.35;
+    drawRect(x + shake, y, g.w, g.h, '#ff1744');
+    ctx.globalAlpha = 1;
+
+    // Ground attack line (melee only) — thicker with glow
+    if (g.type !== 'thrower' && g.type !== 'ranged') {
+      const atkDir = Math.sign(player.x - g.x) || 1;
+      const lineW = 50 + wp * 35;
+      const lineX = atkDir > 0 ? g.x : g.x - lineW;
+      // Glow layer
+      ctx.globalAlpha = (0.5 + wp * 0.4) * 0.4;
+      drawRect(lineX, GROUND_Y - 5, lineW, 8, '#ff5252');
+      ctx.globalAlpha = 0.5 + wp * 0.4;
+      drawRect(lineX, GROUND_Y - 2, lineW, 4, '#ff5252');
+      ctx.globalAlpha = 1;
+    }
+
+    // Red circle with "!" above head
     const exPulse = Math.sin(gameTime * 0.3) > 0;
-    drawText('!', x + g.w/2 + shake, y - 14, exPulse ? '#ff5252' : '#ffcdd2', 14, 'center');
+    const exX = x + g.w/2 + shake;
+    const exY = y - 20;
+    ctx.globalAlpha = exPulse ? 1 : 0.7;
+    ctx.fillStyle = '#d32f2f';
+    ctx.beginPath();
+    ctx.arc(exX, exY, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    drawText('!', exX, exY + 6, '#fff', 20, 'center');
   }
 
   // Thrower/ranged: arm raise + dotted aim line during windup
@@ -4878,12 +4930,12 @@ function drawGoon(g) {
     const armX = x + g.w/2 + armDir * 10;
     drawRect(armX - 4, y - 14, 8, 16, g.color || '#888');
     drawRect(armX - 3, y - 14, 6, 5, '#deb887');
-    // Dotted aim line
+    // Dotted aim line (larger dots, higher alpha)
     const wp = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
-    ctx.globalAlpha = 0.25 + wp * 0.3;
-    const lineLen = Math.min(dist, 100);
+    ctx.globalAlpha = 0.4 + wp * 0.4;
+    const lineLen = Math.min(Math.abs(player.x - g.x), 100);
     for (let d = 0; d < lineLen; d += 8) {
-      drawRect(g.x + armDir * d, g.y - 26, 4, 2, '#ff5252');
+      drawRect(g.x + armDir * d, g.y - 28, 6, 4, '#ff5252');
     }
     ctx.globalAlpha = 1;
   }
@@ -8446,7 +8498,7 @@ function drawLevel() {
 
 function drawHUD() {
   // === TOP LEFT: Player info panel ===
-  drawRect(8, 8, 195, 86, 'rgba(0,0,0,0.7)');
+  drawRect(8, 8, 195, 62, 'rgba(0,0,0,0.7)');
   drawRect(8, 8, 195, 2, '#e94560');
 
   // HP bar — label left, bar right, value far right
@@ -8470,65 +8522,64 @@ function drawHUD() {
     if (exFlash) drawText('!', barX + hpW + 3, 34, '#f44336', 8);
   }
 
-  // Ultra charge bar
-  const ultraR = player.ultraCharge / player.ultraMaxCharge;
-  drawRect(barX, 38, hpW, 6, '#333');
-  if (player.ultraActive) {
-    const timerR = player.ultraTimer / player.ultraDuration;
-    drawRect(barX, 38, hpW * timerR, 6, '#fff');
-    const ultraPulse = Math.sin(gameTime * 0.2) * 0.3 + 0.7;
-    ctx.globalAlpha = ultraPulse;
-    drawText('Q', 14, 44, '#ffd700', 8);
-    drawText('ULTRA!', barX + hpW + 3, 44, '#ffd700', 7);
-    ctx.globalAlpha = 1;
-  } else if (player.ultraAvailable) {
-    const ultraPulse = Math.sin(gameTime * 0.15) * 0.3 + 0.7;
-    ctx.globalAlpha = ultraPulse;
-    drawRect(barX, 38, hpW, 6, '#ffd700');
-    drawText('Q', 14, 44, '#ffd700', 8);
-    drawText('PRONTO!', barX + hpW + 3, 44, '#ffd700', 7);
-    ctx.globalAlpha = 1;
-  } else {
-    drawRect(barX, 38, hpW * ultraR, 6, '#ff8f00');
-    drawText('Q', 14, 44, '#ff8f00', 8);
-  }
-
   // Weapon name row
   const curWeap = weapons[player.weapon];
-  drawText(curWeap.name, 14, 57, '#ffcc80', 9);
+  drawText(curWeap.name, 14, 45, '#ffcc80', 9);
   // Lives display — clear hearts at bottom of panel
   if (difficulty === 'easy') {
-    drawRect(14, 62, 40, 18, 'rgba(0,0,0,0.5)');
-    drawText('\u221E', 34, 76, '#4caf50', 14, 'center');
+    drawRect(14, 50, 40, 18, 'rgba(0,0,0,0.5)');
+    drawText('\u221E', 34, 64, '#4caf50', 14, 'center');
   } else {
-    drawRect(14, 62, 60, 18, 'rgba(0,0,0,0.5)');
+    drawRect(14, 50, 60, 18, 'rgba(0,0,0,0.5)');
     for (let li = 0; li < 3; li++) {
       const alive = li < lives;
-      drawRect(16 + li * 19, 64, 15, 14, alive ? '#e94560' : '#333');
-      drawText(alive ? '\u2665' : '\u2661', 24 + li * 19, 76, alive ? '#fff' : '#555', 11, 'center');
+      drawRect(16 + li * 19, 52, 15, 14, alive ? '#e94560' : '#333');
+      drawText(alive ? '\u2665' : '\u2661', 24 + li * 19, 64, alive ? '#fff' : '#555', 11, 'center');
     }
   }
   // Dodge & Jump indicators — right side of panel
   if (player.dodgeCooldown > 0) {
-    drawText('[X]' + Math.ceil(player.dodgeCooldown / 6) / 10 + 's', 130, 57, '#555', 7);
+    drawText('[X]' + Math.ceil(player.dodgeCooldown / 6) / 10 + 's', 130, 45, '#555', 7);
   } else {
-    drawText('[X]OK', 130, 57, '#64b5f6', 7);
+    drawText('[X]OK', 130, 45, '#64b5f6', 7);
   }
-  drawText('[W]' + (player.grounded ? 'OK' : '--'), 168, 57, player.grounded ? '#64b5f6' : '#555', 7);
+  drawText('[W]' + (player.grounded ? 'OK' : '--'), 168, 45, player.grounded ? '#64b5f6' : '#555', 7);
 
   // Ammo row (only for ranged weapons)
   if (curWeap.maxAmmo) {
     if (player.reloadTimer > 0) {
       const reloadFlash = Math.floor(gameTime / 8) % 2 === 0;
-      drawText('RICARICA!', 14, 68, reloadFlash ? '#ff8f00' : '#ff5722', 8);
+      drawText('RICARICA!', 14, 56, reloadFlash ? '#ff8f00' : '#ff5722', 8);
     } else {
       const ammo = curWeap.currentAmmo !== undefined ? curWeap.currentAmmo : curWeap.maxAmmo;
-      drawText('AMMO: ' + ammo + '/' + curWeap.maxAmmo, 14, 68, ammo > 1 ? '#a1887f' : '#f44336', 8);
+      drawText('AMMO: ' + ammo + '/' + curWeap.maxAmmo, 14, 56, ammo > 1 ? '#a1887f' : '#f44336', 8);
     }
   }
 
-  // Active consumable buff indicators — below street sign
-  let buffY = 116;
+  // === ULTRA BAR — independent widget below player panel ===
+  const ultraBarX = 8, ultraBarY = 84, ultraBarW = 195, ultraBarH = 14;
+  drawRect(ultraBarX, ultraBarY, ultraBarW, ultraBarH, 'rgba(0,0,0,0.7)');
+  const ultraR = player.ultraCharge / player.ultraMaxCharge;
+  if (player.ultraActive) {
+    const timerR = player.ultraTimer / player.ultraDuration;
+    drawRect(ultraBarX + 1, ultraBarY + 1, (ultraBarW - 2) * timerR, ultraBarH - 2, '#fff');
+    const ultraPulse = Math.sin(gameTime * 0.2) * 0.3 + 0.7;
+    ctx.globalAlpha = ultraPulse;
+    drawText('Q  ULTRA!', ultraBarX + ultraBarW / 2, ultraBarY + 11, '#ffd700', 10, 'center');
+    ctx.globalAlpha = 1;
+  } else if (player.ultraAvailable) {
+    const ultraPulse = Math.sin(gameTime * 0.15) * 0.3 + 0.7;
+    ctx.globalAlpha = ultraPulse;
+    drawRect(ultraBarX + 1, ultraBarY + 1, ultraBarW - 2, ultraBarH - 2, '#ffd700');
+    drawText('Q  PRONTO!', ultraBarX + ultraBarW / 2, ultraBarY + 11, '#1a1a2e', 10, 'center');
+    ctx.globalAlpha = 1;
+  } else {
+    drawRect(ultraBarX + 1, ultraBarY + 1, (ultraBarW - 2) * ultraR, ultraBarH - 2, '#ff8f00');
+    drawText('Q', ultraBarX + 6, ultraBarY + 11, '#ff8f00', 9);
+  }
+
+  // Active consumable buff indicators — below ultra bar
+  let buffY = 104;
   if (player.consumableTimers.freeStamina > 0) {
     drawText('CAFFE\' ' + Math.ceil(player.consumableTimers.freeStamina / 60) + 's', 14, buffY, '#6d4c41', 8);
     buffY += 10;
@@ -9241,14 +9292,13 @@ function drawSabi() {
 // ==========================================
 let victoryTimer = 0; // guard timer to prevent instant restart
 let victorySongStarted = false;
+let freestyleFadeTimer = 0; // countdown for smooth crossfade to freestyle
 
 function startVictorySong() {
   if (victorySongStarted) return;
   victorySongStarted = true;
-  stopMusic();
-  // Play the freestyle MP4 as audio only (no video overlay)
-  freestyleVideo.currentTime = 0;
-  freestyleVideo.play().catch(() => {}); // may fail if no user gesture
+  // Don't stop 8-bit music yet — start a fade timer for smooth transition
+  freestyleFadeTimer = 30; // ~0.5s fade
 }
 
 function stopVictorySong() {
@@ -9260,8 +9310,18 @@ function stopVictorySong() {
 function drawVictory() {
   victoryTimer++;
 
-  // Start the freestyle song on victory
-  if (victoryTimer === 2) startVictorySong();
+  // Let 8-bit fanfare play for ~4 seconds, then crossfade to freestyle
+  if (victoryTimer === 240) startVictorySong();
+
+  // Smooth crossfade: fade out 8-bit music, then start freestyle
+  if (freestyleFadeTimer > 0) {
+    freestyleFadeTimer--;
+    if (freestyleFadeTimer === 0) {
+      stopMusic();
+      freestyleVideo.currentTime = 0;
+      freestyleVideo.play().catch(() => {});
+    }
+  }
 
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#1b5e20');
@@ -9339,6 +9399,7 @@ function drawVictory() {
       lives = 3;
       firstTime = true;
       victoryTimer = 0;
+      freestyleFadeTimer = 0;
       stopVictorySong();
       state = 'menu';
     }
