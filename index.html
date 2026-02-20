@@ -71,13 +71,13 @@ const inMobileWrapper = (window.self !== window.top);
 // Virtual button definitions
 const touchButtons = {
   // Left side: movement + Q (ultra) on top
-  left:    { x: 6,   y: H - 90, w: 74, h: 65, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 86,  y: H - 90, w: 74, h: 65, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  ultra:   { x: 26,  y: H - 160, w: 96, h: 58, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
+  left:    { x: 10,  y: H - 80, w: 60, h: 55, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 80,  y: H - 80, w: 60, h: 55, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  ultra:   { x: 30,  y: H - 142, w: 80, h: 48, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
   // Right side: X and W on top, ATK at bottom
-  dodge:   { x: W - 186, y: H - 160, w: 84, h: 58, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  jump:    { x: W - 94,  y: H - 160, w: 84, h: 58, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
-  attack:  { x: W - 150, y: H - 90, w: 84, h: 65, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  dodge:   { x: W - 170, y: H - 142, w: 70, h: 48, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  jump:    { x: W - 90,  y: H - 142, w: 70, h: 48, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
+  attack:  { x: W - 140, y: H - 80, w: 70, h: 55, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Helpers (invisible hit areas — overlay on helper bar drawn by HUD)
   helper1: { x: 246, y: 78, w: 48, h: 22, key: 'Digit1', label: '', color: 'transparent', justPress: true, hidden: true },
   helper2: { x: 300, y: 78, w: 48, h: 22, key: 'Digit2', label: '', color: 'transparent', justPress: true, hidden: true },
