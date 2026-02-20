@@ -63,7 +63,7 @@ canvas.addEventListener('click', e => {
 // Touch device detection
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 const mobileMenuStates = new Set([
-  'menu', 'difficultySelect', 'weaponSelect', 'helperSelect',
+  'menu', 'helperSelect',
   'shop', 'upgrade', 'hub', 'moves', 'tutorial'
 ]);
 // When inside mobile.html iframe, the HTML overlay handles all controls — disable canvas touch buttons
@@ -80,10 +80,10 @@ const touchButtons = {
   jump:    { x: W - 90,  y: H - 142, w: 70, h: 48, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
   attack:  { x: W - 140, y: H - 80, w: 70, h: 55, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Helpers (invisible hit areas — overlay on helper bar drawn by HUD)
-  helper1: { x: 14,  y: H - 175, w: 48, h: 30, key: 'Digit1', label: '', color: 'transparent', justPress: true, hidden: true },
-  helper2: { x: 68,  y: H - 175, w: 48, h: 30, key: 'Digit2', label: '', color: 'transparent', justPress: true, hidden: true },
-  helper3: { x: 122, y: H - 175, w: 48, h: 30, key: 'Digit3', label: '', color: 'transparent', justPress: true, hidden: true },
-  helper4: { x: 176, y: H - 175, w: 48, h: 30, key: 'Digit4', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper1: { x: 246, y: 78, w: 48, h: 22, key: 'Digit1', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper2: { x: 300, y: 78, w: 48, h: 22, key: 'Digit2', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper3: { x: 354, y: 78, w: 48, h: 22, key: 'Digit3', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper4: { x: 408, y: 78, w: 48, h: 22, key: 'Digit4', label: '', color: 'transparent', justPress: true, hidden: true },
   // Utility
   tab:     { x: W - 95, y: 36, w: 38, h: 28, key: 'Tab', label: 'TAB', color: '#555', justPress: true },
   enter:   { x: W/2 - 40, y: H - 45, w: 80, h: 32, key: 'Enter', label: 'OK', color: '#4caf50', justPress: true },
@@ -8709,9 +8709,10 @@ function drawHUD() {
 
   // === BOTTOM LEFT: Helper cooldowns ===
   const bottomBarY = isTouchDevice ? 74 : H - 38;
-  drawRect(8, bottomBarY, 220, 30, 'rgba(0,0,0,0.6)');
+  const bottomBarX = isTouchDevice ? 240 : 8;
+  drawRect(bottomBarX, bottomBarY, 220, 30, 'rgba(0,0,0,0.6)');
   for (let i = 0; i < 4; i++) {
-    const hx = 14 + i * 54;
+    const hx = bottomBarX + 6 + i * 54;
     const hy = bottomBarY + 4;
     if (!helpers[i].unlocked) {
       // Locked helper — greyed out
