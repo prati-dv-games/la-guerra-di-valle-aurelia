@@ -5462,8 +5462,8 @@ function drawHelperSelect() {
   for (let i = 0; i < 4; i++) {
     const h = helpers[i];
     const cx = 60 + i * 205;
-    const cy = 90;
-    const cw = 190, ch = 300;
+    const cy = 80;
+    const cw = 190, ch = 280;
     const isHover = mouseX > cx && mouseX < cx + cw && mouseY > cy && mouseY < cy + ch;
     const selected = (i === helperSelectIndex);
 
@@ -5507,8 +5507,10 @@ function drawHelperSelect() {
     }
   }
 
-  // Confirm button
-  const confirmX = W/2 - 100, confirmY = H - 50;
+  // Instructions + Confirm button
+  drawText('Frecce/1-4 = Seleziona', W/2, H - 65, '#666', 10, 'center');
+
+  const confirmX = W/2 - 100, confirmY = H - 52;
   const confirmHover = mouseX > confirmX && mouseX < confirmX + 200 && mouseY > confirmY && mouseY < confirmY + 36;
   drawRect(confirmX, confirmY, 200, 36, helperSelectReady ? (confirmHover ? '#e040fb' : 'rgba(224,64,251,0.4)') : '#333');
   drawRect(confirmX, confirmY, 200, 2, '#e040fb');
@@ -5528,8 +5530,6 @@ function drawHelperSelect() {
     spawnParticles(W/2, H/2, helpers[helperSelectIndex].color, 25, 6);
     playSFX('coin');
   }
-
-  drawText('Frecce/1-4 = Seleziona', W/2, H - 10, '#666', 10, 'center');
   mouseClick = false;
 }
 
