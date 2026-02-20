@@ -72,7 +72,14 @@ const touchButtons = {
   dodge:   { x: W - 170, y: H - 142, w: 70, h: 48, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
   jump:    { x: W - 90,  y: H - 142, w: 70, h: 48, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
   attack:  { x: W - 140, y: H - 80, w: 70, h: 55, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
-  // Pause (top-right)
+  // Helpers (invisible hit areas — overlay on helper bar drawn by HUD)
+  helper1: { x: 14,  y: H - 175, w: 48, h: 30, key: 'Digit1', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper2: { x: 68,  y: H - 175, w: 48, h: 30, key: 'Digit2', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper3: { x: 122, y: H - 175, w: 48, h: 30, key: 'Digit3', label: '', color: 'transparent', justPress: true, hidden: true },
+  helper4: { x: 176, y: H - 175, w: 48, h: 30, key: 'Digit4', label: '', color: 'transparent', justPress: true, hidden: true },
+  // Utility
+  tab:     { x: W - 95, y: 36, w: 38, h: 28, key: 'Tab', label: 'TAB', color: '#555', justPress: true },
+  enter:   { x: W/2 - 40, y: H - 45, w: 80, h: 32, key: 'Enter', label: 'OK', color: '#4caf50', justPress: true },
   pause:   { x: W - 52, y: 36, w: 38, h: 28, key: 'Escape', label: 'II', color: '#666', justPress: true }
 };
 
@@ -91,9 +98,13 @@ function hitTestButton(tx, ty) {
 }
 
 function getTouchButtonsForState() {
-  if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'pause'];
-  if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right'];
+  if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'tab', 'pause'];
+  if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'enter'];
   if (state === 'sabi') return ['left', 'right', 'pause'];
+  if (state === 'hub' || state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
+  if (state === 'dialogue') return ['enter'];
+  if (state === 'menu' || state === 'difficultySelect' || state === 'weaponSelect' || state === 'helperSelect') return ['enter'];
+  if (state === 'gameover' || state === 'victory') return ['enter'];
   return [];
 }
 
@@ -1947,6 +1958,8 @@ function drawTouchButtons() {
     // Skip ultra button if ultra not available
     if (name === 'ultra' && !(player.ultraCharge >= 100 && !player.ultraActive)) continue;
     const b = touchButtons[name];
+    // Hidden buttons are hit areas only (e.g. helper bar overlay)
+    if (b.hidden) continue;
     const pressed = Object.values(touchBtnState).includes(name);
     const alpha = pressed ? 0.55 : 0.3;
     ctx.globalAlpha = alpha;
@@ -6354,7 +6367,7 @@ function drawHub() {
   }
 
   // Controls hint
-  drawText('< A/D > Scegli   ENTER = Combatti   S = Armeria', W/2, 425, '#666', 10, 'center');
+  drawText(isTouchDevice ? 'Tocca per scegliere e combattere' : '< A/D > Scegli   ENTER = Combatti   S = Armeria', W/2, 425, '#666', 10, 'center');
 
   // Small "Crediti" button bottom-right corner
   const credBtnX = W - 75, credBtnY = H - 24, credBtnW = 65, credBtnH = 18;
@@ -8533,13 +8546,15 @@ function drawHUD() {
       drawText(alive ? '\u2665' : '\u2661', 24 + li * 19, 64, alive ? '#fff' : '#555', 11, 'center');
     }
   }
-  // Dodge & Jump indicators — right side of panel
-  if (player.dodgeCooldown > 0) {
-    drawText('[X]' + Math.ceil(player.dodgeCooldown / 6) / 10 + 's', 130, 45, '#555', 7);
-  } else {
-    drawText('[X]OK', 130, 45, '#64b5f6', 7);
+  // Dodge & Jump indicators — right side of panel (desktop only, mobile uses touch buttons)
+  if (!isTouchDevice) {
+    if (player.dodgeCooldown > 0) {
+      drawText('[X]' + Math.ceil(player.dodgeCooldown / 6) / 10 + 's', 130, 45, '#555', 7);
+    } else {
+      drawText('[X]OK', 130, 45, '#64b5f6', 7);
+    }
+    drawText('[W]' + (player.grounded ? 'OK' : '--'), 168, 45, player.grounded ? '#64b5f6' : '#555', 7);
   }
-  drawText('[W]' + (player.grounded ? 'OK' : '--'), 168, 45, player.grounded ? '#64b5f6' : '#555', 7);
 
   // Ammo row (only for ranged weapons)
   if (curWeap.maxAmmo) {
