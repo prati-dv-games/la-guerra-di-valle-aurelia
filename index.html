@@ -106,7 +106,7 @@ function hitTestButton(tx, ty) {
 function getTouchButtonsForState() {
   if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'tab', 'pause'];
   if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'enter'];
-  if (state === 'sabi') return ['left', 'right', 'pause'];
+  if (state === 'sabi') return ['left', 'right', 'attack', 'pause'];
   if (state === 'hub' || state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
   if (state === 'dialogue') return ['enter'];
   if (state === 'menu' || state === 'difficultySelect' || state === 'weaponSelect' || state === 'helperSelect') return ['enter'];
