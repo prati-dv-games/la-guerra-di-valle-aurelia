@@ -4525,7 +4525,9 @@ function updateGoons() {
             type: 'bullet', color: '#7b1fa2'
           });
         } else {
-          // Melee - check if still in range (jumping avoids melee attacks)
+          // Melee - visible swing + range check (jumping avoids melee attacks)
+          const atkDir = Math.sign(player.x - g.x) || 1;
+          spawnParticles(g.x + atkDir * 25, g.y - 25, '#ff8a65', 4, 3);
           const playerAirborne = player.y < GROUND_Y - 30;
           if (dist < 65 && !playerAirborne) {
             hurtPlayer(g.damage);
@@ -4688,11 +4690,23 @@ function drawGoon(g) {
   });
   ctx.globalAlpha = 1;
 
-  // Red tint in last 8 frames of windup (about to strike!)
-  if (g.windupTimer > 0 && g.windupTimer <= 8) {
-    ctx.globalAlpha = 0.3;
-    drawRect(x, y, g.w, g.h, '#ff1744');
+  // Windup visual — progressive red glow + danger zone
+  if (g.windupTimer > 0) {
+    const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
+    // Red body glow — intensifies as attack approaches
+    ctx.globalAlpha = 0.15 + windupProgress * 0.35;
+    drawRect(x - 2, y - 2, g.w + 4, g.h + 4, '#ff1744');
     ctx.globalAlpha = 1;
+
+    // Ground danger zone for melee attackers
+    if (g.type !== 'thrower' && g.type !== 'ranged') {
+      const atkDir = Math.sign(player.x - g.x) || 1;
+      const zoneX = g.x + atkDir * 5;
+      const zoneW = 60 * atkDir;
+      ctx.globalAlpha = 0.1 + windupProgress * 0.2;
+      drawRect(Math.min(zoneX, zoneX + zoneW), GROUND_Y - 4, Math.abs(zoneW), 4, '#ff1744');
+      ctx.globalAlpha = 1;
+    }
   }
 
   // Thrower/ranged arm raise during windup
@@ -4703,12 +4717,12 @@ function drawGoon(g) {
     drawRect(armX - 2, y - 10, 4, 4, '#deb887');
   }
 
-  // Windup indicator - "!" above head when about to attack
+  // Windup indicator - big "!" above head
   if (g.windupTimer > 0) {
-    const pulse = Math.sin(g.windupTimer * 0.5) * 0.3 + 0.7;
+    const pulse = Math.sin(g.windupTimer * 0.4) * 0.2 + 0.8;
     ctx.globalAlpha = pulse;
-    drawRect(x + g.w/2 - 6, y - 30, 12, 18, 'rgba(0,0,0,0.8)');
-    drawText('!', x + g.w/2, y - 16, '#ff1744', 14, 'center');
+    drawRect(x + g.w/2 - 8, y - 34, 16, 22, 'rgba(180,0,0,0.9)');
+    drawText('!', x + g.w/2, y - 16, '#fff', 16, 'center');
     ctx.globalAlpha = 1;
   }
 
