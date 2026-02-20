@@ -426,6 +426,12 @@ html, body {
   const iframe = document.getElementById('game');
   const touchLayer = document.getElementById('touch-layer');
 
+  // ── Code keyboard state (declared early so pressBtn/releaseBtn can use it) ──
+  const codeKeyboard = document.getElementById('code-keyboard');
+  const kbDisplay = document.getElementById('kb-display');
+  let kbInput = '';
+  let kbVisible = false;
+
   // ── Button hit zones ──
   // Each button: { id, keys[], getRect() }
   // getRect returns bounding box — computed live to handle resize
@@ -474,7 +480,9 @@ html, body {
   window.addEventListener('resize', updateRects);
 
   function hitTest(x, y) {
-    for (const { btn, r } of cachedRects) {
+    // Use live rects (not cached) to handle flex layout shifts
+    for (const btn of buttons) {
+      const r = btn.getRect();
       if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
         return btn;
       }
@@ -546,6 +554,7 @@ html, body {
           canvas.dispatchEvent(new MouseEvent('click', { clientX: cx, clientY: cy, bubbles: true }));
         }
       } catch(e) {}
+      setTimeout(showCodeKeyboard, 100);
       return;
     }
     btn.keys.forEach(k => {
@@ -559,6 +568,7 @@ html, body {
   function releaseBtn(touchId) {
     const entry = touchMap.get(touchId);
     if (!entry) return;
+    if (entry.keys.includes('Escape') && kbVisible) hideCodeKeyboard();
     entry.btn.el.classList.remove('active');
     entry.keys.forEach(k => {
       // Only release if no other touch holds this key
@@ -622,11 +632,6 @@ html, body {
   }, { passive: false });
 
   // ── Code keyboard overlay for credits ──
-  const codeKeyboard = document.getElementById('code-keyboard');
-  const kbDisplay = document.getElementById('kb-display');
-  let kbInput = '';
-  let kbVisible = false;
-
   function showCodeKeyboard() {
     kbInput = '';
     updateKbDisplay();
@@ -684,26 +689,6 @@ html, body {
       setTimeout(() => sendKey(code, 'keyup'), 50);
     }
   }, { passive: false });
-
-  // Show keyboard when credits button is pressed
-  // (Override the credits button handler to also show keyboard)
-  const origPressBtn = pressBtn;
-  pressBtn = function(btn) {
-    origPressBtn(btn);
-    if (btn.isCredits) {
-      setTimeout(showCodeKeyboard, 100);
-    }
-  };
-
-  // Also hide keyboard when ESC game button is pressed
-  const origReleaseBtn = releaseBtn;
-  releaseBtn = function(touchId) {
-    const entry = touchMap.get(touchId);
-    if (entry && entry.keys.includes('Escape') && kbVisible) {
-      hideCodeKeyboard();
-    }
-    origReleaseBtn(touchId);
-  };
 
   // ── Add-to-homescreen hint (only in browser, not standalone) ──
   const a2hs = document.getElementById('a2hs');
