@@ -4652,6 +4652,7 @@ function drawMovesScreen() {
   ], '#b0bec5');
 
   // Current weapon info at bottom
+  const w = weapons[player.weapon] || weapons[0];
   drawRect(20, 424, W - 40, 50, '#1a1a2e');
   drawRect(20, 424, W - 40, 2, w.color || '#888');
   drawText('ARMA ATTUALE: ' + w.name, 36, 444, '#fff', 12);
@@ -4663,8 +4664,15 @@ function drawMovesScreen() {
   drawRect(20, 480, W - 40, 1, '#333');
   drawText('"Nun te scorda\' le mosse, Conte!"', W/2, 498, '#444', 9, 'center');
 
-  // Close on TAB, P, or ESC
-  if (keysJustPressed['Tab'] || keysJustPressed['KeyP'] || keysJustPressed['Escape']) {
+  // Close button (tappable)
+  const closeMBtnW = 100, closeMBtnH = 30;
+  const closeMBtnX = W/2 - closeMBtnW/2, closeMBtnY = H - 45;
+  const closeMHover = mouseX >= closeMBtnX && mouseX <= closeMBtnX + closeMBtnW && mouseY >= closeMBtnY && mouseY <= closeMBtnY + closeMBtnH;
+  drawRect(closeMBtnX, closeMBtnY, closeMBtnW, closeMBtnH, closeMHover ? '#e94560' : 'rgba(233,69,96,0.4)');
+  drawText('CHIUDI', W/2, closeMBtnY + 21, '#fff', 13, 'center');
+
+  // Close on TAB, P, ESC, or tap
+  if (keysJustPressed['Tab'] || keysJustPressed['KeyP'] || keysJustPressed['Escape'] || (closeMHover && mouseClick)) {
     toggleMovesScreen();
   }
 
