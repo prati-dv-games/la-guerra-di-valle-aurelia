@@ -9,6 +9,9 @@
 html, body { background: #1a1a2e; width: 100%; height: 100%; overflow: hidden; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 body { display: flex; justify-content: center; align-items: center; font-family: monospace; }
 canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw; max-height: 100dvh; width: auto; height: auto; }
+@media (min-width: 1000px) and (min-height: 700px) and (hover: hover) {
+  canvas { min-width: min(95vw, 160vh); }
+}
 @supports (padding: env(safe-area-inset-bottom)) {
   canvas { max-height: calc(100dvh - env(safe-area-inset-bottom)); }
 }
@@ -2720,9 +2723,9 @@ function hurtPlayer(dmg) {
   player.comboHitCount = 0; // reset combo counter on hit
   player.comboHitTimer = 0;
   player.scoreMultiplier = 1;
-  // Ultra charge drain on taking damage
+  // Ultra charge drain on taking damage (reduced penalty)
   if (!player.ultraActive) {
-    player.ultraCharge = Math.max(0, player.ultraCharge - 25);
+    player.ultraCharge = Math.max(0, player.ultraCharge - 12);
     if (player.ultraCharge < player.ultraMaxCharge) player.ultraAvailable = false;
   }
   screenShake = 8;
@@ -3058,9 +3061,9 @@ function launchComboHit(stepIndex) {
 
     // Ultra charge accumulation
     if (!player.ultraActive) {
-      let chargeGain = 4; // base per hit
-      if (isCrit) chargeGain = 6;
-      if (didStagger) chargeGain = 12;
+      let chargeGain = 6; // base per hit
+      if (isCrit) chargeGain = 10;
+      if (didStagger) chargeGain = 18;
       player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + chargeGain);
       if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
     }
@@ -3618,16 +3621,19 @@ function updateBossAI() {
         if (dist < 150) boss.x -= Math.sign(dx) * boss.speed * 0.6; // retreat
         else if (dist > 250) boss.x += Math.sign(dx) * boss.speed * 0.3; // keep in range for shots
       } else {
-        // Normal approach
-        if (dist > 80) boss.x += Math.sign(dx) * boss.speed * 0.8;
+        // Normal approach — later bosses are more aggressive
+        const approachMult = 0.8 + currentLevel * 0.1;
+        if (dist > 80) boss.x += Math.sign(dx) * boss.speed * approachMult;
         else if (dist < 50) boss.x -= Math.sign(dx) * boss.speed * 0.5;
       }
-      // Slight weave
-      boss.x += Math.sin(boss.specialTimer * 0.03) * 0.5;
+      // Slight weave — more agitated in later levels
+      boss.x += Math.sin(boss.specialTimer * 0.03) * (0.5 + currentLevel * 0.2);
 
       // Counter-attack system: if player is attacking within range, chance to counter
+      // Later levels have higher counter chance
       if (player.attackActiveTimer > 0 && dist < 80 && boss.staggerTimer <= 0) {
-        const counterChance = boss.bossPhase === 3 ? 0.03 : boss.bossPhase === 2 ? 0.02 : 0.01;
+        const levelBonus = currentLevel * 0.008;
+        const counterChance = (boss.bossPhase === 3 ? 0.03 : boss.bossPhase === 2 ? 0.02 : 0.01) + levelBonus;
         if (Math.random() < counterChance) {
           // Immediate counter with halved telegraph time
           boss.currentMove = pickBossMove(currentLevel, boss.bossPhase, dist);
@@ -3671,7 +3677,10 @@ function updateBossAI() {
       if (dist > 100) boss.x += Math.sign(dx) * boss.speed * 0.3;
       if (boss.stateTimer <= 0) {
         boss.bossState = 'idle';
-        boss.stateTimer = 30 + Math.floor(Math.random() * 30);
+        // Later levels = shorter idle = more aggressive
+        const idleBase = Math.max(10, 30 - currentLevel * 5);
+        const idleRand = Math.max(10, 30 - currentLevel * 4);
+        boss.stateTimer = idleBase + Math.floor(Math.random() * idleRand);
       }
       break;
   }
@@ -4431,6 +4440,7 @@ function spawnGoons(count) {
       flankDir: Math.random() > 0.5 ? 1 : -1,
       knockbackVx: 0,
       windupTimer: 0,
+      phaseOffset: Math.random() * Math.PI * 2, // unique movement phase
       // Poise system
       poise: t.poise || 15,
       maxPoise: t.poise || 15,
@@ -4598,9 +4608,9 @@ function updateGoons() {
     switch(g.type) {
       case 'rusher':
         if (!canAttack && dist < circleRange) {
-          // Pace back and forth at medium range instead of standing still
-          g.x += Math.sin(gameTime * 0.04 + g.x * 0.1) * g.speed * 0.8;
-          if (dist < 60) g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
+          // Pace at medium range with unique rhythm
+          g.x += Math.sin(gameTime * 0.04 + g.phaseOffset) * g.speed * 1.0;
+          if (dist < 60) g.x += Math.sign(g.x - player.x) * g.speed * 0.6;
         } else if (dist > 45) {
           g.x += Math.sign(dx) * g.speed * 1.5 * aggroMult;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
@@ -4611,8 +4621,8 @@ function updateGoons() {
 
       case 'tank':
         if (!canAttack && dist < circleRange) {
-          g.x += Math.sin(gameTime * 0.03 + g.x * 0.1) * g.speed * 0.6;
-          if (dist < 70) g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
+          g.x += Math.sin(gameTime * 0.03 + g.phaseOffset) * g.speed * 0.7;
+          if (dist < 70) g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
         } else if (dist > 55) {
           g.x += Math.sign(dx) * g.speed * 1.1 * aggroMult;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
@@ -4622,9 +4632,9 @@ function updateGoons() {
         break;
 
       case 'drunk':
-        // Always moving erratically — never stands still
-        g.x += Math.sign(dx) * g.speed * 0.8 * aggroMult + Math.sin(gameTime * 0.1 + g.x) * 1.8;
-        if (dist > 200) g.x += Math.sign(dx) * g.speed * 0.5; // close gap if too far
+        // Always moving erratically — unique wobble per goon
+        g.x += Math.sign(dx) * g.speed * 0.8 * aggroMult + Math.sin(gameTime * 0.1 + g.phaseOffset) * 1.8;
+        if (dist > 200) g.x += Math.sign(dx) * g.speed * 0.5;
         if (dist < 50 && g.attackTimer === 0 && !player.dead && canAttack) {
           g.windupTimer = 12;
           g.attackTimer = Math.floor(22 / aggroMult);
@@ -4633,14 +4643,13 @@ function updateGoons() {
 
       case 'thrower': {
         // Maintain ideal range 140-220, always moving
-        const idealRange = 180;
         if (dist < 120) g.x -= Math.sign(dx) * g.speed * 0.6;
         else if (dist > 250) g.x += Math.sign(dx) * g.speed * 1.1;
         else {
-          // Strafe at ideal range instead of standing still
-          g.x += Math.sin(gameTime * 0.05 + g.x * 0.08) * g.speed * 0.9;
-          if (dist < idealRange - 40) g.x -= Math.sign(dx) * g.speed * 0.3;
-          else if (dist > idealRange + 40) g.x += Math.sign(dx) * g.speed * 0.3;
+          // Strafe at ideal range with unique phase
+          g.x += Math.sin(gameTime * 0.05 + g.phaseOffset) * g.speed * 1.0;
+          if (dist < 140) g.x -= Math.sign(dx) * g.speed * 0.3;
+          else if (dist > 220) g.x += Math.sign(dx) * g.speed * 0.3;
         }
         g.shootTimer++;
         if (g.shootTimer > Math.floor(48 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
@@ -4654,9 +4663,9 @@ function updateGoons() {
       case 'flanker': {
         const behindX = player.x + g.flankDir * 80;
         if (!canAttack && dist < circleRange) {
-          // Pace around the player's flank
-          g.x += Math.sin(gameTime * 0.06 + g.x * 0.1) * g.speed * 0.9;
-          if (dist < 50) g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
+          // Pace around the player's flank with unique rhythm
+          g.x += Math.sin(gameTime * 0.06 + g.phaseOffset) * g.speed * 1.1;
+          if (dist < 50) g.x += Math.sign(g.x - player.x) * g.speed * 0.6;
         } else if (Math.abs(g.x - behindX) > 30) {
           g.x += Math.sign(behindX - g.x) * g.speed * 1.15 * aggroMult;
         } else if (g.attackTimer === 0 && dist < 60 && !player.dead && canAttack) {
@@ -4668,12 +4677,12 @@ function updateGoons() {
       }
 
       case 'ranged':
-        // Maintain range 200-350, approach if too far, flee if too close
+        // Maintain range 200-350
         if (dist < 180) g.x -= Math.sign(dx) * g.speed * 1.1;
         else if (dist > 350) g.x += Math.sign(dx) * g.speed * 0.8;
         else {
-          // Strafe at range
-          g.x += Math.sin(gameTime * 0.04 + g.x * 0.07) * g.speed * 0.7;
+          // Strafe with unique phase
+          g.x += Math.sin(gameTime * 0.04 + g.phaseOffset) * g.speed * 0.8;
         }
         g.shootTimer++;
         if (g.shootTimer > Math.floor(40 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
@@ -4685,7 +4694,7 @@ function updateGoons() {
 
       default:
         if (!canAttack && dist < circleRange) {
-          g.x += Math.sin(gameTime * 0.04 + g.x * 0.1) * g.speed * 0.7;
+          g.x += Math.sin(gameTime * 0.04 + g.phaseOffset) * g.speed * 0.8;
           if (dist < 60) g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
         } else if (dist > 50) {
           g.x += Math.sign(dx) * g.speed;
@@ -4695,12 +4704,13 @@ function updateGoons() {
         }
     }
 
-    // Separation: don't stack on top of other goons
+    // Separation: don't stack on top of other goons (strong force)
     goons.forEach(other => {
       if (other === g || other.dead) return;
       const gap = g.x - other.x;
-      if (Math.abs(gap) < 25) {
-        g.x += Math.sign(gap || 1) * 0.6;
+      if (Math.abs(gap) < 40) {
+        const pushForce = (40 - Math.abs(gap)) / 40 * 2.0;
+        g.x += Math.sign(gap || 1) * pushForce;
       }
     });
 
@@ -4772,39 +4782,61 @@ function drawGoon(g) {
   });
   ctx.globalAlpha = 1;
 
-  // Windup visual — progressive red glow + danger zone
+  // Windup visual — big, obvious red flash + shake + danger zone
   if (g.windupTimer > 0) {
     const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
-    // Red body glow — intensifies as attack approaches
-    ctx.globalAlpha = 0.15 + windupProgress * 0.35;
-    drawRect(x - 2, y - 2, g.w + 4, g.h + 4, '#ff1744');
+    // Body shakes as attack approaches
+    const shake = Math.floor(windupProgress * 3) * (Math.floor(gameTime) % 2 === 0 ? 1 : -1);
+
+    // Strong red outline that pulses
+    const outlineSize = 3 + Math.floor(windupProgress * 4);
+    ctx.globalAlpha = 0.3 + windupProgress * 0.5;
+    drawRect(x - outlineSize + shake, y - outlineSize, g.w + outlineSize * 2, g.h + outlineSize * 2, '#ff1744');
     ctx.globalAlpha = 1;
 
-    // Ground danger zone for melee attackers
+    // Inner red body glow
+    ctx.globalAlpha = 0.2 + windupProgress * 0.4;
+    drawRect(x + shake, y, g.w, g.h, '#ff1744');
+    ctx.globalAlpha = 1;
+
+    // Ground danger zone for melee attackers — wide and flashing
     if (g.type !== 'thrower' && g.type !== 'ranged') {
       const atkDir = Math.sign(player.x - g.x) || 1;
       const zoneX = g.x + atkDir * 5;
-      const zoneW = 60 * atkDir;
-      ctx.globalAlpha = 0.1 + windupProgress * 0.2;
-      drawRect(Math.min(zoneX, zoneX + zoneW), GROUND_Y - 4, Math.abs(zoneW), 4, '#ff1744');
+      const zoneW = 70 * atkDir;
+      // Pulsing danger stripe
+      const stripePulse = Math.floor(gameTime / 4) % 2 === 0;
+      ctx.globalAlpha = stripePulse ? 0.15 + windupProgress * 0.35 : 0.05 + windupProgress * 0.15;
+      drawRect(Math.min(zoneX, zoneX + zoneW), GROUND_Y - 8, Math.abs(zoneW), 8, '#ff1744');
+      // Second thinner stripe for visibility
+      ctx.globalAlpha = 0.4 + windupProgress * 0.4;
+      drawRect(Math.min(zoneX, zoneX + zoneW), GROUND_Y - 2, Math.abs(zoneW), 2, '#ffeb3b');
       ctx.globalAlpha = 1;
     }
   }
 
-  // Thrower/ranged arm raise during windup
+  // Thrower/ranged arm raise during windup — bigger & more visible
   if (g.windupTimer > 0 && (g.type === 'thrower' || g.type === 'ranged')) {
     const armDir = Math.sign(player.x - g.x) || 1;
-    const armX = x + g.w/2 + armDir * 8;
-    drawRect(armX - 3, y + 2 - 10, 6, 12, g.color || '#888');
-    drawRect(armX - 2, y - 10, 4, 4, '#deb887');
+    const armX = x + g.w/2 + armDir * 10;
+    drawRect(armX - 4, y - 14, 8, 16, g.color || '#888');
+    drawRect(armX - 3, y - 14, 6, 5, '#deb887');
+    // Aim line toward player
+    const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
+    ctx.globalAlpha = 0.2 + windupProgress * 0.4;
+    const lineLen = Math.min(dist, 120);
+    drawRect(Math.min(g.x, g.x + armDir * lineLen), g.y - 26, Math.abs(armDir * lineLen), 2, '#ff1744');
+    ctx.globalAlpha = 1;
   }
 
-  // Windup indicator - big "!" above head
+  // Windup indicator - big pulsing "!" above head with colored bg
   if (g.windupTimer > 0) {
-    const pulse = Math.sin(g.windupTimer * 0.4) * 0.2 + 0.8;
+    const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
+    const pulse = Math.sin(g.windupTimer * 0.5) * 0.15 + 0.85;
+    const indicSize = 10 + Math.floor(windupProgress * 4);
     ctx.globalAlpha = pulse;
-    drawRect(x + g.w/2 - 8, y - 34, 16, 22, 'rgba(180,0,0,0.9)');
-    drawText('!', x + g.w/2, y - 16, '#fff', 16, 'center');
+    drawRect(x + g.w/2 - indicSize, y - 38, indicSize * 2, 26, '#d50000');
+    drawText('!', x + g.w/2, y - 16, '#ffeb3b', 18 + Math.floor(windupProgress * 4), 'center');
     ctx.globalAlpha = 1;
   }
 
@@ -7319,6 +7351,12 @@ function updateLevel() {
   updateCoinPickups();
   updateHazards();
 
+  // Passive ultra charge trickle in combat
+  if (!player.ultraActive && !player.ultraAvailable && goons.some(g => !g.dead)) {
+    player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 0.08);
+    if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
+  }
+
   // Update helper cooldowns
   for (let i = 0; i < 4; i++) {
     helperCooldowns[i] = Math.max(0, helperCooldowns[i] - 1);
@@ -7667,7 +7705,7 @@ function updatePlayerInput() {
         player.comboChainCount++;
         // Ultra charge bonus for completing full combo chain
         if (!player.ultraActive) {
-          player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 8);
+          player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 14);
           if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
         }
         player.attacking = false;
