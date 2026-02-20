@@ -24,7 +24,7 @@ canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw
 </head>
 <body>
 <div id="freestyle-overlay">
-  <video id="freestyle-video" src="prati_freestyle.mp4" preload="auto"></video>
+  <video id="freestyle-video" src="prati_freestyle.mp4" preload="none"></video>
   <div id="freestyle-hint">ESC per tornare</div>
 </div>
 <canvas id="game" width="900" height="550"></canvas>
@@ -4478,8 +4478,7 @@ const ENEMY_TYPES = {
 };
 
 function spawnGoons(count) {
-  // Remove dead goons but keep any alive ones from previous waves
-  goons = goons.filter(g => !g.dead);
+  // Dead goons already pruned in updateGoons
   const types = ENEMY_TYPES[currentLevel] || ENEMY_TYPES[0];
   for (let i = 0; i < count; i++) {
     const t = types[i % types.length];
@@ -4526,16 +4525,20 @@ function spawnGoons(count) {
 }
 
 function updateGoons() {
-  const aliveGoons = goons.filter(g => !g.dead);
-  const aliveCount = aliveGoons.length;
+  // Prune dead goons every frame to keep array lean
+  goons = goons.filter(g => !g.dead);
+  const aliveCount = goons.length;
 
   // Aggression slots: max 5 enemies attack simultaneously, others circle at medium range
   const MAX_ATTACKERS = 5;
-  const attackingGoons = aliveGoons.filter(g => g.windupTimer > 0 || (g.attackTimer > 0 && g.attackTimer < 20));
-  const attackSlotsAvailable = MAX_ATTACKERS - attackingGoons.length;
+  let attackingCount = 0;
+  for (let i = 0; i < goons.length; i++) {
+    const g = goons[i];
+    if (g.windupTimer > 0 || (g.attackTimer > 0 && g.attackTimer < 20)) attackingCount++;
+  }
+  const attackSlotsAvailable = MAX_ATTACKERS - attackingCount;
 
   goons.forEach(g => {
-    if (g.dead) return;
     // Walk-in animation: move toward play area from offscreen
     if (g.entering) {
       if (!g.enterTarget) g.enterTarget = 200 + Math.random() * 400;
@@ -4774,14 +4777,14 @@ function updateGoons() {
     }
 
     // Separation: don't stack on top of other goons (strong force)
-    goons.forEach(other => {
-      if (other === g || other.dead) return;
+    for (let oi = 0; oi < goons.length; oi++) {
+      const other = goons[oi];
+      if (other === g) continue;
       const gap = g.x - other.x;
       if (Math.abs(gap) < 40) {
-        const pushForce = (40 - Math.abs(gap)) / 40 * 2.0;
-        g.x += Math.sign(gap || 1) * pushForce;
+        g.x += Math.sign(gap || 1) * ((40 - Math.abs(gap)) / 40 * 2.0);
       }
-    });
+    }
 
     g.x = Math.max(30, Math.min(W - 30, g.x));
     g.speed = origSpeed; // restore after hazard slow
@@ -5062,8 +5065,8 @@ function drawMenu() {
       player.stamina = 999;
       player.invincible = 999999;
       player.speed = 6;
-      UPGRADE_POOL.forEach(u => player.upgrades.push(u));
-      helpers.forEach(h => h.tier = 3);
+      UPGRADE_POOL.forEach(u => { if (!player.upgrades.some(e => e.effect === u.effect)) player.upgrades.push(u); });
+      helpers.forEach(h => { h.tier = 3; h.unlocked = true; });
       firstTime = false;
       screenFlash = 20;
       flashColor = '#ffd700';
@@ -5359,15 +5362,15 @@ function drawTutorial() {
 
   // Back wall - bar interior feel
   drawRect(0, 95, W, GROUND_Y - 95, '#2d2233');
-  // Brick texture
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 20; col++) {
-      const offset = row % 2 === 0 ? 0 : 25;
-      ctx.globalAlpha = 0.08;
-      drawRect(col * 50 + offset, 100 + row * 38, 46, 34, '#5d4037');
-      ctx.globalAlpha = 1;
+  // Brick texture (reduced)
+  ctx.globalAlpha = 0.08;
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 10; col++) {
+      const offset = row % 2 === 0 ? 0 : 50;
+      drawRect(col * 100 + offset, 100 + row * 76, 92, 68, '#5d4037');
     }
   }
+  ctx.globalAlpha = 1;
 
   // Vanni bar counter at back
   drawRect(0, GROUND_Y - 45, W, 8, '#5d4037');
@@ -6386,8 +6389,8 @@ function drawHub() {
       player.stamina = 999;
       player.invincible = 999999;
       player.speed = 6;
-      UPGRADE_POOL.forEach(u => player.upgrades.push(u));
-      helpers.forEach(h => h.tier = 3);
+      UPGRADE_POOL.forEach(u => { if (!player.upgrades.some(e => e.effect === u.effect)) player.upgrades.push(u); });
+      helpers.forEach(h => { h.tier = 3; h.unlocked = true; });
       screenFlash = 20;
       flashColor = '#ffd700';
       showQuickText('CONTE MODE ACTIVATED! SEI INVINCIBILE!', '#ffd700');
@@ -7242,18 +7245,16 @@ function drawBgViaPlava() {
   buildings.forEach(b => {
     drawRect(b.x, GROUND_Y - b.h, b.w, b.h, b.color);
     drawRect(b.x, GROUND_Y - b.h, b.w, 6, shadeColor(b.color, -20));
-    // Shuttered windows (green/brown shutters - very Roman)
-    for (let row = 0; row < Math.floor(b.h / 55); row++) {
-      for (let col = 0; col < Math.floor(b.w / 50); col++) {
-        const wx = b.x + 15 + col * 48;
-        const wy = GROUND_Y - b.h + 20 + row * 55;
-        drawRect(wx, wy, 28, 36, '#1a1a2e'); // dark window
-        drawRect(wx - 4, wy, 4, 36, '#2e7d32'); // left shutter
-        drawRect(wx + 28, wy, 4, 36, '#2e7d32'); // right shutter
-        drawRect(wx, wy - 4, 28, 4, '#8d6e63'); // ledge
-        // Some windows lit
-        if ((row + col) % 3 === 0) {
-          ctx.globalAlpha = 0.4;
+    // Windows (simplified for performance — fewer, bigger)
+    for (let row = 0; row < Math.min(3, Math.floor(b.h / 80)); row++) {
+      for (let col = 0; col < Math.min(2, Math.floor(b.w / 70)); col++) {
+        const wx = b.x + 20 + col * 70;
+        const wy = GROUND_Y - b.h + 25 + row * 80;
+        drawRect(wx, wy, 28, 36, '#1a1a2e');
+        drawRect(wx - 3, wy, 3, 36, '#2e7d32');
+        drawRect(wx + 28, wy, 3, 36, '#2e7d32');
+        if ((row + col) % 2 === 0) {
+          ctx.globalAlpha = 0.35;
           drawRect(wx + 2, wy + 2, 24, 32, '#fff9c4');
           ctx.globalAlpha = 1;
         }
@@ -7318,15 +7319,15 @@ function drawBgDownUnder() {
   // Dark pub interior
   ctx.fillStyle = '#1b1b2b';
   ctx.fillRect(0, 0, W, GROUND_Y);
-  // Brick wall
-  for (let row = 0; row < 15; row++) {
-    for (let col = 0; col < 20; col++) {
-      const offset = row % 2 === 0 ? 0 : 25;
-      ctx.globalAlpha = 0.15;
-      drawRect(col * 50 + offset, row * 22 + 30, 46, 18, '#8d6e63');
-      ctx.globalAlpha = 1;
+  // Brick wall (reduced density for performance)
+  ctx.globalAlpha = 0.15;
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 10; col++) {
+      const offset = row % 2 === 0 ? 0 : 50;
+      drawRect(col * 100 + offset, row * 42 + 30, 92, 36, '#8d6e63');
     }
   }
+  ctx.globalAlpha = 1;
   // Bar counter
   drawRect(0, GROUND_Y - 90, W, 10, '#4e342e');
   drawRect(0, GROUND_Y - 80, W, 80, '#3e2723');
@@ -7549,28 +7550,22 @@ function drawBgPizzeria() {
   // Counter with pizzas
   drawRect(50, GROUND_Y - 60, 500, 12, '#795548');
   drawRect(50, GROUND_Y - 48, 500, 48, '#5d4037');
-  // Pizza display
+  // Pizza display (simplified — rects instead of arcs)
   for (let i = 0; i < 4; i++) {
-    ctx.fillStyle = '#ffd54f';
-    ctx.beginPath();
-    ctx.arc(120 + i * 120, GROUND_Y - 68, 22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#f44336';
-    for (let p = 0; p < 5; p++) {
-      ctx.beginPath();
-      ctx.arc(115 + i * 120 + (p % 3) * 8, GROUND_Y - 72 + Math.floor(p / 3) * 8, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    drawRect(100 + i * 120, GROUND_Y - 88, 40, 40, '#ffd54f');
+    drawRect(108 + i * 120, GROUND_Y - 80, 6, 6, '#f44336');
+    drawRect(120 + i * 120, GROUND_Y - 76, 6, 6, '#f44336');
+    drawRect(114 + i * 120, GROUND_Y - 68, 6, 6, '#f44336');
   }
 
-  // Checkered floor
-  for (let r = 0; r < 5; r++) {
-    for (let c = 0; c < 20; c++) {
-      ctx.globalAlpha = 0.15;
-      drawRect(c * 50, GROUND_Y + r * 25, 50, 25, (r + c) % 2 === 0 ? '#fff' : '#d32f2f');
-      ctx.globalAlpha = 1;
+  // Checkered floor (reduced)
+  ctx.globalAlpha = 0.15;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 10; c++) {
+      drawRect(c * 100, GROUND_Y + r * 40, 50, 40, (r + c) % 2 === 0 ? '#fff' : '#d32f2f');
     }
   }
+  ctx.globalAlpha = 1;
 
   // Menu board
   drawRect(30, 120, 120, 160, '#212121');
@@ -7635,17 +7630,11 @@ function drawBgPiazzaMazzini() {
   ];
   palazzi.forEach(p => {
     drawRect(p.x, GROUND_Y - p.h, p.w, p.h, p.color);
-    // Grand windows with arches
-    for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) {
-      const wx = p.x + 15 + c * 58;
-      const wy = GROUND_Y - p.h + 25 + r * 55;
+    // Windows (simplified — no arches for performance)
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
+      const wx = p.x + 20 + c * 80;
+      const wy = GROUND_Y - p.h + 30 + r * 80;
       drawRect(wx, wy, 30, 38, '#111');
-      // Arch top
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(wx + 15, wy, 15, Math.PI, 0);
-      ctx.fill();
-      // Eerie glow
       ctx.globalAlpha = 0.2;
       drawRect(wx + 2, wy + 5, 26, 30, '#b0bec5');
       ctx.globalAlpha = 1;
@@ -7751,7 +7740,7 @@ function updateLevel() {
   updateGoons();
 
   // Wave spawning system
-  const goonsAlive = goons.filter(g => !g.dead).length;
+  const goonsAlive = goons.length; // already filtered in updateGoons
 
   // Wave breather countdown
   if (waveBreatherTimer > 0) {
