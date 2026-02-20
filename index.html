@@ -2030,26 +2030,28 @@ function drawBossChar(b, level) {
     if (gameTime % 4 === 0) spawnParticles(b.x + (Math.random()-0.5)*b.w, b.y - Math.random()*b.h, '#f44336', 1, 2);
   }
 
-  // Boss HP bar with phase markers
-  const barW = 260;
-  const hpRatio = b.hp / b.maxHp;
-  const barX = W/2 - barW/2;
-  drawRect(barX - 4, 6, barW + 8, 36, 'rgba(0,0,0,0.85)');
-  drawRect(barX - 4, 6, barW + 8, 2, '#e94560');
-  drawText(levels[currentLevel].boss.toUpperCase(), W/2, 22, '#ff8a80', 12, 'center');
-  if (b.bossPhase > 1) drawText('PHASE ' + b.bossPhase, W/2 + 100, 22, '#ffd700', 9, 'center');
-  drawRect(barX, 28, barW, 10, '#333');
-  drawRect(barX, 28, barW * hpRatio, 10, hpRatio > 0.3 ? '#e53935' : '#ff6f00');
-  // Boss poise bar
-  if (b.poise !== undefined && b.poise < b.maxPoise) {
-    const poiseR = Math.max(0, b.poise / b.maxPoise);
-    drawRect(barX, 39, barW, 3, '#555');
-    drawRect(barX, 39, barW * poiseR, 3, b.staggerTimer > 0 ? '#ff9800' : '#ffeb3b');
+  // Boss HP bar with phase markers — only show once boss intro has started
+  if (bossIntro) {
+    const barW = 260;
+    const hpRatio = b.hp / b.maxHp;
+    const barX = W/2 - barW/2;
+    drawRect(barX - 4, 6, barW + 8, 36, 'rgba(0,0,0,0.85)');
+    drawRect(barX - 4, 6, barW + 8, 2, '#e94560');
+    drawText(levels[currentLevel].boss.toUpperCase(), W/2, 22, '#ff8a80', 12, 'center');
+    if (b.bossPhase > 1) drawText('PHASE ' + b.bossPhase, W/2 + 100, 22, '#ffd700', 9, 'center');
+    drawRect(barX, 28, barW, 10, '#333');
+    drawRect(barX, 28, barW * hpRatio, 10, hpRatio > 0.3 ? '#e53935' : '#ff6f00');
+    // Boss poise bar
+    if (b.poise !== undefined && b.poise < b.maxPoise) {
+      const poiseR = Math.max(0, b.poise / b.maxPoise);
+      drawRect(barX, 39, barW, 3, '#555');
+      drawRect(barX, 39, barW * poiseR, 3, b.staggerTimer > 0 ? '#ff9800' : '#ffeb3b');
+    }
+    // Phase markers at 60% and 30% HP
+    [0.6, 0.3].forEach(t => {
+      drawRect(barX + barW * t - 1, 26, 2, 14, '#ffd700');
+    });
   }
-  // Phase markers at 60% and 30% HP
-  [0.6, 0.3].forEach(t => {
-    drawRect(barX + barW * t - 1, 26, 2, 14, '#ffd700');
-  });
 }
 
 function drawLaFed(x, y, b) {
@@ -6464,10 +6466,10 @@ function drawLevelBg() {
     case 4: drawBgPiazzaMazzini(); break;
   }
 
-  // Street sign (always)
-  drawRect(20, 12, 200, 30, 'rgba(0,0,0,0.75)');
-  drawRect(20, 12, 200, 3, '#fff');
-  drawText(lvl.name.toUpperCase(), 120, 34, '#fff', 13, 'center');
+  // Street sign (always) — below player info panel
+  drawRect(8, 90, 195, 22, 'rgba(0,0,0,0.75)');
+  drawRect(8, 90, 195, 2, '#fff');
+  drawText(lvl.name.toUpperCase(), 105, 106, '#fff', 11, 'center');
 
   // Ground
   drawRect(0, GROUND_Y, W, H - GROUND_Y, lvl.groundColor);
@@ -7608,8 +7610,8 @@ function drawHUD() {
     }
   }
 
-  // Active consumable buff indicators — below panel, compact
-  let buffY = 90;
+  // Active consumable buff indicators — below street sign
+  let buffY = 116;
   if (player.consumableTimers.freeStamina > 0) {
     drawText('CAFFE\' ' + Math.ceil(player.consumableTimers.freeStamina / 60) + 's', 14, buffY, '#6d4c41', 8);
     buffY += 10;
