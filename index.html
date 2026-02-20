@@ -5451,6 +5451,36 @@ function drawMovesScreen() {
   drawRect(closeMBtnX, closeMBtnY, closeMBtnW, closeMBtnH, closeMHover ? '#e94560' : 'rgba(233,69,96,0.4)');
   drawText('CHIUDI', W/2, closeMBtnY + 21, '#fff', 13, 'center');
 
+  // Level options: restart or return to hub (only when opened from level/tutorial)
+  if (movesScreenPrev === 'level' || movesScreenPrev === 'tutorial') {
+    const optY = H - 45;
+    // Restart level
+    const restartW = 150, restartH = 28;
+    const restartX = 20, restartY = optY;
+    const restartHover = mouseX >= restartX && mouseX <= restartX + restartW && mouseY >= restartY && mouseY <= restartY + restartH;
+    drawRect(restartX, restartY, restartW, restartH, restartHover ? '#ff9800' : 'rgba(255,152,0,0.3)');
+    drawText('RICOMINCIA', restartX + restartW/2, restartY + 20, restartHover ? '#fff' : '#ff9800', 11, 'center');
+    if (restartHover && mouseClick) {
+      movesScreenOpen = false;
+      startLevel(currentLevel);
+      mouseClick = false;
+      return;
+    }
+    // Back to hub
+    const hubW = 150, hubH = 28;
+    const hubX = W - hubW - 20, hubY = optY;
+    const hubHover = mouseX >= hubX && mouseX <= hubX + hubW && mouseY >= hubY && mouseY <= hubY + hubH;
+    drawRect(hubX, hubY, hubW, hubH, hubHover ? '#4caf50' : 'rgba(76,175,80,0.3)');
+    drawText('TORNA A VANNI', hubX + hubW/2, hubY + 20, hubHover ? '#fff' : '#4caf50', 11, 'center');
+    if (hubHover && mouseClick) {
+      movesScreenOpen = false;
+      state = 'hub';
+      resetPlayer();
+      mouseClick = false;
+      return;
+    }
+  }
+
   // Close on TAB, P, ESC, or tap
   if (keysJustPressed['Tab'] || keysJustPressed['KeyP'] || keysJustPressed['Escape'] || (closeMHover && mouseClick)) {
     toggleMovesScreen();
