@@ -129,6 +129,7 @@ Type these on the credits screen:
 | Code | Effect |
 |------|--------|
 | `CONTE` | Unlock everything — all weapons, max upgrades, all helpers tier 3 |
+| `LUDO` | +100 coins |
 | `FREESTYLE` | Play the Cicca & Daniele freestyle music video |
 
 ## How to Share

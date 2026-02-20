@@ -1237,8 +1237,8 @@ const SLOT_PAYOUTS_3 = [38, 25, 18, 14, 10, 6, 0]; // 3-of-a-kind multipliers
 const SLOT_PAYOUTS_2 = [5, 3, 2, 1, 0, 0, 0]; // pair multipliers (best symbols only)
 
 // Bet limits
-const POKER_BET_MIN = 10, POKER_BET_MAX = 100, POKER_BET_STEP = 5;
-const SLOT_BET_MIN = 10, SLOT_BET_MAX = 50, SLOT_BET_STEP = 5;
+const POKER_BET_MIN = 5, POKER_BET_MAX = 100, POKER_BET_STEP = 5;
+const SLOT_BET_MIN = 5, SLOT_BET_MAX = 50, SLOT_BET_STEP = 5;
 
 // Consumable items
 const consumableItems = [
@@ -5275,6 +5275,18 @@ function drawMenu() {
       playSFX('coin');
     }
 
+    // Check for LUDO code
+    if (codeInput === 'LUDO') {
+      showCredits = false;
+      codeInput = '';
+      coins += 100;
+      screenFlash = 15;
+      flashColor = '#ffd700';
+      showQuickText('+100 COINS! Grazie Ludo!', '#ffd700');
+      playSFX('coin');
+      spawnParticles(W/2, H/2, '#ffd700', 20, 5);
+    }
+
     // Check for FREESTYLE code
     if (codeInput === 'FREESTYLE') {
       showCredits = false;
@@ -6705,6 +6717,18 @@ function drawHub() {
       screenFlash = 15;
       flashColor = '#ff69b4';
       playSFX('coin');
+    }
+
+    // Check for LUDO code
+    if (codeInput === 'LUDO') {
+      showCredits = false;
+      codeInput = '';
+      coins += 100;
+      screenFlash = 15;
+      flashColor = '#ffd700';
+      showQuickText('+100 COINS! Grazie Ludo!', '#ffd700');
+      playSFX('coin');
+      spawnParticles(W/2, H/2, '#ffd700', 20, 5);
     }
 
     // Check for FREESTYLE code
