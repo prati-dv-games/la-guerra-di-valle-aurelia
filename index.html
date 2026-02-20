@@ -5173,11 +5173,65 @@ function updateTutorial() {
 }
 
 function drawTutorial() {
-  // Background - training area at Vanni
-  ctx.fillStyle = '#1a237e';
-  ctx.fillRect(0, 0, W, H);
+  // Background - training area at Vanni bar
+  const trainSky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  trainSky.addColorStop(0, '#0d1b2a');
+  trainSky.addColorStop(1, '#1b2838');
+  ctx.fillStyle = trainSky;
+  ctx.fillRect(0, 0, W, GROUND_Y);
   drawRect(0, GROUND_Y, W, H - GROUND_Y, '#3e2723');
   drawRect(0, GROUND_Y, W, 3, '#5d4037');
+
+  // Back wall - bar interior feel
+  drawRect(0, 95, W, GROUND_Y - 95, '#2d2233');
+  // Brick texture
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 20; col++) {
+      const offset = row % 2 === 0 ? 0 : 25;
+      ctx.globalAlpha = 0.08;
+      drawRect(col * 50 + offset, 100 + row * 38, 46, 34, '#5d4037');
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Vanni bar counter at back
+  drawRect(0, GROUND_Y - 45, W, 8, '#5d4037');
+  drawRect(0, GROUND_Y - 37, W, 37, '#3e2723');
+  // Bottles on shelf
+  const bColors = ['#4caf50','#f44336','#2196f3','#ff9800','#9c27b0','#ffeb3b','#4caf50','#f44336'];
+  bColors.forEach((c, i) => {
+    drawRect(60 + i * 100, GROUND_Y - 72, 8, 28, c);
+    drawRect(58 + i * 100, GROUND_Y - 74, 12, 4, c);
+  });
+
+  // Training targets on wall (punching bag outlines)
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = '#f44336';
+  ctx.beginPath(); ctx.arc(180, GROUND_Y - 130, 25, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(720, GROUND_Y - 130, 25, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+  // Target rings
+  [180, 720].forEach(tx => {
+    ctx.strokeStyle = '#f44336'; ctx.lineWidth = 1; ctx.globalAlpha = 0.3;
+    ctx.beginPath(); ctx.arc(tx, GROUND_Y - 130, 15, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tx, GROUND_Y - 130, 8, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Warm hanging lights
+  [200, 450, 700].forEach(lx => {
+    drawRect(lx, 95, 2, 20, '#444');
+    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.03 + lx) * 0.1;
+    ctx.fillStyle = '#ffcc80';
+    ctx.beginPath(); ctx.arc(lx + 1, 118, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    drawRect(lx - 5, 114, 12, 6, '#ffd54f');
+  });
+
+  // Floor mat (training area)
+  ctx.globalAlpha = 0.15;
+  drawRect(300, GROUND_Y + 3, 300, H - GROUND_Y - 3, '#1565c0');
+  ctx.globalAlpha = 1;
 
   // Vanni sign (below tutorial panel)
   drawRect(350, 92, 200, 28, '#b71c1c');
@@ -5204,28 +5258,111 @@ function drawTutorial() {
   drawConte(player);
   drawParticles();
 
-  // Tutorial UI - at the TOP so it doesn't cover action
+  // === Tutorial mini-HUD (ultra bar + consumable slots) ===
+  const tutStep = tutorialSteps[tutorialStep];
+  const isUltraStep = tutStep && tutStep.check === 'ultra';
+  const isConsumableStep = tutStep && tutStep.check === 'consumable';
+  const showTutHud = tutorialStep >= 3; // show from attack step onward
+
+  if (showTutHud) {
+    // Ultra bar - bottom left
+    const ubX = 14, ubY = H - 60, ubW = 140, ubH = 10;
+    drawRect(ubX - 4, ubY - 16, ubW + 8, 30, 'rgba(0,0,0,0.7)');
+    drawText('ULTRA [Q]', ubX, ubY - 4, '#ff8f00', 9);
+    drawRect(ubX, ubY, ubW, ubH, '#333');
+    const ultraR = player.ultraCharge / player.ultraMaxCharge;
+    if (player.ultraAvailable) {
+      const pulse = Math.sin(gameTime * 0.15) * 0.3 + 0.7;
+      ctx.globalAlpha = pulse;
+      drawRect(ubX, ubY, ubW, ubH, '#ffd700');
+      drawText('PRONTO!', ubX + ubW + 6, ubY + 9, '#ffd700', 9);
+      ctx.globalAlpha = 1;
+    } else {
+      drawRect(ubX, ubY, ubW * ultraR, ubH, '#ff8f00');
+      drawText(Math.floor(ultraR * 100) + '%', ubX + ubW + 6, ubY + 9, '#ff8f00', 8);
+    }
+
+    // Pulsing highlight arrow during ultra step
+    if (isUltraStep && !tutorialChecks.ultra) {
+      const arrowPulse = Math.sin(gameTime * 0.1) * 8;
+      const aX = ubX + ubW / 2, aY = ubY - 22 + arrowPulse;
+      ctx.fillStyle = '#ffd700';
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(aX - 8, aY - 10);
+      ctx.lineTo(aX + 8, aY - 10);
+      ctx.lineTo(aX, aY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      drawText('COLPISCI PER CARICARE!', aX, aY - 16, '#ffd700', 10, 'center');
+    }
+  }
+
+  // Consumable slots display during tutorial
+  if (isConsumableStep && player.consumables.length > 0) {
+    const csX = W - 210, csY = H - 60;
+    drawRect(csX - 4, csY - 16, 210, 30, 'rgba(0,0,0,0.7)');
+    drawText('CONSUMABILI', csX, csY - 4, '#a1887f', 9);
+    for (let i = 0; i < player.consumables.length; i++) {
+      const cx = csX + i * 62;
+      const cy = csY;
+      const effect = player.consumables[i];
+      const ci = consumableItems.find(c => c.effect === effect);
+      if (ci) {
+        drawRect(cx, cy, 56, 12, 'rgba(255,255,255,0.15)');
+        drawRect(cx, cy, 56, 2, ci.color);
+        drawText('[' + (i+5) + '] ' + ci.icon, cx + 4, cy + 11, '#fff', 9);
+      }
+    }
+    // Pulsing arrow
+    if (!tutorialChecks.consumable) {
+      const arrowPulse = Math.sin(gameTime * 0.1) * 8;
+      const aX = csX + 90, aY = csY - 22 + arrowPulse;
+      ctx.fillStyle = '#a1887f';
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(aX - 8, aY - 10);
+      ctx.lineTo(aX + 8, aY - 10);
+      ctx.lineTo(aX, aY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      drawText('PREMI 5, 6 O 7!', aX, aY - 16, '#a1887f', 10, 'center');
+    }
+  }
+
+  // === Tutorial UI - at the TOP ===
   const step = tutorialSteps[tutorialStep];
   if (step) {
     drawRect(0, 0, W, 80, 'rgba(10,10,30,0.92)');
     drawRect(0, 78, W, 2, '#4caf50');
 
+    // Step progress dots
+    for (let i = 0; i < tutorialSteps.length; i++) {
+      const dotX = W/2 - (tutorialSteps.length * 8) + i * 16;
+      drawRect(dotX, 6, 8, 4, i < tutorialStep ? '#4caf50' : i === tutorialStep ? '#fff' : '#333');
+    }
+
     // Step indicator
-    drawText('TUTORIAL ' + (tutorialStep + 1) + '/' + tutorialSteps.length, W/2, 18, '#4caf50', 11, 'center');
-    drawText(step.text, W/2, 40, '#fff', 14, 'center');
-    drawText(step.hint, W/2, 60, '#aaa', 11, 'center');
+    drawText('TUTORIAL ' + (tutorialStep + 1) + '/' + tutorialSteps.length, W/2, 22, '#4caf50', 11, 'center');
+    drawText(step.text, W/2, 42, '#fff', 14, 'center');
+    drawText(step.hint, W/2, 62, '#aaa', 11, 'center');
 
     // Auto-advance or manual advance
     const hasCheck = step.check;
     const confirmPressed = keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'];
     if (hasCheck) {
       if (tutorialChecks[step.check]) {
-        drawText('Bravo! [Z/ENTER]', W/2, 74, '#4caf50', 10, 'center');
+        const bravoPulse = Math.sin(gameTime * 0.12) * 0.3 + 0.7;
+        ctx.globalAlpha = bravoPulse;
+        drawText('Bravo! [Z/ENTER]', W/2, 76, '#4caf50', 10, 'center');
+        ctx.globalAlpha = 1;
         if (confirmPressed) { tutorialStep++; }
       }
     } else {
       if (Math.floor(gameTime / 30) % 2 === 0) {
-        drawText('[Z/ENTER]', W/2, 74, '#888', 10, 'center');
+        drawText('[Z/ENTER]', W/2, 76, '#888', 10, 'center');
       }
       if (confirmPressed) { tutorialStep++; }
     }
@@ -6948,6 +7085,39 @@ function drawBgViaPlava() {
   for (let i = 0; i < 4; i++) {
     drawRect(200 + i * 45, GROUND_Y - 185 + Math.sin(gameTime*0.02+i)*3, 15, 20, clothes[i]);
   }
+  // Street lamps
+  [80, 500, 830].forEach(lx => {
+    drawRect(lx, GROUND_Y - 100, 4, 100, '#424242');
+    drawRect(lx - 8, GROUND_Y - 105, 20, 6, '#616161');
+    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.03 + lx * 0.1) * 0.1;
+    ctx.fillStyle = '#ffcc80';
+    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 110, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Parked Vespa
+  drawRect(650, GROUND_Y - 30, 40, 20, '#1e88e5'); // body
+  drawRect(645, GROUND_Y - 38, 12, 12, '#1565c0'); // handlebar
+  drawRect(640, GROUND_Y - 12, 14, 12, '#424242'); // front wheel
+  drawRect(680, GROUND_Y - 12, 14, 12, '#424242'); // back wheel
+  drawRect(660, GROUND_Y - 42, 4, 8, '#90a4ae'); // mirror
+
+  // Trash bins
+  drawRect(42, GROUND_Y - 28, 18, 28, '#424242');
+  drawRect(40, GROUND_Y - 30, 22, 4, '#616161');
+
+  // Stray cat (small pixel silhouette, subtle animation)
+  const catX = 280, catY = GROUND_Y - 10;
+  const catBob = Math.sin(gameTime * 0.02) * 1;
+  drawRect(catX, catY + catBob - 8, 12, 8, '#333'); // body
+  drawRect(catX + 10, catY + catBob - 12, 6, 6, '#333'); // head
+  drawRect(catX + 10, catY + catBob - 15, 2, 4, '#333'); // ear
+  drawRect(catX + 14, catY + catBob - 15, 2, 4, '#333'); // ear
+  drawRect(catX - 4, catY + catBob - 6, 6, 2, '#333'); // tail
+  ctx.globalAlpha = 0.8;
+  drawRect(catX + 12, catY + catBob - 10, 2, 2, '#76ff03'); // eye
+  ctx.globalAlpha = 1;
+
   // Cobblestone hint on ground
   for (let i = 0; i < 30; i++) {
     ctx.globalAlpha = 0.15;
@@ -7008,11 +7178,48 @@ function drawBgDownUnder() {
   ctx.beginPath();
   ctx.arc(780, 160, 4, 0, Math.PI * 2);
   ctx.fill();
+  // Hanging pendant lights
+  [150, 350, 550, 750].forEach(lx => {
+    drawRect(lx, 0, 1, 45, '#555');
+    ctx.globalAlpha = 0.15 + Math.sin(gameTime * 0.025 + lx * 0.1) * 0.08;
+    ctx.fillStyle = '#ffcc80';
+    ctx.beginPath(); ctx.arc(lx, 50, 18, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    drawRect(lx - 6, 44, 12, 8, '#ff8f00');
+  });
+
+  // Band posters on wall
+  drawRect(30, 130, 50, 65, '#1a237e');
+  drawText('LIVE', 55, 155, '#f44336', 8, 'center');
+  drawText('MUSIC', 55, 168, '#fff', 7, 'center');
+  drawRect(840, 140, 45, 55, '#b71c1c');
+  drawText('PUB', 862, 160, '#fff', 7, 'center');
+  drawText('QUIZ', 862, 175, '#ffd700', 7, 'center');
+
+  // Pool table (background, behind counter)
+  drawRect(300, GROUND_Y - 140, 100, 55, '#1b5e20');
+  drawRect(296, GROUND_Y - 144, 108, 4, '#5d4037');
+  drawRect(296, GROUND_Y - 89, 108, 4, '#5d4037');
+  drawRect(296, GROUND_Y - 140, 4, 55, '#5d4037');
+  drawRect(400, GROUND_Y - 140, 4, 55, '#5d4037');
+  // Pool balls
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(330, GROUND_Y - 115, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#f44336'; ctx.beginPath(); ctx.arc(350, GROUND_Y - 120, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(365, GROUND_Y - 110, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1565c0'; ctx.beginPath(); ctx.arc(380, GROUND_Y - 118, 3, 0, Math.PI * 2); ctx.fill();
+
   // Stools
   for (let i = 0; i < 6; i++) {
     drawRect(60 + i * 140, GROUND_Y - 10, 30, 10, '#5d4037');
     drawRect(72 + i * 140, GROUND_Y, 6, 20, '#795548');
   }
+
+  // Spilled drink stain (subtle)
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#795548';
+  ctx.beginPath(); ctx.arc(420, GROUND_Y + 20, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+
   // Wooden floor
   for (let i = 0; i < 12; i++) {
     ctx.globalAlpha = 0.1;
@@ -7074,6 +7281,43 @@ function drawBgPiazzaBainsizza() {
     ctx.arc(tx + 8, GROUND_Y - 55, 18, 0, Math.PI * 2);
     ctx.fill();
   });
+
+  // Street lamps with warm glow
+  [60, 280, 620, 850].forEach(lx => {
+    drawRect(lx, GROUND_Y - 90, 4, 90, '#37474f');
+    drawRect(lx - 6, GROUND_Y - 94, 16, 5, '#455a64');
+    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.03 + lx * 0.05) * 0.1;
+    ctx.fillStyle = '#ffe0b2';
+    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 98, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Benches
+  [200, 680].forEach(bx => {
+    drawRect(bx, GROUND_Y - 20, 50, 6, '#5d4037'); // seat
+    drawRect(bx + 2, GROUND_Y - 14, 4, 14, '#4e342e'); // leg
+    drawRect(bx + 44, GROUND_Y - 14, 4, 14, '#4e342e'); // leg
+    drawRect(bx, GROUND_Y - 32, 50, 4, '#5d4037'); // backrest
+    drawRect(bx, GROUND_Y - 32, 2, 16, '#4e342e'); // back support
+    drawRect(bx + 48, GROUND_Y - 32, 2, 16, '#4e342e');
+  });
+
+  // Pigeons (small pixel birds, subtle movement)
+  [{ x: 150, d: 0 }, { x: 170, d: 1.5 }, { x: 500, d: 3 }, { x: 520, d: 4.5 }].forEach(p => {
+    const bob = Math.sin(gameTime * 0.04 + p.d) * 1.5;
+    const px = p.x + Math.sin(gameTime * 0.01 + p.d) * 3;
+    drawRect(px, GROUND_Y - 6 + bob, 8, 5, '#78909c'); // body
+    drawRect(px + 6, GROUND_Y - 9 + bob, 4, 4, '#90a4ae'); // head
+    drawRect(px + 9, GROUND_Y - 8 + bob, 3, 1, '#ff8f00'); // beak
+  });
+
+  // Moon
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#e0e0e0';
+  ctx.beginPath(); ctx.arc(780, 40, 18, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#263248';
+  ctx.beginPath(); ctx.arc(786, 36, 16, 0, Math.PI * 2); ctx.fill(); // crescent shadow
+  ctx.globalAlpha = 1;
 
   // Cobblestone piazza
   for (let i = 0; i < 40; i++) {
@@ -7148,6 +7392,35 @@ function drawBgPizzeria() {
   drawText('Diavola     7E', 90, 180, '#ffd54f', 8, 'center');
   drawText('Capricciosa 8E', 90, 195, '#ffd54f', 8, 'center');
   drawText('Pugni  GRATIS', 90, 215, '#f44336', 8, 'center');
+
+  // Hanging garlic braids
+  [200, 350, 500].forEach(gx => {
+    drawRect(gx, 94, 2, 18, '#8d6e63');
+    for (let g = 0; g < 3; g++) {
+      ctx.fillStyle = '#f5f5dc';
+      ctx.beginPath(); ctx.arc(gx + 1, 115 + g * 10, 5, 0, Math.PI * 2); ctx.fill();
+    }
+  });
+
+  // Steam from oven (animated particles rising)
+  for (let s = 0; s < 4; s++) {
+    const sx = 675 + Math.sin(gameTime * 0.03 + s * 1.5) * 20;
+    const sy = GROUND_Y - 155 - (gameTime * 0.5 + s * 30) % 60;
+    ctx.globalAlpha = 0.08 + (1 - ((gameTime * 0.5 + s * 30) % 60) / 60) * 0.1;
+    ctx.fillStyle = '#bdbdbd';
+    ctx.beginPath(); ctx.arc(sx, sy, 8 + s * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Hanging pepper lights (red string lights along awning)
+  for (let i = 0; i < 15; i++) {
+    const lx = 30 + i * 60;
+    const bob = Math.sin(gameTime * 0.02 + i * 0.8) * 1;
+    ctx.fillStyle = i % 3 === 0 ? '#f44336' : i % 3 === 1 ? '#4caf50' : '#fff';
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.arc(lx, 96 + bob, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
 }
 
 // Piazza Mazzini - the famous piazza with central garden
@@ -7218,11 +7491,46 @@ function drawBgPiazzaMazzini() {
     ctx.globalAlpha = 1;
   });
 
-  // Fog at ground level
-  for (let i = 0; i < 8; i++) {
-    ctx.globalAlpha = 0.08;
-    const fx = (i * 130 + gameTime * 0.3) % (W + 100) - 50;
-    drawRect(fx, GROUND_Y - 20, 100, 30, '#b0bec5');
+  // Statue in center (monument)
+  drawRect(440, GROUND_Y - 80, 20, 50, '#546e7a'); // pedestal pillar
+  drawRect(430, GROUND_Y - 85, 40, 8, '#607d8b'); // pedestal top
+  drawRect(425, GROUND_Y - 30, 50, 10, '#607d8b'); // pedestal base
+  // Figure silhouette
+  drawRect(442, GROUND_Y - 115, 16, 32, '#455a64');
+  drawRect(438, GROUND_Y - 105, 8, 18, '#455a64'); // arm
+  drawRect(454, GROUND_Y - 100, 8, 14, '#455a64'); // arm
+  drawRect(446, GROUND_Y - 122, 10, 10, '#546e7a'); // head
+
+  // Rain effect
+  ctx.strokeStyle = '#5c6bc0';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 30; i++) {
+    const rx = (i * 73 + gameTime * 3) % W;
+    const ry = (i * 41 + gameTime * 6) % GROUND_Y;
+    ctx.globalAlpha = 0.15;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.lineTo(rx - 2, ry + 12);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Puddle reflections
+  [150, 350, 600, 800].forEach(px => {
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = '#7986cb';
+    ctx.beginPath();
+    ctx.ellipse(px, GROUND_Y + 15, 25, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Fog at ground level (denser)
+  for (let i = 0; i < 10; i++) {
+    ctx.globalAlpha = 0.06 + Math.sin(gameTime * 0.02 + i) * 0.03;
+    const fx = (i * 110 + gameTime * 0.3) % (W + 100) - 50;
+    const fw = 80 + (i % 3) * 40;
+    drawRect(fx, GROUND_Y - 15, fw, 25, '#b0bec5');
     ctx.globalAlpha = 1;
   }
 }
