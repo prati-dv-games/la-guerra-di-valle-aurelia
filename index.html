@@ -8,7 +8,10 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { background: #1a1a2e; width: 100%; height: 100%; overflow: hidden; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 body { display: flex; justify-content: center; align-items: center; font-family: monospace; }
-canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
+canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw; max-height: 100dvh; width: auto; height: auto; }
+@supports (padding: env(safe-area-inset-bottom)) {
+  canvas { max-height: calc(100dvh - env(safe-area-inset-bottom)); }
+}
 #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
 </style>
 </head>
@@ -50,15 +53,15 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 
 // Virtual button definitions
 const touchButtons = {
-  // Combat buttons (bottom-right, inverted triangle)
-  attack:  { x: W - 75, y: H - 75, w: 60, h: 60, key: 'KeyZ', label: 'Z', color: '#e94560', justPress: true },
-  dodge:   { x: W - 145, y: H - 75, w: 60, h: 60, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  jump:    { x: W - 110, y: H - 145, w: 60, h: 60, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
+  // Combat buttons (bottom-right, triangle layout)
+  attack:  { x: W - 80, y: H - 100, w: 65, h: 55, key: 'KeyZ', label: 'Z', color: '#e94560', justPress: true },
+  dodge:   { x: W - 155, y: H - 100, w: 65, h: 55, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  jump:    { x: W - 120, y: H - 170, w: 65, h: 55, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
   // Movement (bottom-left)
-  left:    { x: 15, y: H - 75, w: 45, h: 45, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 70, y: H - 75, w: 45, h: 45, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  left:    { x: 15, y: H - 100, w: 55, h: 50, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 80, y: H - 100, w: 55, h: 50, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
   // Ultra (above combat)
-  ultra:   { x: W - 90, y: H - 195, w: 50, h: 32, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
+  ultra:   { x: W - 100, y: H - 230, w: 55, h: 35, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
   // Pause (top-right)
   pause:   { x: W - 50, y: 36, w: 35, h: 25, key: 'Escape', label: 'II', color: '#666', justPress: true }
 };
@@ -79,6 +82,7 @@ function hitTestButton(tx, ty) {
 
 function getTouchButtonsForState() {
   if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'pause'];
+  if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right'];
   if (state === 'sabi') return ['left', 'right', 'pause'];
   return [];
 }
@@ -5095,11 +5099,16 @@ function drawTutorial() {
     toggleMovesScreen();
   }
 
-  // Skip option - bottom right (tappable button for mobile)
-  const skipBtnX = W - 120, skipBtnY = H - 30, skipBtnW = 110, skipBtnH = 25;
+  // Mobile touch buttons
+  drawTouchButtons();
+
+  // Skip option — top right, big enough to tap on mobile
+  const skipBtnW = 140, skipBtnH = 36;
+  const skipBtnX = W - skipBtnW - 10, skipBtnY = 86;
   const skipHover = mouseX >= skipBtnX && mouseX <= skipBtnX + skipBtnW && mouseY >= skipBtnY && mouseY <= skipBtnY + skipBtnH;
-  drawRect(skipBtnX, skipBtnY, skipBtnW, skipBtnH, skipHover ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)');
-  drawText('SALTA >', skipBtnX + skipBtnW / 2, skipBtnY + 17, skipHover ? '#fff' : '#666', 11, 'center');
+  drawRect(skipBtnX, skipBtnY, skipBtnW, skipBtnH, skipHover ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)');
+  drawRect(skipBtnX, skipBtnY, skipBtnW, 2, '#888');
+  drawText('SALTA TUTORIAL >', skipBtnX + skipBtnW / 2, skipBtnY + 23, skipHover ? '#fff' : '#aaa', 12, 'center');
   if ((mouseClick && skipHover) || keys['Escape']) {
     state = 'hub';
     resetPlayer();
@@ -5371,15 +5380,15 @@ function drawMovesScreen() {
   drawSection(20, 60, 430, 112, 'ATTACCO', '#e94560', [
     ['Z / Spazio', 'Colpisci. Premi piu\' volte = combo chain'],
     ['Q', 'ULTRA — barra piena → attiva (1.5x danno, velocita\', 5 sec)'],
-    ['W + Z', 'Overhead — colpo dall\'alto, 2x danno postura'],
-    ['W + Z (aria)', 'Attacco aereo'],
+    ['W poi Z', 'Overhead — colpo dall\'alto, 2x danno postura'],
+    ['Z in aria', 'Attacco aereo'],
     ['X', 'Schivata (durante windup nemico = COUNTER)'],
   ], '#ff8a65');
 
   // GRAB
   drawSection(20, 182, 430, 68, 'GRAB', '#64b5f6', [
     ['Z vicino', 'Afferra nemico stordito'],
-    ['', 'Z = lancia nemico | W+Z = slam'],
+    ['', 'Z = lancia nemico | W poi Z = slam'],
   ], '#90caf9');
 
   // MOVIMENTO
@@ -7452,7 +7461,7 @@ function drawLevel() {
 
   // Quick text - positioned above helper bar
   if (quickTextTimer > 0) {
-    const qtY = isTouchDevice ? H - 130 : H - 65;
+    const qtY = isTouchDevice ? H - 160 : H - 65;
     ctx.globalAlpha = Math.min(1, quickTextTimer / 20);
     drawRect(W/2 - 260, qtY, 520, 24, 'rgba(0,0,0,0.85)');
     drawRect(W/2 - 260, qtY, 520, 2, quickTextColor);
@@ -7700,7 +7709,7 @@ function drawHUD() {
   }
 
   // === BOTTOM LEFT: Helper cooldowns ===
-  const bottomBarY = isTouchDevice ? H - 110 : H - 38;
+  const bottomBarY = isTouchDevice ? H - 140 : H - 38;
   drawRect(8, bottomBarY, 220, 30, 'rgba(0,0,0,0.6)');
   for (let i = 0; i < 4; i++) {
     const hx = 14 + i * 54;
