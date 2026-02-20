@@ -9106,6 +9106,17 @@ function drawSabi() {
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, H);
 
+  // Mobile zoom — camera follows Cicca
+  const sabiZoom = isTouchDevice ? 1.5 : 1;
+  if (sabiZoom > 1) {
+    ctx.save();
+    const camX = Math.max(W / (2 * sabiZoom), Math.min(W - W / (2 * sabiZoom), sabiCicca.x));
+    const camY = 340;
+    ctx.translate(W / 2, H / 2);
+    ctx.scale(sabiZoom, sabiZoom);
+    ctx.translate(-camX, -camY);
+  }
+
   // Sun
   ctx.fillStyle = '#fff9c4';
   ctx.beginPath();
@@ -9307,6 +9318,9 @@ function drawSabi() {
     }
   });
   sabiMessages = sabiMessages.filter(m => m.timer < 120);
+
+  // Restore zoom before drawing UI
+  if (sabiZoom > 1) ctx.restore();
 
   // === UI text ===
   // Title — floating
