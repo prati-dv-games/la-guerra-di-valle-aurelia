@@ -16,9 +16,17 @@ canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw
   canvas { max-height: calc(100dvh - env(safe-area-inset-bottom)); }
 }
 #ui { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+#freestyle-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+#freestyle-overlay.active { display: flex; }
+#freestyle-video { max-width: 100%; max-height: 90vh; }
+#freestyle-hint { color: #555; font-family: monospace; font-size: 12px; margin-top: 8px; }
 </style>
 </head>
 <body>
+<div id="freestyle-overlay">
+  <video id="freestyle-video" src="prati_freestyle.mp4" preload="auto"></video>
+  <div id="freestyle-hint">ESC per tornare</div>
+</div>
 <canvas id="game" width="900" height="550"></canvas>
 <script>
 // ==========================================
@@ -846,6 +854,37 @@ let firstTime = true;
 let cheatBuffer = '';
 let showCredits = false;
 let codeInput = '';
+let freestylePlaying = false;
+const freestyleOverlay = document.getElementById('freestyle-overlay');
+const freestyleVideo = document.getElementById('freestyle-video');
+
+function startFreestyleVideo() {
+  freestylePlaying = true;
+  freestyleOverlay.classList.add('active');
+  freestyleVideo.currentTime = 0;
+  freestyleVideo.play();
+  stopMusic();
+}
+
+function stopFreestyleVideo() {
+  freestylePlaying = false;
+  freestyleOverlay.classList.remove('active');
+  freestyleVideo.pause();
+  freestyleVideo.currentTime = 0;
+}
+
+// Close video on ESC
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Escape' && freestylePlaying) {
+    stopFreestyleVideo();
+    e.preventDefault();
+  }
+});
+
+// When video ends, return to game
+freestyleVideo.addEventListener('ended', function() {
+  stopFreestyleVideo();
+});
 let currentLevel = 0;
 let coins = 0;
 let lives = 3;
@@ -5024,6 +5063,13 @@ function drawMenu() {
       playSFX('coin');
     }
 
+    // Check for FREESTYLE code
+    if (codeInput === 'FREESTYLE') {
+      showCredits = false;
+      codeInput = '';
+      startFreestyleVideo();
+    }
+
     // Block menu interaction while credits open
     return;
   }
@@ -6338,6 +6384,13 @@ function drawHub() {
       screenFlash = 15;
       flashColor = '#ff69b4';
       playSFX('coin');
+    }
+
+    // Check for FREESTYLE code
+    if (codeInput === 'FREESTYLE') {
+      showCredits = false;
+      codeInput = '';
+      startFreestyleVideo();
     }
 
     mouseClick = false;
@@ -9180,9 +9233,28 @@ function drawSabi() {
 // VICTORY
 // ==========================================
 let victoryTimer = 0; // guard timer to prevent instant restart
+let victorySongStarted = false;
+
+function startVictorySong() {
+  if (victorySongStarted) return;
+  victorySongStarted = true;
+  stopMusic();
+  // Play the freestyle MP4 as audio only (no video overlay)
+  freestyleVideo.currentTime = 0;
+  freestyleVideo.play().catch(() => {}); // may fail if no user gesture
+}
+
+function stopVictorySong() {
+  victorySongStarted = false;
+  freestyleVideo.pause();
+  freestyleVideo.currentTime = 0;
+}
 
 function drawVictory() {
   victoryTimer++;
+
+  // Start the freestyle song on victory
+  if (victoryTimer === 2) startVictorySong();
 
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#1b5e20');
@@ -9225,10 +9297,11 @@ function drawVictory() {
   drawText('- CREDITS -', W/2, creditsY, '#ffd700', 14, 'center');
   drawText('Un gioco da conti...anzi, del Conte!', W/2, creditsY + 18, '#ccc', 11, 'center');
   drawText('Sviluppatore: Cicca', W/2, creditsY + 36, '#aaa', 11, 'center');
-  drawText('Ambientato a Prati, Roma', W/2, creditsY + 54, '#aaa', 11, 'center');
-  drawText('Grazie per aver giocato!', W/2, creditsY + 74, '#ffcc80', 13, 'center');
+  drawText('Musica: Cicca & Daniele', W/2, creditsY + 50, '#aaa', 11, 'center');
+  drawText('Ambientato a Prati, Roma', W/2, creditsY + 64, '#aaa', 11, 'center');
+  drawText('Grazie per aver giocato!', W/2, creditsY + 84, '#ffcc80', 13, 'center');
 
-  drawText('Coins raccolti: ' + coins, W/2, creditsY + 96, '#ffd700', 12, 'center');
+  drawText('Coins raccolti: ' + coins, W/2, creditsY + 104, '#ffd700', 12, 'center');
 
   ctx.globalAlpha = 1;
 
@@ -9259,6 +9332,7 @@ function drawVictory() {
       lives = 3;
       firstTime = true;
       victoryTimer = 0;
+      stopVictorySong();
       state = 'menu';
     }
   }
@@ -9268,6 +9342,9 @@ function drawVictory() {
 // MAIN GAME LOOP
 // ==========================================
 function update() {
+  // Skip game updates while freestyle video is playing
+  if (freestylePlaying) return;
+
   gameTime++;
 
   // Music management per state
@@ -9293,7 +9370,7 @@ function update() {
       }
       break;
     case 'gameover': playTrack('gameover'); break;
-    case 'victory': playTrack('victory'); break;
+    case 'victory': if (!victorySongStarted) playTrack('victory'); break;
     case 'sabi': playTrack('sabi'); break;
   }
 
