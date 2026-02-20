@@ -38,6 +38,25 @@ Choose at game start:
 
 On mobile, on-screen touch buttons replace keyboard controls.
 
+### Playing on PS5
+
+The game supports the DualSense controller via the Gamepad API. Since the PS5 browser can't open local files, you need to host the game online first (see "How to Share" below), then navigate to the URL in the PS5's built-in browser.
+
+| DualSense | Action |
+|-----------|--------|
+| Left Stick / D-pad | Move |
+| Triangle | Jump |
+| Cross (X) | Attack / Confirm |
+| Circle (O) | Dodge |
+| Square | Ultra (when bar is full) |
+| L1 / R1 | Helper 1 (Pirox) / Helper 2 (Tommy) |
+| L2 / R2 | Helper 3 (Cicca) / Helper 4 (Il Mostro) |
+| L3 / R3 | Use consumable |
+| Options | Pause / Back |
+| Create | Moves screen |
+
+Use the touchpad as a mouse for hub menus and the shop. Any standard gamepad (Xbox, Switch Pro, etc.) also works with the same layout.
+
 ### Combat System
 
 - **Combo chains**: chain attacks together; timing the next hit in the combo window keeps the chain going
