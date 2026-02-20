@@ -4785,61 +4785,44 @@ function drawGoon(g) {
   });
   ctx.globalAlpha = 1;
 
-  // Windup visual — big, obvious red flash + shake + danger zone
+  // Windup visual — clean: body tint + "!" + ground line
   if (g.windupTimer > 0) {
-    const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
-    // Body shakes as attack approaches
-    const shake = Math.floor(windupProgress * 3) * (Math.floor(gameTime) % 2 === 0 ? 1 : -1);
+    const wp = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
+    const shake = (wp > 0.5 ? 1 : 0) * (Math.floor(gameTime) % 2 === 0 ? 1 : -1);
 
-    // Strong red outline that pulses
-    const outlineSize = 3 + Math.floor(windupProgress * 4);
-    ctx.globalAlpha = 0.3 + windupProgress * 0.5;
-    drawRect(x - outlineSize + shake, y - outlineSize, g.w + outlineSize * 2, g.h + outlineSize * 2, '#ff1744');
-    ctx.globalAlpha = 1;
-
-    // Inner red body glow
-    ctx.globalAlpha = 0.2 + windupProgress * 0.4;
+    // Subtle body red tint (no giant outline)
+    ctx.globalAlpha = 0.15 + wp * 0.25;
     drawRect(x + shake, y, g.w, g.h, '#ff1744');
     ctx.globalAlpha = 1;
 
-    // Ground danger zone for melee attackers — wide and flashing
+    // Thin red line under feet toward attack direction (melee only)
     if (g.type !== 'thrower' && g.type !== 'ranged') {
       const atkDir = Math.sign(player.x - g.x) || 1;
-      const zoneX = g.x + atkDir * 5;
-      const zoneW = 70 * atkDir;
-      // Pulsing danger stripe
-      const stripePulse = Math.floor(gameTime / 4) % 2 === 0;
-      ctx.globalAlpha = stripePulse ? 0.15 + windupProgress * 0.35 : 0.05 + windupProgress * 0.15;
-      drawRect(Math.min(zoneX, zoneX + zoneW), GROUND_Y - 8, Math.abs(zoneW), 8, '#ff1744');
-      // Second thinner stripe for visibility
-      ctx.globalAlpha = 0.4 + windupProgress * 0.4;
-      drawRect(Math.min(zoneX, zoneX + zoneW), GROUND_Y - 2, Math.abs(zoneW), 2, '#ffeb3b');
+      const lineW = 40 + wp * 25;
+      const lineX = atkDir > 0 ? g.x : g.x - lineW;
+      ctx.globalAlpha = 0.3 + wp * 0.4;
+      drawRect(lineX, GROUND_Y - 1, lineW, 2, '#ff5252');
       ctx.globalAlpha = 1;
     }
+
+    // Small "!" above head — no bg box, just the character
+    const exPulse = Math.sin(gameTime * 0.3) > 0;
+    drawText('!', x + g.w/2 + shake, y - 14, exPulse ? '#ff5252' : '#ffcdd2', 14, 'center');
   }
 
-  // Thrower/ranged arm raise during windup — bigger & more visible
+  // Thrower/ranged: arm raise + dotted aim line during windup
   if (g.windupTimer > 0 && (g.type === 'thrower' || g.type === 'ranged')) {
     const armDir = Math.sign(player.x - g.x) || 1;
     const armX = x + g.w/2 + armDir * 10;
     drawRect(armX - 4, y - 14, 8, 16, g.color || '#888');
     drawRect(armX - 3, y - 14, 6, 5, '#deb887');
-    // Aim line toward player
-    const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
-    ctx.globalAlpha = 0.2 + windupProgress * 0.4;
-    const lineLen = Math.min(dist, 120);
-    drawRect(Math.min(g.x, g.x + armDir * lineLen), g.y - 26, Math.abs(armDir * lineLen), 2, '#ff1744');
-    ctx.globalAlpha = 1;
-  }
-
-  // Windup indicator - big pulsing "!" above head with colored bg
-  if (g.windupTimer > 0) {
-    const windupProgress = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
-    const pulse = Math.sin(g.windupTimer * 0.5) * 0.15 + 0.85;
-    const indicSize = 10 + Math.floor(windupProgress * 4);
-    ctx.globalAlpha = pulse;
-    drawRect(x + g.w/2 - indicSize, y - 38, indicSize * 2, 26, '#d50000');
-    drawText('!', x + g.w/2, y - 16, '#ffeb3b', 18 + Math.floor(windupProgress * 4), 'center');
+    // Dotted aim line
+    const wp = g.windupMax ? 1 - (g.windupTimer / g.windupMax) : 0.5;
+    ctx.globalAlpha = 0.25 + wp * 0.3;
+    const lineLen = Math.min(dist, 100);
+    for (let d = 0; d < lineLen; d += 8) {
+      drawRect(g.x + armDir * d, g.y - 26, 4, 2, '#ff5252');
+    }
     ctx.globalAlpha = 1;
   }
 
@@ -7501,27 +7484,19 @@ function drawBgPiazzaMazzini() {
   drawRect(454, GROUND_Y - 100, 8, 14, '#455a64'); // arm
   drawRect(446, GROUND_Y - 122, 10, 10, '#546e7a'); // head
 
-  // Rain effect
-  ctx.strokeStyle = '#5c6bc0';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 30; i++) {
-    const rx = (i * 73 + gameTime * 3) % W;
-    const ry = (i * 41 + gameTime * 6) % GROUND_Y;
-    ctx.globalAlpha = 0.15;
-    ctx.beginPath();
-    ctx.moveTo(rx, ry);
-    ctx.lineTo(rx - 2, ry + 12);
-    ctx.stroke();
+  // Rain effect (lightweight — rects instead of strokes)
+  for (let i = 0; i < 18; i++) {
+    const rx = (i * 97 + gameTime * 3) % W;
+    const ry = (i * 53 + gameTime * 6) % GROUND_Y;
+    ctx.globalAlpha = 0.12;
+    drawRect(rx, ry, 1, 10, '#7986cb');
   }
   ctx.globalAlpha = 1;
 
-  // Puddle reflections
+  // Puddle reflections (flat rects on ground, drawn behind everything)
   [150, 350, 600, 800].forEach(px => {
     ctx.globalAlpha = 0.06;
-    ctx.fillStyle = '#7986cb';
-    ctx.beginPath();
-    ctx.ellipse(px, GROUND_Y + 15, 25, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
+    drawRect(px - 22, GROUND_Y + 12, 44, 6, '#7986cb');
     ctx.globalAlpha = 1;
   });
 
