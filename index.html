@@ -3291,6 +3291,8 @@ function playerOverhead() {
   const dmg = weap.damage * 1.4;
   const range = weap.range * 0.9;
   const attackX = player.x + player.facing * range * 0.5;
+  const poiseMult = player.upgrades.some(u => u.effect === 'poise25') ? 1.25 : 1;
+  const effectivePoise = Math.round(weap.poise * poiseMult);
 
   const targets = [...goons.filter(g => !g.dead)];
   if (boss && !boss.dead && bossIntro && bossIntroTimer <= 0) targets.push(boss);
@@ -3367,6 +3369,8 @@ function playerJumpAttack() {
   const dmg = weap.damage * 1.2;
   const range = weap.range;
   const attackX = player.x + player.facing * range * 0.5;
+  const poiseMult = player.upgrades.some(u => u.effect === 'poise25') ? 1.25 : 1;
+  const effectivePoise = Math.round(weap.poise * poiseMult);
 
   // Ranged weapon shoots downward-angled bullet
   if (weap.ranged) {
