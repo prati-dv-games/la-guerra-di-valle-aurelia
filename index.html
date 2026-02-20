@@ -71,21 +71,21 @@ const inMobileWrapper = (window.self !== window.top);
 // Virtual button definitions
 const touchButtons = {
   // Left side: movement + Q (ultra) on top
-  left:    { x: 6,   y: H - 88, w: 70, h: 64, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 80,  y: H - 88, w: 70, h: 64, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  ultra:   { x: 22,  y: H - 158, w: 94, h: 56, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
+  left:    { x: 4,   y: H - 96, w: 82, h: 74, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 90,  y: H - 96, w: 82, h: 74, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  ultra:   { x: 16,  y: H - 174, w: 110, h: 64, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
   // Right side: X and W on top, ATK at bottom
-  dodge:   { x: W - 178, y: H - 158, w: 82, h: 56, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  jump:    { x: W - 92,  y: H - 158, w: 82, h: 56, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
-  attack:  { x: W - 150, y: H - 88, w: 82, h: 64, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
-  // Helpers (invisible hit areas — overlay on helper bar drawn by HUD)
-  helper1: { x: 246, y: 78, w: 48, h: 22, key: 'Digit1', label: '', color: 'transparent', justPress: true, hidden: true },
-  helper2: { x: 300, y: 78, w: 48, h: 22, key: 'Digit2', label: '', color: 'transparent', justPress: true, hidden: true },
-  helper3: { x: 354, y: 78, w: 48, h: 22, key: 'Digit3', label: '', color: 'transparent', justPress: true, hidden: true },
-  helper4: { x: 408, y: 78, w: 48, h: 22, key: 'Digit4', label: '', color: 'transparent', justPress: true, hidden: true },
+  dodge:   { x: W - 192, y: H - 174, w: 90, h: 64, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  jump:    { x: W - 98,  y: H - 174, w: 90, h: 64, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
+  attack:  { x: W - 160, y: H - 96, w: 92, h: 74, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  // Helpers — bottom center between left and right controls
+  helper1: { x: 305, y: H - 80, w: 60, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
+  helper2: { x: 375, y: H - 80, w: 60, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
+  helper3: { x: 445, y: H - 80, w: 60, h: 46, key: 'Digit3', label: '3', color: '#4caf50', justPress: true },
+  helper4: { x: 515, y: H - 80, w: 60, h: 46, key: 'Digit4', label: '4', color: '#4caf50', justPress: true },
   // Utility
   tab:     { x: W - 95, y: 36, w: 38, h: 28, key: 'Tab', label: 'TAB', color: '#555', justPress: true },
-  enter:   { x: W/2 - 40, y: H - 45, w: 80, h: 32, key: 'Enter', label: 'OK', color: '#4caf50', justPress: true },
+  enter:   { x: W/2 - 50, y: H - 50, w: 100, h: 38, key: 'Enter', label: 'OK', color: '#4caf50', justPress: true },
   pause:   { x: W - 52, y: 36, w: 38, h: 28, key: 'Escape', label: 'II', color: '#666', justPress: true }
 };
 
