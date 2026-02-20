@@ -1039,7 +1039,7 @@ let weaponSelectTimer = 0;
 
 // Weapon upgrade tier (0-3)
 let weaponTier = 0;
-const WEAPON_UPGRADE_COSTS = [100, 200, 350];
+const WEAPON_UPGRADE_COSTS = [150, 300, 500];
 
 // Shop tab: 0 = Potenzia Arma, 1 = Potenzia Helper, 2 = La Ruota
 let shopTab = 0;
@@ -1072,25 +1072,25 @@ const consumableItems = [
 ];
 
 const helpers = [
-  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0,
+  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 60,
     tiers: [
       { cost: 80, desc: 'Stun +50%, area piu\' grande' },
       { cost: 180, desc: 'Spacca poise: 3x danno poise' },
       { cost: 320, desc: 'Raduno: nemici stunnati -30% poise' }
     ]},
-  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0,
+  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 60,
     tiers: [
       { cost: 80, desc: 'Danno +50%, attacca piu\' spesso' },
       { cost: 180, desc: 'Combo assist: attacca staggerati' },
       { cost: 320, desc: 'Grido: +30% danno per 4s ogni 30s' }
     ]},
-  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#212121', icon: 'C', tier: 0,
+  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#212121', icon: 'C', tier: 0, unlocked: false, unlockCost: 60,
     tiers: [
       { cost: 80, desc: 'Cura +50%' },
       { cost: 180, desc: 'Buff attacco: +20% danno per 5s' },
       { cost: 320, desc: 'Revive: auto-cura se muori (1x)' }
     ]},
-  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0,
+  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 60,
     tiers: [
       { cost: 80, desc: 'Durata speed +50%' },
       { cost: 180, desc: 'Speed +20% velocita\' attacco' },
@@ -2435,6 +2435,7 @@ function drawProjectiles() {
 // HELPER EFFECTS
 // ==========================================
 function activateHelper(idx) {
+  if (!helpers[idx].unlocked) return;
   if (helperCooldowns[idx] > 0) return;
   helperCooldowns[idx] = helpers[idx].cooldown;
   playSFX('helper');
@@ -5953,9 +5954,9 @@ function drawShopWeapon(py) {
   drawText('POTENZIAMENTI DISPONIBILI', W/2, py + 140, '#ff8a65', 13, 'center');
 
   const upgDescs = [
-    { label: 'Lv.1 — Affilatura', desc: '+15% danno base', cost: WEAPON_UPGRADE_COSTS[0] },
+    { label: 'Lv.1 — Affilatura', desc: '+10% danno base', cost: WEAPON_UPGRADE_COSTS[0] },
     { label: 'Lv.2 — Tecnica Avanzata', desc: '+1 colpo combo', cost: WEAPON_UPGRADE_COSTS[1] },
-    { label: 'Lv.3 — Arma Suprema', desc: '+20% raggio, bagliore', cost: WEAPON_UPGRADE_COSTS[2] }
+    { label: 'Lv.3 — Arma Suprema', desc: '+12% raggio, bagliore', cost: WEAPON_UPGRADE_COSTS[2] }
   ];
 
   for (let i = 0; i < 3; i++) {
@@ -6003,14 +6004,14 @@ function drawShopWeapon(py) {
 function applyWeaponUpgrade(tier) {
   const w = weapons[0];
   switch(tier) {
-    case 0: // +15% damage
-      w.damage = Math.round(w.damage * 1.15);
+    case 0: // +10% damage
+      w.damage = Math.round(w.damage * 1.10);
       break;
     case 1: // +1 combo hit
       w.comboHits++;
       break;
-    case 2: // +20% range + glow
-      w.range = Math.round(w.range * 1.2);
+    case 2: // +12% range + glow
+      w.range = Math.round(w.range * 1.12);
       w.glow = true;
       break;
   }
@@ -6051,9 +6052,23 @@ function drawShopHelper(py) {
       }
     }
 
-    // Next upgrade
+    // Unlock or upgrade button
     const btnY = hy + boxH - 40;
-    if (maxed) {
+    if (!h.unlocked) {
+      // Must unlock first
+      const canUnlock = coins >= h.unlockCost;
+      const btnHover = mouseX > hx + 10 && mouseX < hx + 190 && mouseY > btnY && mouseY < btnY + 32;
+      drawRect(hx + 10, btnY, 180, 32, btnHover && canUnlock ? '#333' : '#222');
+      drawText('SBLOCCA', hx + 100, btnY + 12, '#fff', 10, 'center');
+      drawText(h.unlockCost + ' COINS', hx + 100, btnY + 26, canUnlock ? '#ffd700' : '#666', 10, 'center');
+      if (btnHover && mouseClick && canUnlock) {
+        coins -= h.unlockCost;
+        h.unlocked = true;
+        playSFX('coin');
+        spawnParticles(hx + 100, btnY + 16, h.color, 15, 5);
+        mouseClick = false;
+      }
+    } else if (maxed) {
       drawText('MASSIMO', hx + 100, btnY + 20, '#4caf50', 12, 'center');
     } else {
       const tierData = h.tiers[nextTier];
@@ -6178,8 +6193,8 @@ function drawShopGacha(py) {
     }
   }
 
-  // Odds info
-  drawText('Probabilita\': 40% Niente | 35% Consumabile | 20% Arma Rara | 5% Leggendaria', W/2, H - 58, '#555', 8, 'center');
+  // Mystery hint
+  drawText('Tenta la fortuna, Conte...', W/2, H - 58, '#444', 8, 'center');
 }
 
 function rollGacha() {
@@ -7750,6 +7765,14 @@ function drawHUD() {
   for (let i = 0; i < 4; i++) {
     const hx = 14 + i * 54;
     const hy = bottomBarY + 4;
+    if (!helpers[i].unlocked) {
+      // Locked helper — greyed out
+      ctx.globalAlpha = 0.25;
+      drawRect(hx, hy, 48, 22, 'rgba(0,0,0,0.3)');
+      drawText((i+1) + ':?', hx + 4, hy + 16, '#555', 10);
+      ctx.globalAlpha = 1;
+      continue;
+    }
     const ready = helperCooldowns[i] === 0;
     // Background
     drawRect(hx, hy, 48, 22, ready ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.3)');
