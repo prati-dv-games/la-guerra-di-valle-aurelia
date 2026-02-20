@@ -3155,9 +3155,9 @@ function launchComboHit(stepIndex) {
 
     // Ultra charge accumulation
     if (!player.ultraActive) {
-      let chargeGain = 6; // base per hit
-      if (isCrit) chargeGain = 10;
-      if (didStagger) chargeGain = 18;
+      let chargeGain = 5; // base per hit
+      if (isCrit) chargeGain = 8;
+      if (didStagger) chargeGain = 15;
       player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + chargeGain);
       if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
     }
@@ -7972,7 +7972,7 @@ function updateLevel() {
 
   // Passive ultra charge trickle in combat
   if (!player.ultraActive && !player.ultraAvailable && goons.some(g => !g.dead)) {
-    player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 0.08);
+    player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 0.06);
     if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
   }
 
