@@ -4598,8 +4598,9 @@ function updateGoons() {
     switch(g.type) {
       case 'rusher':
         if (!canAttack && dist < circleRange) {
-          // Circle at medium range
-          g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
+          // Pace back and forth at medium range instead of standing still
+          g.x += Math.sin(gameTime * 0.04 + g.x * 0.1) * g.speed * 0.8;
+          if (dist < 60) g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
         } else if (dist > 45) {
           g.x += Math.sign(dx) * g.speed * 1.5 * aggroMult;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
@@ -4610,7 +4611,8 @@ function updateGoons() {
 
       case 'tank':
         if (!canAttack && dist < circleRange) {
-          g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
+          g.x += Math.sin(gameTime * 0.03 + g.x * 0.1) * g.speed * 0.6;
+          if (dist < 70) g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
         } else if (dist > 55) {
           g.x += Math.sign(dx) * g.speed * 1.1 * aggroMult;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
@@ -4620,16 +4622,26 @@ function updateGoons() {
         break;
 
       case 'drunk':
-        g.x += Math.sign(dx) * g.speed * aggroMult + Math.sin(gameTime * 0.1 + g.x) * 1.8;
+        // Always moving erratically — never stands still
+        g.x += Math.sign(dx) * g.speed * 0.8 * aggroMult + Math.sin(gameTime * 0.1 + g.x) * 1.8;
+        if (dist > 200) g.x += Math.sign(dx) * g.speed * 0.5; // close gap if too far
         if (dist < 50 && g.attackTimer === 0 && !player.dead && canAttack) {
           g.windupTimer = 12;
           g.attackTimer = Math.floor(22 / aggroMult);
         }
         break;
 
-      case 'thrower':
-        if (dist < 120) g.x -= Math.sign(dx) * g.speed * 0.5;
-        else if (dist > 250) g.x += Math.sign(dx) * g.speed;
+      case 'thrower': {
+        // Maintain ideal range 140-220, always moving
+        const idealRange = 180;
+        if (dist < 120) g.x -= Math.sign(dx) * g.speed * 0.6;
+        else if (dist > 250) g.x += Math.sign(dx) * g.speed * 1.1;
+        else {
+          // Strafe at ideal range instead of standing still
+          g.x += Math.sin(gameTime * 0.05 + g.x * 0.08) * g.speed * 0.9;
+          if (dist < idealRange - 40) g.x -= Math.sign(dx) * g.speed * 0.3;
+          else if (dist > idealRange + 40) g.x += Math.sign(dx) * g.speed * 0.3;
+        }
         g.shootTimer++;
         if (g.shootTimer > Math.floor(48 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
           g.shootTimer = 0;
@@ -4637,11 +4649,14 @@ function updateGoons() {
           g.attackTimer = 20;
         }
         break;
+      }
 
       case 'flanker': {
         const behindX = player.x + g.flankDir * 80;
         if (!canAttack && dist < circleRange) {
-          g.x += Math.sign(g.x - player.x) * g.speed * 0.6;
+          // Pace around the player's flank
+          g.x += Math.sin(gameTime * 0.06 + g.x * 0.1) * g.speed * 0.9;
+          if (dist < 50) g.x += Math.sign(g.x - player.x) * g.speed * 0.5;
         } else if (Math.abs(g.x - behindX) > 30) {
           g.x += Math.sign(behindX - g.x) * g.speed * 1.15 * aggroMult;
         } else if (g.attackTimer === 0 && dist < 60 && !player.dead && canAttack) {
@@ -4653,7 +4668,13 @@ function updateGoons() {
       }
 
       case 'ranged':
-        if (dist < 200) g.x -= Math.sign(dx) * g.speed;
+        // Maintain range 200-350, approach if too far, flee if too close
+        if (dist < 180) g.x -= Math.sign(dx) * g.speed * 1.1;
+        else if (dist > 350) g.x += Math.sign(dx) * g.speed * 0.8;
+        else {
+          // Strafe at range
+          g.x += Math.sin(gameTime * 0.04 + g.x * 0.07) * g.speed * 0.7;
+        }
         g.shootTimer++;
         if (g.shootTimer > Math.floor(40 / aggroMult) && g.attackTimer === 0 && !player.dead && canAttack) {
           g.shootTimer = 0;
@@ -4664,7 +4685,8 @@ function updateGoons() {
 
       default:
         if (!canAttack && dist < circleRange) {
-          g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
+          g.x += Math.sin(gameTime * 0.04 + g.x * 0.1) * g.speed * 0.7;
+          if (dist < 60) g.x += Math.sign(g.x - player.x) * g.speed * 0.4;
         } else if (dist > 50) {
           g.x += Math.sign(dx) * g.speed;
         } else if (g.attackTimer === 0 && !player.dead && canAttack) {
@@ -5715,7 +5737,13 @@ function drawHub() {
   // === TOP BAR ===
   drawRect(0, 0, W, 50, 'rgba(0,0,0,0.75)');
   drawRect(0, 48, W, 2, '#4e342e');
-  drawText('COINS: ' + coins, 25, 32, '#ffd700', 16);
+  drawText('COINS: ' + coins, 25, 28, '#ffd700', 14);
+  // Lives display in hub
+  for (let li = 0; li < 3; li++) {
+    const alive = li < lives;
+    drawRect(25 + li * 22, 34, 18, 14, alive ? '#e94560' : '#333');
+    drawText(alive ? '\u2665' : '\u2661', 34 + li * 22, 46, alive ? '#fff' : '#555', 11, 'center');
+  }
   drawText('Base del Conte', W/2, 32, '#a1887f', 13, 'center');
   // Shop button
   const shopBx = 720, shopBy = 10;
@@ -6731,9 +6759,9 @@ function drawLevelBg() {
   }
 
   // Street sign (always) — below player info panel
-  drawRect(8, 90, 195, 22, 'rgba(0,0,0,0.75)');
-  drawRect(8, 90, 195, 2, '#fff');
-  drawText(lvl.name.toUpperCase(), 105, 106, '#fff', 11, 'center');
+  drawRect(8, 98, 195, 22, 'rgba(0,0,0,0.75)');
+  drawRect(8, 98, 195, 2, '#fff');
+  drawText(lvl.name.toUpperCase(), 105, 114, '#fff', 11, 'center');
 
   // Ground
   drawRect(0, GROUND_Y, W, H - GROUND_Y, lvl.groundColor);
@@ -7812,7 +7840,7 @@ function drawLevel() {
 
 function drawHUD() {
   // === TOP LEFT: Player info panel ===
-  drawRect(8, 8, 195, 78, 'rgba(0,0,0,0.7)');
+  drawRect(8, 8, 195, 86, 'rgba(0,0,0,0.7)');
   drawRect(8, 8, 195, 2, '#e94560');
 
   // HP bar — label left, bar right, value far right
@@ -7862,9 +7890,12 @@ function drawHUD() {
   // Weapon name row
   const curWeap = weapons[player.weapon];
   drawText(curWeap.name, 14, 57, '#ffcc80', 9);
-  // Lives display — small hearts
+  // Lives display — clear hearts at bottom of panel
+  drawRect(14, 62, 60, 18, 'rgba(0,0,0,0.5)');
   for (let li = 0; li < 3; li++) {
-    drawText(li < lives ? '\u2665' : '\u2661', 14 + li * 14, 72, li < lives ? '#e94560' : '#444', 9);
+    const alive = li < lives;
+    drawRect(16 + li * 19, 64, 15, 14, alive ? '#e94560' : '#333');
+    drawText(alive ? '\u2665' : '\u2661', 24 + li * 19, 76, alive ? '#fff' : '#555', 11, 'center');
   }
   // Dodge & Jump indicators — right side of panel
   if (player.dodgeCooldown > 0) {
