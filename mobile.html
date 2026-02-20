@@ -97,14 +97,10 @@ html, body {
   font-weight: bold;
 }
 
-/* Action buttons (right side — X and W on top, ATK rectangular at bottom) */
+/* Action buttons (right side — all rectangular) */
 .action-btn {
   position: fixed;
-  width: 16vw;
-  height: 15vw;
-  max-width: 68px;
-  max-height: 64px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.1);
   color: rgba(255,255,255,0.8);
@@ -119,19 +115,27 @@ html, body {
 }
 .action-btn.active { background: rgba(255,255,255,0.4); color: #fff; }
 
-/* Right side layout: X and W on top row (tight to ATK), ATK rectangular at bottom */
-#btn-x   { bottom: calc(max(3dvh, 6px) + 14vw); right: calc(max(3vw, 6px) + 17vw); background: rgba(33,150,243,0.25); border-color: rgba(33,150,243,0.3); }
-#btn-w   { bottom: calc(max(3dvh, 6px) + 14vw); right: max(3vw, 6px); background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.3); }
+/* Right side: X and W side by side above ATK, all rectangular */
+#btn-x {
+  bottom: calc(max(3dvh, 6px) + 14vw);
+  right: calc(max(3vw, 6px) + 14vw);
+  width: 13vw; max-width: 56px;
+  height: 12vw; max-height: 52px;
+  background: rgba(33,150,243,0.25); border-color: rgba(33,150,243,0.3);
+}
+#btn-w {
+  bottom: calc(max(3dvh, 6px) + 14vw);
+  right: max(3vw, 6px);
+  width: 13vw; max-width: 56px;
+  height: 12vw; max-height: 52px;
+  background: rgba(76,175,80,0.25); border-color: rgba(76,175,80,0.3);
+}
 #btn-atk {
   bottom: max(3dvh, 6px);
-  right: calc(max(3vw, 6px) + 5vw);
-  width: 24vw;
-  max-width: 100px;
-  height: 13vw;
-  max-height: 56px;
-  border-radius: 10px;
-  background: rgba(233,69,96,0.25);
-  border-color: rgba(233,69,96,0.3);
+  right: max(3vw, 6px);
+  width: 27vw; max-width: 116px;
+  height: 13vw; max-height: 56px;
+  background: rgba(233,69,96,0.25); border-color: rgba(233,69,96,0.3);
 }
 
 /* Top bar buttons */
