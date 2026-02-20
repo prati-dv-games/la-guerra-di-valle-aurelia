@@ -4010,10 +4010,16 @@ function drawMenu() {
   // Ground
   drawRect(0, 440, W, 110, '#16213e');
 
-  // Start prompt
-  if (Math.floor(gameTime / 40) % 2 === 0) {
-    drawText('Premi ENTER per iniziare', W/2, 320, '#e94560', 18, 'center');
-  }
+  // Start button (tappable on mobile)
+  const startBtnW = 280, startBtnH = 40;
+  const startBtnX = W/2 - startBtnW/2, startBtnY = 295;
+  const startHover = mouseX >= startBtnX && mouseX <= startBtnX + startBtnW && mouseY >= startBtnY && mouseY <= startBtnY + startBtnH;
+  const startPulse = Math.sin(gameTime * 0.08) * 0.3 + 0.7;
+  ctx.globalAlpha = startHover ? 1 : startPulse;
+  drawRect(startBtnX, startBtnY, startBtnW, startBtnH, startHover ? '#e94560' : 'rgba(233,69,96,0.2)');
+  drawRect(startBtnX, startBtnY, startBtnW, 2, '#e94560');
+  drawText('INIZIA', W/2, startBtnY + 28, '#fff', 20, 'center');
+  ctx.globalAlpha = 1;
 
   // Controls
   drawText('WASD/Frecce = Muovi | Z/Spazio = Attacca | X = Schiva | 1-4 = Helper', W/2, 500, '#666', 11, 'center');
@@ -4045,24 +4051,25 @@ function drawMenu() {
     drawRect(panelX, panelY, panelW, 2, '#e94560');
     drawRect(panelX, panelY + panelH - 2, panelW, 2, '#e94560');
 
-    drawText('- CREDITI -', W/2, 140, '#e94560', 22, 'center');
-    drawText('LA GUERRA DI VALLE AURELIA', W/2, 170, '#ffd700', 14, 'center');
-    drawText('Un gioco di Andrea per Daniele', W/2, 200, '#ccc', 12, 'center');
-    drawText('Ambientato a Valle Aurelia, Roma', W/2, 222, '#aaa', 11, 'center');
-    drawText('Programmazione: Andrea + Claude', W/2, 248, '#aaa', 11, 'center');
-    drawText('Idea & Design: Andrea', W/2, 268, '#aaa', 11, 'center');
-    drawText('Grazie per aver giocato!', W/2, 296, '#ffcc80', 12, 'center');
+    drawText('- CREDITI -', W/2, 130, '#e94560', 22, 'center');
+    drawText('LA GUERRA DI VALLE AURELIA', W/2, 158, '#ffd700', 14, 'center');
+    drawText('Un gioco da conti...anzi, del Conte!', W/2, 182, '#ccc', 11, 'center');
+    drawText('Ambientato a Valle Aurelia, Roma', W/2, 202, '#aaa', 11, 'center');
+    drawText('Sviluppatore: Cicca', W/2, 226, '#aaa', 11, 'center');
+    drawText('Programmazione: Cicca + Claude', W/2, 246, '#aaa', 11, 'center');
+    drawText('Idea & Design: Cicca', W/2, 266, '#aaa', 11, 'center');
+    drawText('Grazie per aver giocato!', W/2, 294, '#ffcc80', 12, 'center');
 
     // Code entry box
-    drawRect(W/2 - 90, 330, 180, 28, 'rgba(255,255,255,0.08)');
-    drawRect(W/2 - 90, 330, 180, 1, '#555');
-    drawRect(W/2 - 90, 357, 180, 1, '#555');
+    drawRect(W/2 - 90, 320, 180, 28, 'rgba(255,255,255,0.08)');
+    drawRect(W/2 - 90, 320, 180, 1, '#555');
+    drawRect(W/2 - 90, 347, 180, 1, '#555');
     const cursor = Math.floor(gameTime / 30) % 2 === 0 ? '_' : '';
     const displayCode = codeInput + cursor;
-    drawText(displayCode || 'Inserisci codice...', W/2, 350, codeInput ? '#fff' : '#555', 12, 'center');
+    drawText(displayCode || 'Inserisci codice...', W/2, 340, codeInput ? '#fff' : '#555', 12, 'center');
 
     // Close button
-    const closeBtnX = W/2 - 40, closeBtnY = 380, closeBtnW = 80, closeBtnH = 24;
+    const closeBtnX = W/2 - 40, closeBtnY = 370, closeBtnW = 80, closeBtnH = 24;
     const hoverClose = mouseX >= closeBtnX && mouseX <= closeBtnX + closeBtnW && mouseY >= closeBtnY && mouseY <= closeBtnY + closeBtnH;
     drawRect(closeBtnX, closeBtnY, closeBtnW, closeBtnH, hoverClose ? '#e94560' : 'rgba(233,69,96,0.4)');
     drawText('Chiudi', W/2, closeBtnY + 17, '#fff', 11, 'center');
@@ -4123,7 +4130,8 @@ function drawMenu() {
     return;
   }
 
-  if (keys['Enter'] || keys['Space']) {
+  const startTap = startHover && mouseClick;
+  if (keys['Enter'] || keys['Space'] || startTap) {
     if (firstTime) {
       state = 'weaponSelect';
       weaponSelectIndex = 0;
@@ -4136,6 +4144,7 @@ function drawMenu() {
       resetPlayer();
     }
   }
+  mouseClick = false;
 }
 
 // ==========================================
@@ -4936,24 +4945,25 @@ function drawHub() {
     drawRect(panelX, panelY, panelW, 2, '#e94560');
     drawRect(panelX, panelY + panelH - 2, panelW, 2, '#e94560');
 
-    drawText('- CREDITI -', W/2, 140, '#e94560', 22, 'center');
-    drawText('LA GUERRA DI VALLE AURELIA', W/2, 170, '#ffd700', 14, 'center');
-    drawText('Un gioco di Andrea per Daniele', W/2, 200, '#ccc', 12, 'center');
-    drawText('Ambientato a Valle Aurelia, Roma', W/2, 222, '#aaa', 11, 'center');
-    drawText('Programmazione: Andrea + Claude', W/2, 248, '#aaa', 11, 'center');
-    drawText('Idea & Design: Andrea', W/2, 268, '#aaa', 11, 'center');
-    drawText('Grazie per aver giocato!', W/2, 296, '#ffcc80', 12, 'center');
+    drawText('- CREDITI -', W/2, 130, '#e94560', 22, 'center');
+    drawText('LA GUERRA DI VALLE AURELIA', W/2, 158, '#ffd700', 14, 'center');
+    drawText('Un gioco da conti...anzi, del Conte!', W/2, 182, '#ccc', 11, 'center');
+    drawText('Ambientato a Valle Aurelia, Roma', W/2, 202, '#aaa', 11, 'center');
+    drawText('Sviluppatore: Cicca', W/2, 226, '#aaa', 11, 'center');
+    drawText('Programmazione: Cicca + Claude', W/2, 246, '#aaa', 11, 'center');
+    drawText('Idea & Design: Cicca', W/2, 266, '#aaa', 11, 'center');
+    drawText('Grazie per aver giocato!', W/2, 294, '#ffcc80', 12, 'center');
 
     // Code entry box
-    drawRect(W/2 - 90, 330, 180, 28, 'rgba(255,255,255,0.08)');
-    drawRect(W/2 - 90, 330, 180, 1, '#555');
-    drawRect(W/2 - 90, 357, 180, 1, '#555');
+    drawRect(W/2 - 90, 320, 180, 28, 'rgba(255,255,255,0.08)');
+    drawRect(W/2 - 90, 320, 180, 1, '#555');
+    drawRect(W/2 - 90, 347, 180, 1, '#555');
     const cursor = Math.floor(gameTime / 30) % 2 === 0 ? '_' : '';
     const displayCode = codeInput + cursor;
-    drawText(displayCode || 'Inserisci codice...', W/2, 350, codeInput ? '#fff' : '#555', 12, 'center');
+    drawText(displayCode || 'Inserisci codice...', W/2, 340, codeInput ? '#fff' : '#555', 12, 'center');
 
     // Close button
-    const closeBtnX = W/2 - 40, closeBtnY = 380, closeBtnW = 80, closeBtnH = 24;
+    const closeBtnX = W/2 - 40, closeBtnY = 370, closeBtnW = 80, closeBtnH = 24;
     const hoverClose = mouseX >= closeBtnX && mouseX <= closeBtnX + closeBtnW && mouseY >= closeBtnY && mouseY <= closeBtnY + closeBtnH;
     drawRect(closeBtnX, closeBtnY, closeBtnW, closeBtnH, hoverClose ? '#e94560' : 'rgba(233,69,96,0.4)');
     drawText('Chiudi', W/2, closeBtnY + 17, '#fff', 11, 'center');
@@ -6962,15 +6972,24 @@ function drawGameOver() {
     drawText('Il Conte cade a ' + levels[currentLevel].name, W/2, 220, '#aaa', 14, 'center');
   }
 
-  // Retry
-  if (Math.floor(gameTime / 30) % 2 === 0) {
-    drawText('ENTER = Riprova | ESC = Torna a Vanni', W/2, 350, '#fff', 14, 'center');
-  }
+  // Retry button (tappable)
+  const retryBtnW = 180, retryBtnH = 36;
+  const retryBtnX = W/2 - retryBtnW/2, retryBtnY = 320;
+  const retryHover = mouseX >= retryBtnX && mouseX <= retryBtnX + retryBtnW && mouseY >= retryBtnY && mouseY <= retryBtnY + retryBtnH;
+  drawRect(retryBtnX, retryBtnY, retryBtnW, retryBtnH, retryHover ? '#e94560' : 'rgba(233,69,96,0.3)');
+  drawRect(retryBtnX, retryBtnY, retryBtnW, 2, '#e94560');
+  drawText('RIPROVA', W/2, retryBtnY + 25, '#fff', 16, 'center');
 
-  if (keys['Enter'] || keys['Space']) {
+  const backBtnW = 180, backBtnH = 36;
+  const backBtnX = W/2 - backBtnW/2, backBtnY = 370;
+  const backHover = mouseX >= backBtnX && mouseX <= backBtnX + backBtnW && mouseY >= backBtnY && mouseY <= backBtnY + backBtnH;
+  drawRect(backBtnX, backBtnY, backBtnW, backBtnH, backHover ? '#555' : 'rgba(255,255,255,0.1)');
+  drawText('TORNA A VANNI', W/2, backBtnY + 25, '#aaa', 13, 'center');
+
+  if (keys['Enter'] || keys['Space'] || (retryHover && mouseClick)) {
     startLevel(currentLevel);
   }
-  if (keys['Escape']) {
+  if (keys['Escape'] || (backHover && mouseClick)) {
     state = 'hub';
     resetPlayer();
     bossIntro = false;
@@ -7376,23 +7395,27 @@ function drawVictory() {
   ctx.globalAlpha = fadeIn;
 
   // Credits section
-  const creditsY = 395;
+  const creditsY = 385;
   drawText('- CREDITS -', W/2, creditsY, '#ffd700', 14, 'center');
-  drawText('Un gioco di Andrea per Daniele', W/2, creditsY + 20, '#aaa', 11, 'center');
-  drawText('Ambientato a Valle Aurelia, Roma', W/2, creditsY + 38, '#aaa', 11, 'center');
-  drawText('Grazie per aver giocato!', W/2, creditsY + 56, '#ffcc80', 13, 'center');
+  drawText('Un gioco da conti...anzi, del Conte!', W/2, creditsY + 18, '#ccc', 11, 'center');
+  drawText('Sviluppatore: Cicca', W/2, creditsY + 36, '#aaa', 11, 'center');
+  drawText('Ambientato a Valle Aurelia, Roma', W/2, creditsY + 54, '#aaa', 11, 'center');
+  drawText('Grazie per aver giocato!', W/2, creditsY + 74, '#ffcc80', 13, 'center');
 
-  drawText('Coins raccolti: ' + coins, W/2, creditsY + 82, '#ffd700', 12, 'center');
+  drawText('Coins raccolti: ' + coins, W/2, creditsY + 96, '#ffd700', 12, 'center');
 
   ctx.globalAlpha = 1;
 
   // Only show restart prompt after 3 seconds
   if (victoryTimer > 180) {
-    if (Math.floor(gameTime / 30) % 2 === 0) {
-      drawText('Premi Z/ENTER per ricominciare', W/2, H - 20, '#fff', 13, 'center');
-    }
+    const restartBtnW = 260, restartBtnH = 36;
+    const restartBtnX = W/2 - restartBtnW/2, restartBtnY = H - 50;
+    const restartHover = mouseX >= restartBtnX && mouseX <= restartBtnX + restartBtnW && mouseY >= restartBtnY && mouseY <= restartBtnY + restartBtnH;
+    drawRect(restartBtnX, restartBtnY, restartBtnW, restartBtnH, restartHover ? '#ffd700' : 'rgba(255,215,0,0.2)');
+    drawRect(restartBtnX, restartBtnY, restartBtnW, 2, '#ffd700');
+    drawText('RICOMINCIA', W/2, restartBtnY + 25, restartHover ? '#1a1a2e' : '#ffd700', 16, 'center');
 
-    if (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ']) {
+    if (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || (restartHover && mouseClick)) {
       // Reset everything
       coins = 0;
       player.weapon = 0;
