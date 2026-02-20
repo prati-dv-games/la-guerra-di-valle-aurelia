@@ -64,14 +64,14 @@ const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 
 
 // Virtual button definitions
 const touchButtons = {
-  // Left side: movement + ultra
+  // Left side: movement + Q (ultra) on top
   left:    { x: 10,  y: H - 80, w: 60, h: 55, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
   right:   { x: 80,  y: H - 80, w: 60, h: 55, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  ultra:   { x: 30,  y: H - 142, w: 80, h: 52, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
-  // Right side: W (jump), X (dodge), ATK
-  dodge:   { x: W - 170, y: H - 80, w: 70, h: 55, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  jump:    { x: W - 90,  y: H - 80, w: 70, h: 55, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
-  attack:  { x: W - 140, y: H - 142, w: 70, h: 48, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  ultra:   { x: 30,  y: H - 142, w: 80, h: 48, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
+  // Right side: X and W on top, ATK at bottom
+  dodge:   { x: W - 170, y: H - 142, w: 70, h: 48, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  jump:    { x: W - 90,  y: H - 142, w: 70, h: 48, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
+  attack:  { x: W - 140, y: H - 80, w: 70, h: 55, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Pause (top-right)
   pause:   { x: W - 52, y: 36, w: 38, h: 28, key: 'Escape', label: 'II', color: '#666', justPress: true }
 };
