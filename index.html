@@ -7838,7 +7838,7 @@ function drawShopWeapon(py) {
 
   // Rarity badge in shop
   let shopRarLetter = 'C', shopRarColor = '#9e9e9e';
-  if (rareWeapons.some(rw => rw.name === w.name)) { shopRarLetter = 'R'; shopRarColor = '#2196f3'; }
+  if (rareWeapons.some(rw => rw.name === w.name) || w.name === 'Manganello') { shopRarLetter = 'R'; shopRarColor = '#2196f3'; }
   else if (legendaryWeapons.some(lw => lw.name === w.name) || w.special === 'sbombo') { shopRarLetter = 'L'; shopRarColor = '#ffd700'; }
   drawRect(44, py + 8, 24, 24, shopRarColor);
   drawText(shopRarLetter, 56, py + 26, '#000', 14, 'center');
