@@ -1269,7 +1269,7 @@ const helpers = [
       { cost: 200, desc: 'Combo assist: attacca staggerati' },
       { cost: 350, desc: 'Grido: +30% danno per 4s ogni 30s' }
     ]},
-  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#212121', icon: 'C', tier: 0, unlocked: false, unlockCost: 80,
+  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#ff8a65', icon: 'C', tier: 0, unlocked: false, unlockCost: 80,
     tiers: [
       { cost: 100, desc: 'Cura +50%' },
       { cost: 200, desc: 'Buff attacco: +20% danno per 5s' },
@@ -2878,25 +2878,29 @@ function drawHelperVisuals() {
         if (h.timer % 40 < 20) drawText('*hic*', h.x, h.y - 58, '#ff6e40', 10, 'center');
         break;
 
-      case 2: // Cicca black cat
+      case 2: // Cicca orange tabby cat
         // Cat body
-        drawRect(h.x - 10, h.y - 14, 20, 10, '#212121');
+        drawRect(h.x - 10, h.y - 14, 20, 10, '#ff8a65');
+        drawRect(h.x - 6, h.y - 12, 3, 8, '#e64a19'); // stripe
+        drawRect(h.x + 3, h.y - 12, 3, 8, '#e64a19'); // stripe
         // Head
-        drawRect(h.x - 7, h.y - 20, 12, 10, '#212121');
+        drawRect(h.x - 7, h.y - 20, 12, 10, '#ff8a65');
         // Ears
-        drawRect(h.x - 7, h.y - 24, 4, 5, '#212121');
-        drawRect(h.x + 3, h.y - 24, 4, 5, '#212121');
+        drawRect(h.x - 7, h.y - 24, 4, 5, '#ff8a65');
+        drawRect(h.x + 3, h.y - 24, 4, 5, '#ff8a65');
         // Eyes
-        drawRect(h.x - 4, h.y - 17, 3, 3, '#76ff03');
-        drawRect(h.x + 2, h.y - 17, 3, 3, '#76ff03');
+        drawRect(h.x - 4, h.y - 17, 3, 3, '#4caf50');
+        drawRect(h.x + 2, h.y - 17, 3, 3, '#4caf50');
+        // Nose
+        drawRect(h.x, h.y - 14, 2, 2, '#ff80ab');
         // Tail
         const tailWave = Math.sin(h.timer * 0.3) * 8;
-        drawRect(h.x + 10, h.y - 18 + tailWave, 3, 12, '#212121');
+        drawRect(h.x + 10, h.y - 18 + tailWave, 3, 12, '#ff8a65');
         // Legs running
         const legOff = Math.sin(h.timer * 0.8) * 3;
-        drawRect(h.x - 6, h.y - 4, 3, 4 + legOff, '#212121');
-        drawRect(h.x + 4, h.y - 4, 3, 4 - legOff, '#212121');
-        drawText('Miao!', h.x, h.y - 30, '#76ff03', 9, 'center');
+        drawRect(h.x - 6, h.y - 4, 3, 4 + legOff, '#ff8a65');
+        drawRect(h.x + 4, h.y - 4, 3, 4 - legOff, '#ff8a65');
+        drawText('Miao!', h.x, h.y - 30, '#4caf50', 9, 'center');
         break;
 
       case 3: // Il Mostro on moped
@@ -5194,40 +5198,40 @@ function drawMenu() {
     // Darken background
     drawRect(0, 0, W, H, 'rgba(0,0,0,0.8)');
 
-    // Credits panel — taller on touch to fit on-screen keyboard
-    const panelX = W/2 - 200, panelY = isTouchDevice ? 30 : 100, panelW = 400, panelH = isTouchDevice ? 500 : 340;
+    // Credits panel — 15% larger, taller on touch to fit on-screen keyboard
+    const panelX = W/2 - 230, panelY = isTouchDevice ? 20 : 75, panelW = 460, panelH = isTouchDevice ? 520 : 400;
     drawRect(panelX, panelY, panelW, panelH, 'rgba(20,20,40,0.95)');
     drawRect(panelX, panelY, panelW, 2, '#e94560');
     drawRect(panelX, panelY + panelH - 2, panelW, 2, '#e94560');
 
     const tOff = isTouchDevice ? -50 : 0; // text offset for touch layout
-    drawText('- CREDITI -', W/2, 130 + tOff, '#e94560', 22, 'center');
-    drawText('LA GUERRA DI VALLE AURELIA', W/2, 155 + tOff, '#ffd700', 14, 'center');
-    drawText('Un gioco da conti...anzi, del Conte!', W/2, 175 + tOff, '#ccc', 11, 'center');
-    drawText('Ambientato a Prati, Roma', W/2, 193 + tOff, '#aaa', 11, 'center');
-    drawText('Sviluppatore: Cicca', W/2, 214 + tOff, '#aaa', 11, 'center');
-    drawText('Programmazione: Cicca + Claude', W/2, 232 + tOff, '#aaa', 11, 'center');
-    drawText('Idea & Design: Cicca', W/2, 250 + tOff, '#aaa', 11, 'center');
-    drawText('Grazie per aver giocato!', W/2, 272 + tOff, '#ffcc80', 12, 'center');
+    drawText('- CREDITI -', W/2, 110 + tOff, '#e94560', 25, 'center');
+    drawText('LA GUERRA DI VALLE AURELIA', W/2, 140 + tOff, '#ffd700', 16, 'center');
+    drawText('Un gioco da conti...anzi, del Conte!', W/2, 163 + tOff, '#ccc', 13, 'center');
+    drawText('Ambientato a Prati, Roma', W/2, 184 + tOff, '#aaa', 13, 'center');
+    drawText('Sviluppatore: Cicca', W/2, 210 + tOff, '#aaa', 13, 'center');
+    drawText('Programmazione: Cicca + Claude', W/2, 232 + tOff, '#aaa', 13, 'center');
+    drawText('Idea & Design: Cicca', W/2, 254 + tOff, '#aaa', 13, 'center');
+    drawText('Grazie per aver giocato!', W/2, 280 + tOff, '#ffcc80', 14, 'center');
 
     // Code entry box
-    const codeY = isTouchDevice ? 280 : 320;
-    drawRect(W/2 - 90, codeY, 180, 28, 'rgba(255,255,255,0.08)');
-    drawRect(W/2 - 90, codeY, 180, 1, '#555');
-    drawRect(W/2 - 90, codeY + 27, 180, 1, '#555');
+    const codeY = isTouchDevice ? 290 : 340;
+    drawRect(W/2 - 105, codeY, 210, 32, 'rgba(255,255,255,0.08)');
+    drawRect(W/2 - 105, codeY, 210, 1, '#555');
+    drawRect(W/2 - 105, codeY + 31, 210, 1, '#555');
     const cursor = Math.floor(gameTime / 30) % 2 === 0 ? '_' : '';
     const displayCode = codeInput + cursor;
-    drawText(displayCode || 'Inserisci codice...', W/2, codeY + 20, codeInput ? '#fff' : '#555', 12, 'center');
+    drawText(displayCode || 'Inserisci codice...', W/2, codeY + 22, codeInput ? '#fff' : '#555', 14, 'center');
 
     // On-screen keyboard for mobile
-    drawCreditsKeyboard(codeY + 35);
+    drawCreditsKeyboard(codeY + 40);
 
     // Close button
-    const closeBtnY2 = isTouchDevice ? codeY + 130 : 370;
-    const closeBtnX = W/2 - 40, closeBtnW = 80, closeBtnH = 24;
+    const closeBtnY2 = isTouchDevice ? codeY + 135 : 400;
+    const closeBtnX = W/2 - 46, closeBtnW = 92, closeBtnH = 28;
     const hoverClose = mouseX >= closeBtnX && mouseX <= closeBtnX + closeBtnW && mouseY >= closeBtnY2 && mouseY <= closeBtnY2 + closeBtnH;
     drawRect(closeBtnX, closeBtnY2, closeBtnW, closeBtnH, hoverClose ? '#e94560' : 'rgba(233,69,96,0.4)');
-    drawText('Chiudi', W/2, closeBtnY2 + 17, '#fff', 11, 'center');
+    drawText('Chiudi', W/2, closeBtnY2 + 19, '#fff', 13, 'center');
     if (mouseClick && hoverClose) {
       showCredits = false;
       codeInput = '';
@@ -6661,39 +6665,39 @@ function drawHub() {
   // === Credits overlay with code entry ===
   if (showCredits) {
     drawRect(0, 0, W, H, 'rgba(0,0,0,0.85)');
-    const panelX = W/2 - 200, panelY = isTouchDevice ? 30 : 100, panelW = 400, panelH = isTouchDevice ? 500 : 340;
+    const panelX = W/2 - 230, panelY = isTouchDevice ? 20 : 75, panelW = 460, panelH = isTouchDevice ? 520 : 400;
     drawRect(panelX, panelY, panelW, panelH, 'rgba(20,20,40,0.95)');
     drawRect(panelX, panelY, panelW, 2, '#e94560');
     drawRect(panelX, panelY + panelH - 2, panelW, 2, '#e94560');
 
     const tOff = isTouchDevice ? -50 : 0;
-    drawText('- CREDITI -', W/2, 130 + tOff, '#e94560', 22, 'center');
-    drawText('LA GUERRA DI VALLE AURELIA', W/2, 155 + tOff, '#ffd700', 14, 'center');
-    drawText('Un gioco da conti...anzi, del Conte!', W/2, 175 + tOff, '#ccc', 11, 'center');
-    drawText('Ambientato a Prati, Roma', W/2, 193 + tOff, '#aaa', 11, 'center');
-    drawText('Sviluppatore: Cicca', W/2, 214 + tOff, '#aaa', 11, 'center');
-    drawText('Programmazione: Cicca + Claude', W/2, 232 + tOff, '#aaa', 11, 'center');
-    drawText('Idea & Design: Cicca', W/2, 250 + tOff, '#aaa', 11, 'center');
-    drawText('Grazie per aver giocato!', W/2, 272 + tOff, '#ffcc80', 12, 'center');
+    drawText('- CREDITI -', W/2, 110 + tOff, '#e94560', 25, 'center');
+    drawText('LA GUERRA DI VALLE AURELIA', W/2, 140 + tOff, '#ffd700', 16, 'center');
+    drawText('Un gioco da conti...anzi, del Conte!', W/2, 163 + tOff, '#ccc', 13, 'center');
+    drawText('Ambientato a Prati, Roma', W/2, 184 + tOff, '#aaa', 13, 'center');
+    drawText('Sviluppatore: Cicca', W/2, 210 + tOff, '#aaa', 13, 'center');
+    drawText('Programmazione: Cicca + Claude', W/2, 232 + tOff, '#aaa', 13, 'center');
+    drawText('Idea & Design: Cicca', W/2, 254 + tOff, '#aaa', 13, 'center');
+    drawText('Grazie per aver giocato!', W/2, 280 + tOff, '#ffcc80', 14, 'center');
 
     // Code entry box
-    const codeY = isTouchDevice ? 280 : 320;
-    drawRect(W/2 - 90, codeY, 180, 28, 'rgba(255,255,255,0.08)');
-    drawRect(W/2 - 90, codeY, 180, 1, '#555');
-    drawRect(W/2 - 90, codeY + 27, 180, 1, '#555');
+    const codeY = isTouchDevice ? 290 : 340;
+    drawRect(W/2 - 105, codeY, 210, 32, 'rgba(255,255,255,0.08)');
+    drawRect(W/2 - 105, codeY, 210, 1, '#555');
+    drawRect(W/2 - 105, codeY + 31, 210, 1, '#555');
     const cursor = Math.floor(gameTime / 30) % 2 === 0 ? '_' : '';
     const displayCode = codeInput + cursor;
-    drawText(displayCode || 'Inserisci codice...', W/2, codeY + 20, codeInput ? '#fff' : '#555', 12, 'center');
+    drawText(displayCode || 'Inserisci codice...', W/2, codeY + 22, codeInput ? '#fff' : '#555', 14, 'center');
 
     // On-screen keyboard for mobile
-    drawCreditsKeyboard(codeY + 35);
+    drawCreditsKeyboard(codeY + 40);
 
     // Close button
-    const closeBtnY2 = isTouchDevice ? codeY + 130 : 370;
-    const closeBtnX = W/2 - 40, closeBtnW = 80, closeBtnH = 24;
+    const closeBtnY2 = isTouchDevice ? codeY + 135 : 400;
+    const closeBtnX = W/2 - 46, closeBtnW = 92, closeBtnH = 28;
     const hoverClose = mouseX >= closeBtnX && mouseX <= closeBtnX + closeBtnW && mouseY >= closeBtnY2 && mouseY <= closeBtnY2 + closeBtnH;
     drawRect(closeBtnX, closeBtnY2, closeBtnW, closeBtnH, hoverClose ? '#e94560' : 'rgba(233,69,96,0.4)');
-    drawText('Chiudi', W/2, closeBtnY2 + 17, '#fff', 11, 'center');
+    drawText('Chiudi', W/2, closeBtnY2 + 19, '#fff', 13, 'center');
     if (mouseClick && hoverClose) {
       showCredits = false;
       codeInput = '';
