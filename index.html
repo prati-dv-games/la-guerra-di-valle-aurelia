@@ -20,10 +20,12 @@ canvas { border: 3px solid #e94560; image-rendering: pixelated; max-width: 100vw
 #freestyle-overlay.active { display: flex; }
 #freestyle-video { max-width: 100%; max-height: 90vh; }
 #freestyle-hint { color: #555; font-family: monospace; font-size: 12px; margin-top: 8px; }
+#freestyle-close { position: absolute; top: 12px; right: 16px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid #555; font-family: monospace; font-size: 18px; padding: 8px 18px; cursor: pointer; z-index: 1000; border-radius: 4px; }
 </style>
 </head>
 <body>
 <div id="freestyle-overlay">
+  <button id="freestyle-close" onclick="stopFreestyleVideo()">X CHIUDI</button>
   <video id="freestyle-video" src="prati_freestyle.mp4" preload="none" playsinline></video>
   <div id="freestyle-hint">ESC per tornare</div>
 </div>
@@ -5547,6 +5549,15 @@ function updateTutorial() {
 }
 
 function drawTutorial() {
+  // Camera zoom — 1.5x on mobile, 1.3x on desktop
+  const tutZoom = isTouchDevice ? 1.5 : 1.3;
+  ctx.save();
+  const tutCamX = Math.max(W / (2 * tutZoom), Math.min(W - W / (2 * tutZoom), player.x));
+  const tutCamY = Math.max(H / (2 * tutZoom), Math.min(H - H / (2 * tutZoom), player.y - 40));
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(tutZoom, tutZoom);
+  ctx.translate(-tutCamX, -tutCamY);
+
   // Background - training area at Vanni bar
   const trainSky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
   trainSky.addColorStop(0, '#0d1b2a');
@@ -5631,6 +5642,8 @@ function drawTutorial() {
   // Draw player
   drawConte(player);
   drawParticles();
+
+  ctx.restore();
 
   // === Tutorial mini-HUD (ultra bar + consumable slots) ===
   const tutStep = tutorialSteps[tutorialStep];
