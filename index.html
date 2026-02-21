@@ -1214,7 +1214,8 @@ let casinoTab = 0; // 0=poker, 1=slots
 let casinoFirstVisit = true;
 
 // Poker state
-let pokerPhase = 'idle'; // 'idle' | 'hold' | 'result'
+let pokerPhase = 'idle'; // 'idle' | 'hold' | 'redraw' | 'result'
+let pokerRedrawAnim = 0;
 let pokerDeck = [];
 let pokerHand = [null, null, null, null, null];
 let pokerHeld = [false, false, false, false, false];
@@ -8979,27 +8980,82 @@ function drawVideoPoker(panelY) {
         for (let i = 0; i < 5; i++) {
           if (!pokerHeld[i]) pokerHand[i] = pokerDeck.pop();
         }
-        pokerResult = evaluatePokerHand(pokerHand);
-        const mult = POKER_PAYOUTS[pokerResult] || 0;
-        pokerWinAmount = mult * pokerBet;
-        coins += pokerWinAmount;
-        pokerPhase = 'result';
-        pokerResultTimer = 180;
-        if (pokerWinAmount >= pokerBet * 10) {
-          pokerNpcComment = getAndreinoComment('bigwin');
-        } else if (pokerWinAmount > 0) {
-          pokerNpcComment = getAndreinoComment('win');
-        } else {
-          pokerNpcComment = getAndreinoComment('lose');
-        }
-        pokerNpcCommentTimer = 180;
-        if (pokerWinAmount > 0) {
-          playSFX('coin');
-          spawnParticles(cardStartX + totalCardsW/2, cardY + 40, '#ffd700', 20, 5);
-        } else {
-          playSFX('hurt');
-        }
+        pokerPhase = 'redraw';
+        pokerRedrawAnim = 35;
+        playSFX('hit');
         mouseClick = false;
+      }
+    }
+
+  } else if (pokerPhase === 'redraw') {
+    pokerRedrawAnim = Math.max(0, pokerRedrawAnim - 1);
+    // Staggered reveal: each non-held card flips at a different time
+    let redrawIdx = 0;
+    for (let i = 0; i < 5; i++) {
+      const cx = cardStartX + i * cardSpacing;
+      const cy = cardY;
+      if (pokerHeld[i]) {
+        // Held cards stay face up
+        if (pokerHand[i]) drawCard(cx, cy, pokerHand[i], cardW, cardH);
+        drawRect(cx, cy + cardH + 2, cardW, 18, '#ffd700');
+        drawText('TIENI', cx + cardW/2, cy + cardH + 16, '#000', 10, 'center');
+      } else {
+        // Non-held cards: flip animation (back → squeeze → face)
+        const flipDelay = redrawIdx * 6; // stagger each redrawn card by 6 frames
+        const flipProgress = Math.max(0, (35 - pokerRedrawAnim) - flipDelay);
+        const flipDuration = 14;
+        if (flipProgress <= 0) {
+          // Still showing back
+          drawCardBack(cx, cy, cardW, cardH);
+        } else if (flipProgress < flipDuration / 2) {
+          // Squeezing down (card narrows to center)
+          const t = flipProgress / (flipDuration / 2);
+          const squeeze = 1 - t;
+          const sw = Math.max(2, cardW * squeeze);
+          const sx = cx + (cardW - sw) / 2;
+          drawCardBack(sx, cy, sw, cardH);
+        } else if (flipProgress < flipDuration) {
+          // Expanding back (showing face)
+          const t = (flipProgress - flipDuration / 2) / (flipDuration / 2);
+          const squeeze = t;
+          const sw = Math.max(2, cardW * squeeze);
+          const sx = cx + (cardW - sw) / 2;
+          if (pokerHand[i]) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(sx, cy, sw, cardH);
+            ctx.clip();
+            drawCard(cx, cy, pokerHand[i], cardW, cardH);
+            ctx.restore();
+          }
+        } else {
+          // Fully revealed
+          if (pokerHand[i]) drawCard(cx, cy, pokerHand[i], cardW, cardH);
+        }
+        redrawIdx++;
+      }
+    }
+    // Transition to result when animation finishes
+    if (pokerRedrawAnim <= 0) {
+      pokerResult = evaluatePokerHand(pokerHand);
+      const mult = POKER_PAYOUTS[pokerResult] || 0;
+      pokerWinAmount = mult * pokerBet;
+      coins += pokerWinAmount;
+      pokerPhase = 'result';
+      pokerResultTimer = 180;
+      if (pokerWinAmount >= pokerBet * 10) {
+        pokerNpcComment = getAndreinoComment('bigwin');
+      } else if (pokerWinAmount > 0) {
+        pokerNpcComment = getAndreinoComment('win');
+      } else {
+        pokerNpcComment = getAndreinoComment('lose');
+      }
+      pokerNpcCommentTimer = 180;
+      if (pokerWinAmount > 0) {
+        playSFX('coin');
+        spawnParticles(cardStartX + totalCardsW/2, cardY + 40, '#ffd700', 20, 5);
+      } else {
+        playSFX('hurt');
       }
     }
 
