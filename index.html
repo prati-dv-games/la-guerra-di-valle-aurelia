@@ -6072,17 +6072,16 @@ function drawHelperSelect() {
     // Name
     drawText(h.name, cx + cardW/2, cy + 110, '#fff', 16, 'center');
 
-    // Description
-    drawText(h.desc, cx + cardW/2, cy + 140, '#ddd', 10, 'center');
-
-    // Tier info
-    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 170, '#bbb', 9, 'center');
-
-    // Tier upgrades preview
-    drawText('Potenziamenti:', cx + cardW/2, cy + 200, '#999', 9, 'center');
-    for (let t = 0; t < 3; t++) {
-      drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, cx + cardW/2, cy + 220 + t * 18, '#aaa', 8, 'center');
-    }
+    // Main effect description
+    const helperDescs = [
+      ['Stordisce i nemici vicini', 'Utile per uscire da situazioni difficili'],
+      ['Coltellata diretta al boss', 'Danno pesante, colpisce il boss'],
+      ['Cura +35 HP', 'Unica fonte di cura in battaglia'],
+      ['Velocita\' x2 per 8 secondi', 'Muoviti e colpisci piu\' veloce']
+    ];
+    drawText(helperDescs[i][0], cx + cardW/2, cy + 138, '#fff', 11, 'center');
+    drawText(helperDescs[i][1], cx + cardW/2, cy + 156, '#999', 9, 'center');
+    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 178, h.color, 9, 'center');
 
     ctx.globalAlpha = 1;
   }
