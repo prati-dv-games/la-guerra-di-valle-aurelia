@@ -2251,28 +2251,31 @@ function drawBossChar(b, level) {
     if (gameTime % 4 === 0) spawnParticles(b.x + (Math.random()-0.5)*b.w, b.y - Math.random()*b.h, '#f44336', 1, 2);
   }
 
-  // Boss HP bar with phase markers — only show once boss intro has started
-  if (bossIntro) {
-    const barW = 260;
-    const hpRatio = b.hp / b.maxHp;
-    const barX = W/2 - barW/2;
-    drawRect(barX - 4, 6, barW + 8, 36, 'rgba(0,0,0,0.85)');
-    drawRect(barX - 4, 6, barW + 8, 2, '#e94560');
-    drawText(levels[currentLevel].boss.toUpperCase(), W/2, 22, '#ff8a80', 12, 'center');
-    if (b.bossPhase > 1) drawText('PHASE ' + b.bossPhase, W/2 + 100, 22, '#ffd700', 9, 'center');
-    drawRect(barX, 28, barW, 10, '#333');
-    drawRect(barX, 28, barW * hpRatio, 10, hpRatio > 0.3 ? '#e53935' : '#ff6f00');
-    // Boss poise bar
-    if (b.poise !== undefined && b.poise < b.maxPoise) {
-      const poiseR = Math.max(0, b.poise / b.maxPoise);
-      drawRect(barX, 39, barW, 3, '#555');
-      drawRect(barX, 39, barW * poiseR, 3, b.staggerTimer > 0 ? '#ff9800' : '#ffeb3b');
-    }
-    // Phase markers at 60% and 30% HP
-    [0.6, 0.3].forEach(t => {
-      drawRect(barX + barW * t - 1, 26, 2, 14, '#ffd700');
-    });
+  // Boss HP bar is drawn in HUD (outside zoom transform) — see drawBossHpBar()
+}
+
+function drawBossHpBar() {
+  if (!boss || boss.dead || !bossIntro) return;
+  const b = boss;
+  const barW = 260;
+  const hpRatio = b.hp / b.maxHp;
+  const barX = W/2 - barW/2;
+  drawRect(barX - 4, 6, barW + 8, 36, 'rgba(0,0,0,0.85)');
+  drawRect(barX - 4, 6, barW + 8, 2, '#e94560');
+  drawText(levels[currentLevel].boss.toUpperCase(), W/2, 22, '#ff8a80', 12, 'center');
+  if (b.bossPhase > 1) drawText('PHASE ' + b.bossPhase, W/2 + 100, 22, '#ffd700', 9, 'center');
+  drawRect(barX, 28, barW, 10, '#333');
+  drawRect(barX, 28, barW * hpRatio, 10, hpRatio > 0.3 ? '#e53935' : '#ff6f00');
+  // Boss poise bar
+  if (b.poise !== undefined && b.poise < b.maxPoise) {
+    const poiseR = Math.max(0, b.poise / b.maxPoise);
+    drawRect(barX, 39, barW, 3, '#555');
+    drawRect(barX, 39, barW * poiseR, 3, b.staggerTimer > 0 ? '#ff9800' : '#ffeb3b');
   }
+  // Phase markers at 60% and 30% HP
+  [0.6, 0.3].forEach(t => {
+    drawRect(barX + barW * t - 1, 26, 2, 14, '#ffd700');
+  });
 }
 
 function drawLaFed(x, y, b) {
@@ -9684,6 +9687,7 @@ function drawLevel() {
 
   // HUD
   drawHUD();
+  drawBossHpBar();
 
   // Quick text - positioned above helper bar
   if (quickTextTimer > 0) {
