@@ -14,9 +14,9 @@ Choose at game start:
 
 | Difficulty | Lives | Damage Taken | Enemy HP |
 |------------|-------|--------------|----------|
-| **Easy** | Infinite | 60% | 70% |
-| **Medium** | 3 per boss | 100% | 100% |
-| **Hard** | 3 total (no resets) | 100% | 100% |
+| **Easy** | Infinite | -30% | -20% |
+| **Medium** | 3 per boss | Normal | Normal |
+| **Hard** | 3 total (no resets) | +10% | +10% |
 
 ### Controls
 
@@ -32,7 +32,7 @@ Choose at game start:
 | 2 | Helper: Tommy (drunk knife) |
 | 3 | Helper: Cicca the cat (heal) |
 | 4 | Helper: Il Mostro (speed boost) |
-| S | Open shop (at Vanni hub) |
+| S | Open shop — Armeria di Giammy e Mele (at hub) |
 | B | Open casino — Bingo degli Ubaldi (at Vanni hub) |
 | M | Mute/unmute music |
 | ESC | Back / return to hub |
@@ -76,7 +76,7 @@ Use the touchpad as a mouse for hub menus and the shop. Any standard gamepad (Xb
 
 ### Weapons
 
-Buy weapons at the Vanni shop between levels:
+Buy weapons at Giammy & Mele's shop between levels:
 
 | Weapon | Style |
 |--------|-------|
@@ -88,6 +88,7 @@ Buy weapons at the Vanni shop between levels:
 | Catena | Chain with wide range |
 | Pistola | Ranged |
 | La Lupa | Legendary — the she-wolf blade |
+| Manganello | Michele's police baton (backroom secret) — Ultra slows all enemies |
 
 ### Helpers
 
@@ -131,6 +132,17 @@ Type these on the credits screen:
 | `CONTE` | Unlock everything — all weapons, max upgrades, all helpers tier 3 |
 | `LUDO` | +100 coins |
 | `FREE` | Play the Cicca & Daniele freestyle music video |
+| `YO` | Toggle sunglasses on Daniele (persists for the whole run) |
+
+### Hub Secrets
+
+The hub hides interactive secrets -- click/tap to discover them:
+
+- Punch the street lamp for bonus coins (once per run)
+- Pet Cicca the cat when she wanders by
+- Tap the left wall of Vanni's bar repeatedly
+- Try the drink at the outdoor table for a combat buff
+- Click the front door of Bar Vanni to find Michele Lo Sbirro's backroom -- choose wisely and you may receive the Manganello (police baton) weapon whose Ultra slows all enemies
 
 ## How to Share
 

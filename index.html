@@ -935,7 +935,7 @@ window.addEventListener('keydown', e => {
 // ==========================================
 let state = 'menu'; // menu, difficultySelect, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, casino, gameover, victory
 let difficulty = 'medium'; // 'easy', 'medium', 'hard'
-const DIFF_HP = { easy: 0.7, medium: 0.9, hard: 1.0 };
+const DIFF_HP = { easy: 0.61, medium: 0.76, hard: 0.84 };
 const DIFF_DMG = { easy: 0.6, medium: 0.85, hard: 0.935 };
 let tutorialStep = 0;
 let tutorialDummy = null;
@@ -1027,7 +1027,6 @@ const UPGRADE_POOL = [
   { name: '+15% Critico', cat: 'stat', desc: 'Tutte le armi +15% chance critico', effect: 'crit15', icon: '\u25C6', color: '#ff9800' },
   { name: 'Pelle Dura', cat: 'stat', desc: 'Ricevi 15% danno in meno', effect: 'armor15', icon: '\u25A0', color: '#607d8b' },
   { name: 'Colpo Pesante', cat: 'stat', desc: '+25% danno poise, stagger piu\' veloce', effect: 'poise25', icon: '\u25B2', color: '#9c27b0' },
-  { name: 'Scatto Aereo', cat: 'mossa', desc: 'Schiva in aria (X in volo)', effect: 'airdash', icon: '\u2197', color: '#29b6f6' },
   { name: 'Combo Extra', cat: 'mossa', desc: '+1 colpo a tutte le combo', effect: 'comboext', icon: '\u221E', color: '#e040fb' },
   // Potenziamenti Ultra — attivi solo durante modalita' Ultra (Q)
   { name: 'Ultra Fuoco', cat: 'mod', desc: 'Ultra: ogni colpo brucia il nemico (3s)', effect: 'ultraFire', icon: '\u2666', color: '#ff5722' },
@@ -1091,10 +1090,6 @@ const player = {
   reloadTimer: 0, // ammo reload countdown for ranged weapons
   consumables: [],
   consumableTimers: {},
-  // Grab system
-  grabbing: false,
-  grabbedEnemy: null,
-  grabTimer: 0,
   // Combo counter (scoring)
   comboHitCount: 0,
   comboHitTimer: 0,
@@ -1128,10 +1123,10 @@ const starterWeapons = [
     comboHits: 3, poise: 14, activeFrames: 8, comboWindow: 13, endLag: 22,
     special: 'reachControl', desc: 'Pesante, lungo raggio. Colpo doppio.',
     color: '#795548', icon: 'P' },
-  { name: 'Fionda',         damage: 10, range: 180, speed: 16, crit: 8,
+  { name: 'Fionda',         damage: 11, range: 180, speed: 17, crit: 8,
     comboHits: 3, poise: 2, activeFrames: 6, comboWindow: 10, endLag: 20,
-    special: 'pierce', desc: 'Ranged. Il 3o colpo perfora.', ranged: true,
-    color: '#a1887f', icon: 'F', maxAmmo: 5, reloadFrames: 90 }
+    special: 'pierce', desc: 'Ranged. 3o colpo perfora (Ultra).', ranged: true,
+    color: '#a1887f', icon: 'F', maxAmmo: 4, reloadFrames: 90 }
 ];
 
 // Rare weapons (from gacha)
@@ -1161,6 +1156,14 @@ const legendaryWeapons = [
     special: 'pierce', desc: 'Ranged leggendaria. Tutti i colpi perforano.', ranged: true,
     color: '#333', icon: 'G', maxAmmo: 4, reloadFrames: 75 }
 ];
+
+const manganelloWeapon = {
+  name: 'Manganello', damage: 20, range: 55, speed: 10, crit: 12,
+  comboHits: 3, poise: 14, activeFrames: 7, comboWindow: 14, endLag: 18,
+  special: 'interrogation',
+  desc: 'Arma di Michele. Ultra: rallenta tutti i nemici.',
+  color: '#263238', icon: 'M'
+};
 
 // Active weapon — single-element array, weapons[0] is always current weapon
 let weapons = [starterWeapons[0]]; // default, replaced at weapon select
@@ -1291,25 +1294,25 @@ const consumableItems = [
 ];
 
 const helpers = [
-  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 80,
+  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 30,
     tiers: [
       { cost: 50, desc: 'Stun +50%, area piu\' grande' },
       { cost: 100, desc: 'Spacca poise: 3x danno poise' },
       { cost: 175, desc: 'Raduno: nemici stunnati -30% poise' }
     ]},
-  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 80,
+  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 30,
     tiers: [
       { cost: 50, desc: 'Danno +50%, attacca piu\' spesso' },
       { cost: 100, desc: 'Combo assist: attacca staggerati' },
       { cost: 175, desc: 'Grido: +30% danno per 4s ogni 30s' }
     ]},
-  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#ff8a65', icon: 'C', tier: 0, unlocked: false, unlockCost: 80,
+  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#ff8a65', icon: 'C', tier: 0, unlocked: false, unlockCost: 30,
     tiers: [
       { cost: 50, desc: 'Cura +50%' },
       { cost: 100, desc: 'Buff attacco: +20% danno per 5s' },
       { cost: 175, desc: 'Revive: auto-cura se muori (1x)' }
     ]},
-  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 80,
+  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 30,
     tiers: [
       { cost: 50, desc: 'Durata speed +50%' },
       { cost: 100, desc: 'Speed +20% velocita\' attacco' },
@@ -1732,6 +1735,31 @@ function drawConte(p) {
     drawRect(x + 2, y - 8, 6, 3, '#ffc107'); // Roma lupetto badge
     // Hair peeking out
     drawRect(x + 2, y, w - 4, 3, '#3e2723');
+    // Sunglasses (YO code) — aviator style
+    if (hasSunglasses) {
+      const sx = x, sy = y, sw = w;
+      // Frame bridge (gold metal)
+      drawRect(sx + sw/2 - 3, sy + 8, 6, 2, '#bfa24a');
+      // Left lens frame
+      drawRect(sx + 5, sy + 7, 11, 7, '#222');
+      // Right lens frame
+      drawRect(sx + sw - 16, sy + 7, 11, 7, '#222');
+      // Left lens (dark gradient look)
+      drawRect(sx + 6, sy + 8, 9, 5, '#1a1a2e');
+      drawRect(sx + 6, sy + 8, 9, 2, '#2a2a4e'); // lighter top for gradient
+      // Right lens
+      drawRect(sx + sw - 15, sy + 8, 9, 5, '#1a1a2e');
+      drawRect(sx + sw - 15, sy + 8, 9, 2, '#2a2a4e');
+      // Lens shine (subtle reflection)
+      drawRect(sx + 7, sy + 9, 3, 1, 'rgba(255,255,255,0.25)');
+      drawRect(sx + sw - 14, sy + 9, 3, 1, 'rgba(255,255,255,0.25)');
+      // Temple arms going to ears (gold)
+      drawRect(sx + 3, sy + 9, 3, 2, '#bfa24a');
+      drawRect(sx + sw - 6, sy + 9, 3, 2, '#bfa24a');
+      // Nose pads
+      drawRect(sx + sw/2 - 2, sy + 10, 1, 2, '#bfa24a');
+      drawRect(sx + sw/2 + 1, sy + 10, 1, 2, '#bfa24a');
+    }
     // Stone Island shirt - dark navy/black
     drawRect(x + 2, y + 20, w - 4, h - 36, '#1a1a2e');
     // Stone Island compass badge on arm
@@ -3103,7 +3131,8 @@ function launchComboHit(stepIndex) {
   const upgDmg = player.upgrades.some(u => u.effect === 'dmg15') ? 1.15 : 1;
   const consumableDmg = (player.consumableTimers.dmgBoost > 0) ? 1.3 : 1;
   const ultraMult = player.ultraActive ? 1.5 : 1;
-  let dmg = weap.damage * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * consumableDmg * ultraMult;
+  const amaroMult = drinkBuff ? 1.1 : 1;
+  let dmg = weap.damage * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * consumableDmg * ultraMult * amaroMult;
   const poiseMult = player.upgrades.some(u => u.effect === 'poise25') ? 1.25 : 1;
   const effectivePoise = Math.round(weap.poise * poiseMult);
 
@@ -3132,7 +3161,7 @@ function launchComboHit(stepIndex) {
         player.reloadTimer = weap.reloadFrames || 90;
       }
     }
-    const isPiercing = weap.special === 'pierce' ? (weap.name === 'Pistola del Nonno' || stepIndex >= 2) : false;
+    const isPiercing = weap.special === 'pierce' ? (weap.name === 'Pistola del Nonno' || (stepIndex >= 2 && player.ultraActive)) : false;
     projectiles.push({
       x: player.x + player.facing * 20,
       y: player.y - 28,
@@ -3444,7 +3473,7 @@ function launchComboHit(stepIndex) {
 
 // Overhead: Up + Attack — slow overhead slam, 2x poise damage
 function playerOverhead() {
-  if (player.dead || player.stunTimer > 0 || player.endLagTimer > 0 || player.grabbing || player.exhaustedTimer > 0) return;
+  if (player.dead || player.stunTimer > 0 || player.endLagTimer > 0 || player.exhaustedTimer > 0) return;
   player.stamina = Math.max(0, player.stamina - 28);
   player.staminaRegenDelay = 30;
   player.attacking = true;
@@ -3781,6 +3810,10 @@ function updateBossAI() {
     return;
   }
 
+  // Interrogation special: Ultra slows boss
+  const savedBossSpeed = boss.speed;
+  if (player.ultraActive && weapons[0].special === 'interrogation') boss.speed *= 0.6;
+
   boss.hitFlash = Math.max(0, boss.hitFlash - 1);
   boss.attackTimer = Math.max(0, boss.attackTimer - 1);
   boss.specialTimer++;
@@ -3973,6 +4006,9 @@ function updateBossAI() {
   if (reginaActive && regina && !regina.dead) updateReginaAI();
   // Update Mariuso (L4 helper)
   if (mariusoActive && mariuso && !mariuso.dead) updateMariusoAI();
+
+  // Restore boss speed after interrogation slow
+  boss.speed = savedBossSpeed;
 }
 
 // Boss move selection per level and phase
@@ -4764,6 +4800,7 @@ function updateGoons() {
     const origSpeed = g.speed;
     if (g.hazardSlow) g.speed *= 0.7;
     if (g.slowTimer > 0) { g.slowTimer--; g.speed *= 0.7; }
+    if (player.ultraActive && weapons[0].special === 'interrogation') g.speed *= 0.6;
     if (g.stunTimer > 0) { g.stunTimer--; g.speed = origSpeed; return; }
 
     // Poise break cooldown timer
@@ -5345,6 +5382,15 @@ function drawMenu() {
       startFreestyleVideo();
     }
 
+    // Check for YO code (sunglasses toggle)
+    if (codeInput === 'YO') {
+      hasSunglasses = !hasSunglasses;
+      codeInput = '';
+      screenFlash = 10; flashColor = '#333';
+      showQuickText(hasSunglasses ? 'STYLE ON!' : 'Occhiali rimossi.', '#333');
+      playSFX('perfect_dodge');
+    }
+
     // Block menu interaction while credits open
     return;
   }
@@ -5447,16 +5493,16 @@ function drawDifficultySelect() {
     // Difficulty-specific info
     if (i === 0) {
       drawText('Vite: \u221E', cx + cardW/2, startY + 210, '#4caf50', 11, 'center');
-      drawText('Nemici: -30% HP', cx + cardW/2, startY + 228, '#4caf50', 10, 'center');
-      drawText('Danni subiti: -40%', cx + cardW/2, startY + 246, '#4caf50', 10, 'center');
+      drawText('Nemici: -20% HP', cx + cardW/2, startY + 228, '#4caf50', 10, 'center');
+      drawText('Danni subiti: -30%', cx + cardW/2, startY + 246, '#4caf50', 10, 'center');
     } else if (i === 1) {
       drawText('Vite: 3 per boss', cx + cardW/2, startY + 210, '#ff9800', 11, 'center');
       drawText('Nemici: normali', cx + cardW/2, startY + 228, '#ff9800', 10, 'center');
       drawText('Danni subiti: normali', cx + cardW/2, startY + 246, '#ff9800', 10, 'center');
     } else {
       drawText('Vite: 3 in TOTALE', cx + cardW/2, startY + 210, '#f44336', 11, 'center');
-      drawText('Nemici: normali', cx + cardW/2, startY + 228, '#f44336', 10, 'center');
-      drawText('Danni subiti: normali', cx + cardW/2, startY + 246, '#f44336', 10, 'center');
+      drawText('Nemici: +10% HP', cx + cardW/2, startY + 228, '#f44336', 10, 'center');
+      drawText('Danni subiti: +10%', cx + cardW/2, startY + 246, '#f44336', 10, 'center');
     }
 
     ctx.globalAlpha = 1;
@@ -5606,8 +5652,8 @@ function updateTutorial() {
 }
 
 function drawTutorial() {
-  // Camera zoom — 1.5x on mobile, 1.3x on desktop
-  const tutZoom = isTouchDevice ? 1.4 : 1.3;
+  // Camera zoom
+  const tutZoom = isTouchDevice ? 1.35 : 1.25;
   ctx.save();
   const tutCamX = Math.max(W / (2 * tutZoom), Math.min(W - W / (2 * tutZoom), player.x));
   const tutCamY = Math.max(H / (2 * tutZoom), Math.min(H - H / (2 * tutZoom), player.y - 40));
@@ -5868,9 +5914,6 @@ function resetPlayer() {
   // Reset ammo on level start
   const w0 = weapons[player.weapon];
   if (w0 && w0.maxAmmo) w0.currentAmmo = w0.maxAmmo;
-  player.grabbing = false;
-  player.grabbedEnemy = null;
-  player.grabTimer = 0;
   player.comboHitCount = 0;
   player.comboHitTimer = 0;
   player.scoreMultiplier = 1;
@@ -6205,19 +6248,13 @@ function drawMovesScreen() {
     ['X', 'Schivata (durante windup nemico = COUNTER)'],
   ], '#ff8a65');
 
-  // GRAB
-  drawSection(20, 182, 430, 68, 'GRAB', '#64b5f6', [
-    ['Z vicino', 'Afferra nemico stordito'],
-    ['', 'Z = lancia | W+Z = slam (tastiera)'],
-  ], '#90caf9');
-
   // MOVIMENTO
-  drawSection(20, 260, 430, 58, 'MOVIMENTO', '#2196f3', [
+  drawSection(20, 182, 430, 58, 'MOVIMENTO', '#2196f3', [
     ['A/D', 'Muovi    |    W = Salta    |    X = Schiva'],
   ], '#64b5f6');
 
   // STAMINA
-  drawSection(20, 328, 430, 68, 'STAMINA', '#fdd835', [
+  drawSection(20, 250, 430, 68, 'STAMINA', '#fdd835', [
     ['Costo', 'Colpo = 12 | Ultra = 7 per colpo'],
     ['Esaurito', 'Stamina a 0 → bloccato brevemente'],
     ['Caffe\'', 'Consumabile: stamina gratis 10s'],
@@ -6229,7 +6266,7 @@ function drawMovesScreen() {
     ['Sanpietrino', 'Crit cresce ad ogni colpo del combo'],
     ['Cacciavite', 'Sanguinamento su ogni colpo'],
     ['Spranga', 'Colpo 1 lungo, Colpo 2 entrambi i lati'],
-    ['Fionda', 'Il 3o colpo perfora i nemici'],
+    ['Fionda', 'Ultra: il 3o colpo perfora i nemici'],
     ['Machete', '2x danno su nemici sotto 25% HP'],
     ['Catena', 'Attira nemici vicini'],
   ], '#ffcc80');
@@ -6319,9 +6356,34 @@ function drawMovesScreen() {
 // HUB - VANNI
 // ==========================================
 let hubSelection = 0;
+let hubConfirm = false; // level confirmation box active
+let hubInputCooldown = 0; // prevents accidental input bleed-through
 let shopOpen = false;
+let lampHit = false, lampFlicker = 0;
+let hubCatX = 100, hubCatDir = 1, hubCatTimer = 0, hubCatPetted = false, hubCatSitting = 0;
+let wallTaps = 0, graffitiRevealed = false, graffitiAlpha = 0;
+let drinkTaken = false, drinkWobble = 0, drinkBuff = 0;
+let hasSunglasses = false;
+let micheleVisited = false;
+let micheleArgueTimer = 0;
+let micheleArgueLine = '';
+let micheleArgueIntroDone = false;
+let backroomPhase = 0; // 0=dialogue, 1=choice, 2=response, 3=exit
+let backroomLine = 0;
+let backroomChoice = -1; // 0=Scarabeo, 1=TMAX
+let backroomCooldown = 0; // input cooldown to prevent accidental double-tap
+let hubVisitInited = false;
 
 function drawHub() {
+  // Reset per-visit secrets on hub entry
+  if (!hubVisitInited) {
+    hubVisitInited = true;
+    hubCatSitting = 0; hubCatX = 100; hubCatDir = 1; hubCatTimer = 0;
+    wallTaps = 0; graffitiRevealed = false; graffitiAlpha = 0;
+    drinkWobble = 0;
+    // lampHit, drinkTaken, hubCatPetted, and hasSunglasses persist across visits
+  }
+
   // Night sky
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, '#070714');
@@ -6338,87 +6400,399 @@ function drawHub() {
   ctx.globalAlpha = 1;
 
   // Roman palazzi in background (neighbors)
-  drawRect(-10, 140, 160, 270, '#3d3530');
-  drawRect(740, 160, 180, 250, '#3a3228');
+  // COLOR THEORY: split-complementary off indigo sky (#070714)
+  //   Vanni = warm sienna-amber (indigo's complement) → focal glow
+  //   Left  = cool slate blue (analogous to sky) → recedes into night
+  //   Right = dusty rose-clay (bridges toward Bingo's purple)
+
+  // Left palazzo — cool slate blue, in night shadow
+  drawRect(-10, 140, 160, 270, '#363d4d');
+  drawRect(-10, 140, 160, 3, '#4a5265');
   for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
-    drawRect(10 + c * 55, 170 + r * 60, 24, 35, '#1a1a2e');
-    drawRect(760 + c * 55, 185 + r * 60, 24, 35, '#1a1a2e');
+    const nwx = 10 + c * 55, nwy = 170 + r * 60;
+    drawRect(nwx, nwy, 24, 35, '#181c28');
+    ctx.globalAlpha = 0.12;
+    drawRect(nwx + 1, nwy + 1, 22, 33, '#c8d0e0');
+    ctx.globalAlpha = 1;
+    // Shutters (muted teal-green, works with blue wall)
+    drawRect(nwx - 4, nwy, 4, 35, '#3d5c4a');
+    drawRect(nwx + 24, nwy, 4, 35, '#3d5c4a');
+    // Sill
+    drawRect(nwx - 2, nwy + 35, 28, 3, '#4a5265');
+  }
+  // Right palazzo — dusty rose-clay, bridges to Bingo's purple
+  drawRect(740, 160, 180, 250, '#4a3840');
+  drawRect(740, 160, 180, 3, '#5e4850');
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
+    const nwx = 760 + c * 55, nwy = 185 + r * 60;
+    drawRect(nwx, nwy, 24, 35, '#1e1820');
+    ctx.globalAlpha = 0.12;
+    drawRect(nwx + 1, nwy + 1, 22, 33, '#e0d0d8');
+    ctx.globalAlpha = 1;
+    drawRect(nwx - 4, nwy, 4, 35, '#5a4048');
+    drawRect(nwx + 24, nwy, 4, 35, '#5a4048');
+    drawRect(nwx - 2, nwy + 35, 28, 3, '#5e4850');
   }
 
-  // BAR VANNI - main building
-  drawRect(150, 100, 540, 310, '#4a3f35');
-  drawRect(150, 100, 540, 4, '#6d5f50');
+  // BAR VANNI - main building (warm sienna-amber — complement of indigo sky)
+  const facadeGrad = ctx.createLinearGradient(150, 100, 150, 410);
+  facadeGrad.addColorStop(0, '#6a5038');
+  facadeGrad.addColorStop(0.4, '#5a4433');
+  facadeGrad.addColorStop(1, '#4a3828');
+  ctx.fillStyle = facadeGrad;
+  ctx.fillRect(150, 100, 540, 310);
+  // Subtle stucco texture
+  for (let ty = 0; ty < 10; ty++) for (let tx = 0; tx < 18; tx++) {
+    ctx.globalAlpha = 0.03 + ((tx * 7 + ty * 13) % 5) * 0.008;
+    drawRect(152 + tx * 30, 104 + ty * 30, 28, 28, (tx + ty) % 2 === 0 ? '#7a6048' : '#4a3828');
+  }
+  ctx.globalAlpha = 1;
+  // Roofline cornice
+  drawRect(146, 96, 548, 8, '#6a5848');
+  drawRect(146, 96, 548, 2, '#8a7460');
+  drawRect(148, 104, 544, 2, '#3a2e22');
 
-  // Red/maroon awning with scalloped edge
-  drawRect(140, 125, 560, 30, '#8b1a1a');
-  drawRect(140, 125, 560, 4, '#c62828');
+  // Red/maroon awning with scalloped edge and stripe detail
+  const awningGrad = ctx.createLinearGradient(0, 125, 0, 158);
+  awningGrad.addColorStop(0, '#9b2020');
+  awningGrad.addColorStop(0.5, '#8b1a1a');
+  awningGrad.addColorStop(1, '#6d1414');
+  ctx.fillStyle = awningGrad;
+  ctx.fillRect(140, 125, 560, 32);
+  // Awning highlight stripe
+  drawRect(140, 125, 560, 2, '#c62828');
+  drawRect(140, 139, 560, 1, 'rgba(255,200,150,0.08)');
+  // Scalloped edge
   for (let i = 0; i < 14; i++) {
-    ctx.fillStyle = '#8b1a1a';
+    ctx.fillStyle = '#6d1414';
     ctx.beginPath();
-    ctx.arc(160 + i * 40, 157, 12, 0, Math.PI);
+    ctx.arc(160 + i * 40, 158, 13, 0, Math.PI);
+    ctx.fill();
+    // Scallop highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.beginPath();
+    ctx.arc(160 + i * 40, 158, 11, Math.PI, Math.PI * 1.5);
     ctx.fill();
   }
 
-  // BAR VANNI sign on awning
-  drawRect(310, 95, 220, 34, '#1a1a1a');
-  drawRect(310, 95, 220, 2, '#c62828');
+  // BAR VANNI sign — elegant dark backing with gold lettering
+  drawRect(310, 93, 220, 36, '#111');
+  drawRect(310, 93, 220, 2, '#c62828');
+  drawRect(310, 127, 220, 2, '#3e2723');
+  // Inner border
+  drawRect(314, 97, 212, 28, 'rgba(139,26,26,0.3)');
   drawText('BAR VANNI', 420, 118, '#ffd54f', 20, 'center');
+  // Subtle gold glow behind text
+  ctx.globalAlpha = 0.08;
+  drawText('BAR VANNI', 420, 118, '#fff', 21, 'center');
+  ctx.globalAlpha = 1;
 
-  // Bar interior visible through windows (warm glow)
-  // Large windows
+  // Windows — with wooden shutters, warm interior glow, and sills
   for (let i = 0; i < 3; i++) {
     const wx = 175 + i * 175;
+    // Window recess (shadow)
+    drawRect(wx - 2, 168, 84, 104, '#2c2218');
+    // Glass / interior
     drawRect(wx, 170, 80, 100, '#1a1a2e');
-    ctx.globalAlpha = 0.35 + Math.sin(gameTime * 0.02 + i) * 0.1;
-    drawRect(wx + 2, 172, 76, 96, '#fff3e0');
+    // Warm interior glow
+    const winGlow = 0.3 + Math.sin(gameTime * 0.02 + i) * 0.08;
+    ctx.globalAlpha = winGlow;
+    const wGrad = ctx.createRadialGradient(wx + 40, 220, 5, wx + 40, 220, 50);
+    wGrad.addColorStop(0, '#ffe0b2');
+    wGrad.addColorStop(0.6, '#ffcc80');
+    wGrad.addColorStop(1, '#4a3520');
+    ctx.fillStyle = wGrad;
+    ctx.fillRect(wx + 2, 172, 76, 96);
     ctx.globalAlpha = 1;
-    // Window frame
+    // Interior silhouettes (bottles on shelf)
+    ctx.globalAlpha = 0.12;
+    for (let b = 0; b < 4; b++) {
+      drawRect(wx + 10 + b * 18, 195, 6, 14, '#1a1a1a');
+      drawRect(wx + 12 + b * 18, 190, 2, 6, '#1a1a1a');
+    }
+    ctx.globalAlpha = 1;
+    // Wooden frame (warm brown)
     drawRect(wx, 170, 80, 3, '#5d4037');
-    drawRect(wx, 220, 80, 2, '#5d4037');
-    drawRect(wx + 39, 170, 2, 100, '#5d4037');
+    drawRect(wx, 267, 80, 3, '#5d4037');
+    drawRect(wx, 170, 3, 100, '#5d4037');
+    drawRect(wx + 77, 170, 3, 100, '#5d4037');
+    // Cross mullion
+    drawRect(wx, 218, 80, 2, '#5d4037');
+    drawRect(wx + 38, 170, 3, 100, '#5d4037');
+    // Window sill
+    drawRect(wx - 4, 270, 88, 5, '#8d7b6a');
+    drawRect(wx - 4, 270, 88, 1, '#a09080');
+    // Flower box under window
+    drawRect(wx + 5, 275, 70, 8, '#5d4037');
+    drawRect(wx + 5, 275, 70, 1, '#795548');
+    // Little green tufts
+    for (let f = 0; f < 5; f++) {
+      ctx.fillStyle = ['#4caf50', '#388e3c', '#66bb6a', '#2e7d32', '#81c784'][f];
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.arc(wx + 12 + f * 14, 274, 4 + (f % 2), Math.PI, 0);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
-  // Door - open with warm light
-  drawRect(385, 280, 70, 130, '#3e2723');
-  drawRect(388, 283, 64, 127, '#2a1f16');
-  // Warm light from inside
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = '#ffcc80';
+  // Door — open entrance with warm inviting light
+  // Door frame (thick wood)
+  drawRect(382, 276, 76, 134, '#4e342e');
+  drawRect(383, 277, 74, 133, '#3e2723');
+  // Inner door / opening
+  drawRect(386, 280, 68, 130, '#2a1f16');
+  drawRect(388, 283, 64, 127, '#1e1610');
+  // Warm light spilling out
+  ctx.globalAlpha = 0.35;
+  const doorGlow = ctx.createRadialGradient(420, 320, 10, 420, 320, 70);
+  doorGlow.addColorStop(0, '#ffe0b2');
+  doorGlow.addColorStop(0.5, '#ffcc80');
+  doorGlow.addColorStop(1, 'rgba(255,180,100,0)');
+  ctx.fillStyle = doorGlow;
   ctx.beginPath();
-  ctx.arc(420, 310, 50, Math.PI, 0);
+  ctx.arc(420, 310, 60, Math.PI, 0);
   ctx.fill();
-  ctx.globalAlpha = 0.2;
-  ctx.fillRect(370, 340, 100, 70);
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = '#ffcc80';
+  ctx.fillRect(375, 340, 90, 70);
+  ctx.globalAlpha = 1;
+  // Light cast on ground from door
+  ctx.globalAlpha = 0.06;
+  ctx.beginPath();
+  ctx.moveTo(386, 410);
+  ctx.lineTo(350, 435);
+  ctx.lineTo(490, 435);
+  ctx.lineTo(454, 410);
+  ctx.fillStyle = '#ffcc80';
+  ctx.fill();
   ctx.globalAlpha = 1;
   // Espresso machine glow inside (through door)
-  drawRect(400, 300, 20, 25, '#666');
-  drawRect(404, 295, 12, 8, '#aaa');
-  ctx.globalAlpha = 0.6;
+  drawRect(400, 298, 20, 26, '#555');
+  drawRect(401, 299, 18, 24, '#666');
+  drawRect(404, 293, 12, 8, '#999');
+  drawRect(406, 291, 8, 4, '#bbb');
+  ctx.globalAlpha = 0.7;
   drawRect(406, 302, 8, 4, '#ff6f00');
+  // Steam wisp from machine
+  ctx.globalAlpha = 0.08 + Math.sin(gameTime * 0.05) * 0.04;
+  ctx.beginPath();
+  ctx.arc(410, 288 - Math.sin(gameTime * 0.03) * 3, 5, 0, Math.PI * 2);
+  ctx.fillStyle = '#ccc';
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // Door arch (decorative top)
+  ctx.strokeStyle = '#5d4037';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(420, 280, 37, Math.PI, 0);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // Backroom door click — Michele Lo Sbirro
+  const vanniDoorHover = !hubConfirm && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
+  if (vanniDoorHover) {
+    ctx.globalAlpha = 0.15;
+    drawRect(385, 280, 70, 130, '#ffcc80');
+    ctx.globalAlpha = 1;
+  }
+  if (!showCredits && !hubConfirm && vanniDoorHover && mouseClick) {
+    if (micheleVisited) {
+      showQuickText("Michele e' andato a jiu jitsu... o cosi dice", '#78909c');
+    } else {
+      state = 'backroom';
+      backroomPhase = 0;
+      backroomLine = 0;
+      backroomChoice = -1;
+      backroomCooldown = 15;
+      micheleArgueTimer = 0;
+      micheleArgueLine = '';
+    }
+    mouseClick = false;
+  }
+
+  // Michele arguing hint — after LaFed beaten, if not yet visited
+  if (bossDefeated[0] && !micheleVisited) {
+    if (!micheleArgueIntroDone) {
+      // Intro dialogue box — player must click to dismiss
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      const dlgX = W/2 - 250, dlgY = H/2 - 50, dlgW = 500, dlgH = 100;
+      drawRect(dlgX + 3, dlgY + 3, dlgW, dlgH, 'rgba(0,0,0,0.3)');
+      drawRect(dlgX, dlgY, dlgW, dlgH, 'rgba(20,20,40,0.95)');
+      drawRect(dlgX, dlgY, dlgW, 3, '#ff8a65');
+      ctx.strokeStyle = '#5d4037';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(dlgX, dlgY, dlgW, dlgH);
+      ctx.lineWidth = 1;
+      drawText('Qualcuno urla da dentro il bar...', W/2, dlgY + 42, '#ff8a65', 16, 'center');
+      const blinkAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+      ctx.globalAlpha = blinkAlpha;
+      drawText('[Click / Enter]', W/2, dlgY + 78, '#888', 11, 'center');
+      ctx.globalAlpha = 1;
+      if (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space']) {
+        micheleArgueIntroDone = true;
+        hubInputCooldown = 15;
+        mouseClick = false;
+      }
+    } else {
+      // Periodic arguing bubble from the door
+      if (micheleArgueTimer <= 0 && gameTime % 180 === 0) {
+        const MICHELE_ARGUE = [
+          '"Te lo giuro, e\' solo un\'amica!"',
+          '"Amore, ho perso il telefono per 3 giorni, capita!"',
+          '"Non e\' come sembra! Ero a jiu jitsu!"',
+          '"Ma quale sparizione?! Ero a fare surf!"',
+          '"Si, ok, non ho risposto... ma avevo il telefono in silenzioso!"',
+          '"Non urlare che ci sentono fuori!"',
+          '"Lo sai che ti amo... e anche il jiu jitsu..."',
+          '"Colpa del Conte, mi ha distratto!"',
+          '"Dai, ti porto in snowboard... domani... forse..."',
+          '"OK OK hai ragione, come sempre, MA..."'
+        ];
+        micheleArgueLine = MICHELE_ARGUE[Math.floor(Math.random() * MICHELE_ARGUE.length)];
+        micheleArgueTimer = 150;
+      }
+      if (micheleArgueTimer > 0) {
+        micheleArgueTimer--;
+        drawCasinoBubble(420, 278, micheleArgueLine, 200, '#78909c');
+      }
+    }
+  }
+
+  // === Secret 3: Secret Graffiti on left wall ===
+  if (!showCredits && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
+    wallTaps++;
+    if (wallTaps >= 5) {
+      graffitiRevealed = true;
+      playSFX('coin');
+      screenFlash = 8;
+      flashColor = '#ff5722';
+      showQuickText("...qualcuno e' stato qui prima di te", '#ff5722');
+    }
+    mouseClick = false;
+  }
+  if (graffitiRevealed && graffitiAlpha < 0.7) {
+    graffitiAlpha += 0.7 / 60; // fade in over 60 frames
+    if (graffitiAlpha > 0.7) graffitiAlpha = 0.7;
+  }
+  if (graffitiAlpha > 0) {
+    ctx.save();
+    ctx.globalAlpha = graffitiAlpha;
+    ctx.translate(170, 280);
+    ctx.rotate(-0.08);
+    ctx.font = '14px monospace';
+    ctx.fillStyle = '#ff5722';
+    ctx.fillText('IL CONTE', 0, 0);
+    ctx.fillText('ERA QUI', 0, 16);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // Outdoor tables (round bistro style)
+  // Table 1 — round top with shadow
+  ctx.globalAlpha = 0.15;
+  ctx.beginPath();
+  ctx.ellipse(210, 380, 28, 6, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // Table leg
+  drawRect(207, 379, 6, 28, '#5d4037');
+  drawRect(200, 405, 20, 3, '#4e342e');
+  // Table top (round)
+  ctx.beginPath();
+  ctx.ellipse(210, 375, 27, 5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#6d5040';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(210, 374, 25, 4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#7d6050';
+  ctx.fill();
+  // Chairs
+  drawRect(178, 385, 6, 18, '#5d4037');
+  drawRect(176, 383, 10, 3, '#5d4037');
+  drawRect(176, 372, 10, 12, '#5d4037');
+  drawRect(232, 385, 6, 18, '#5d4037');
+  drawRect(230, 383, 10, 3, '#5d4037');
+  drawRect(230, 372, 10, 12, '#5d4037');
+  // Coffee cup on table (small espresso cup)
+  drawRect(199, 370, 7, 5, '#f5f5f5');
+  drawRect(200, 371, 5, 3, '#e0e0e0');
+  drawRect(196, 372, 3, 2, '#e0e0e0'); // handle
+  // Saucer
+  drawRect(197, 375, 10, 1, '#e0e0e0');
+  // Steam
+  ctx.globalAlpha = 0.06 + Math.sin(gameTime * 0.06) * 0.03;
+  ctx.beginPath();
+  ctx.arc(203, 367 - Math.sin(gameTime * 0.04) * 2, 3, 0, Math.PI * 2);
+  ctx.fillStyle = '#ccc';
+  ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Outdoor tables (2 small round tables with chairs)
-  // Table 1
-  drawRect(185, 375, 50, 4, '#5d4037');
-  drawRect(207, 379, 6, 30, '#4e342e');
-  drawRect(180, 385, 8, 20, '#4e342e');
-  drawRect(230, 385, 8, 20, '#4e342e');
-  // Coffee cup on table
-  drawRect(195, 371, 8, 6, '#fff');
-  drawRect(197, 370, 4, 2, '#795548');
-
-  // Table 2
-  drawRect(600, 380, 50, 4, '#5d4037');
-  drawRect(622, 384, 6, 25, '#4e342e');
-  drawRect(595, 390, 8, 18, '#4e342e');
-  drawRect(645, 390, 8, 18, '#4e342e');
+  // Table 2 — same bistro style
+  ctx.globalAlpha = 0.15;
+  ctx.beginPath();
+  ctx.ellipse(622, 385, 28, 6, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  drawRect(619, 384, 6, 24, '#5d4037');
+  drawRect(612, 406, 20, 3, '#4e342e');
+  ctx.beginPath();
+  ctx.ellipse(622, 380, 27, 5, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#6d5040';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(622, 379, 25, 4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#7d6050';
+  ctx.fill();
+  // Chairs
+  drawRect(593, 390, 6, 16, '#5d4037');
+  drawRect(591, 388, 10, 3, '#5d4037');
+  drawRect(591, 377, 10, 12, '#5d4037');
+  drawRect(647, 390, 6, 16, '#5d4037');
+  drawRect(645, 388, 10, 3, '#5d4037');
+  drawRect(645, 377, 10, 12, '#5d4037');
+  // Amaro glass on table (amber colored)
+  if (!drinkTaken) {
+    drawRect(614, 374, 8, 7, 'rgba(255,143,0,0.5)');
+    drawRect(615, 375, 6, 5, '#ff8f00');
+    drawRect(614, 374, 8, 1, '#ffc107');
+  }
   // Ashtray
-  drawRect(612, 377, 12, 4, '#9e9e9e');
+  drawRect(630, 376, 10, 3, '#757575');
+  drawRect(631, 377, 8, 1, '#9e9e9e');
 
-  // Street lamp (near Vanni) — warm pulsing glow
-  drawRect(120, 200, 4, 210, '#424242');
-  drawRect(112, 196, 20, 6, '#424242');
-  const lampPulse = 0.5 + Math.sin(gameTime * 0.015) * 0.15 + Math.sin(gameTime * 0.037) * 0.08;
+  // === Secret 4: Bartender Drink ===
+  if (!showCredits && !drinkTaken && mouseClick && mouseX > 560 && mouseX < 660 && mouseY > 365 && mouseY < 395) {
+    drinkTaken = true;
+    drinkWobble = 180;
+    drinkBuff = 1;
+    playSFX('coin');
+    spawnParticles(622, 380, '#795548', 8, 3);
+    showQuickText('*gulp* ...CHE BOTTA!! +10% DMG', '#ff8f00');
+    mouseClick = false;
+  }
+  if (drinkWobble > 0) drinkWobble--;
+
+  // Street lamp (near Vanni) — ornate Roman style
+  // Pole
+  drawRect(120, 210, 4, 200, '#4a4a4a');
+  drawRect(119, 404, 6, 6, '#555'); // base
+  drawRect(116, 408, 12, 3, '#4a4a4a');
+  // Curved arm
+  drawRect(112, 196, 20, 4, '#4a4a4a');
+  // Lantern housing
+  drawRect(114, 186, 16, 14, '#555');
+  drawRect(116, 188, 12, 10, '#666');
+  drawRect(113, 185, 18, 2, '#4a4a4a');
+  drawRect(113, 200, 18, 2, '#4a4a4a');
+  // Lamp flicker after being punched
+  if (lampFlicker > 0) lampFlicker--;
+  const lampPulse = lampFlicker > 0
+    ? (0.2 + Math.random() * 0.5)
+    : (0.5 + Math.sin(gameTime * 0.015) * 0.15 + Math.sin(gameTime * 0.037) * 0.08);
   // Outer soft glow
   const grad1 = ctx.createRadialGradient(122, 192, 0, 122, 192, 60);
   grad1.addColorStop(0, 'rgba(255,200,120,' + (lampPulse * 0.35).toFixed(2) + ')');
@@ -6435,25 +6809,185 @@ function drawHub() {
   ctx.arc(122, 192, 10, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 1;
+  // Secret 1: Punch the lamp (once per run)
+  if (!showCredits && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
+    lampHit = true;
+    lampFlicker = 60;
+    const lampCoins = 5 + Math.floor(Math.random() * 11);
+    coins += lampCoins;
+    playSFX('hit');
+    screenShake = 4;
+    spawnParticles(122, 192, '#ffd700', 12, 5);
+    showQuickText('CLANG! +' + lampCoins + ' coins!', '#ffd700');
+    mouseClick = false;
+  }
 
-  // Street lamp 2
-  drawRect(720, 220, 4, 190, '#424242');
-  drawRect(712, 216, 20, 6, '#424242');
-  ctx.globalAlpha = 0.25 + Math.sin(gameTime * 0.03 + 2) * 0.1;
-  ctx.fillStyle = '#ffcc80';
+  // Street lamp 2 — matching ornate style
+  drawRect(720, 230, 4, 180, '#4a4a4a');
+  drawRect(719, 404, 6, 6, '#555');
+  drawRect(716, 408, 12, 3, '#4a4a4a');
+  drawRect(712, 216, 20, 4, '#4a4a4a');
+  drawRect(714, 206, 16, 14, '#555');
+  drawRect(716, 208, 12, 10, '#666');
+  drawRect(713, 205, 18, 2, '#4a4a4a');
+  drawRect(713, 220, 18, 2, '#4a4a4a');
+  const lamp2Pulse = 0.25 + Math.sin(gameTime * 0.03 + 2) * 0.1;
+  const grad2 = ctx.createRadialGradient(722, 212, 0, 722, 212, 40);
+  grad2.addColorStop(0, 'rgba(255,200,120,' + (lamp2Pulse * 0.35).toFixed(2) + ')');
+  grad2.addColorStop(0.5, 'rgba(255,180,90,' + (lamp2Pulse * 0.1).toFixed(2) + ')');
+  grad2.addColorStop(1, 'rgba(255,160,60,0)');
+  ctx.fillStyle = grad2;
   ctx.beginPath();
-  ctx.arc(722, 212, 20, 0, Math.PI * 2);
+  ctx.arc(722, 212, 40, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = lamp2Pulse;
+  ctx.fillStyle = '#ffe0a0';
+  ctx.beginPath();
+  ctx.arc(722, 212, 6, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Cobblestone ground
-  drawRect(0, 410, W, 140, '#2c2218');
-  drawRect(0, 410, W, 3, '#4e3d2e');
-  for (let i = 0; i < 35; i++) {
-    ctx.globalAlpha = 0.12;
-    drawRect(i * 28 + (Math.floor(i/2) % 2 === 0 ? 0 : 14), 415, 24, 11, '#4a3d30');
-    drawRect(i * 28 + (Math.floor(i/2) % 2 === 0 ? 14 : 0), 428, 24, 11, '#4a3d30');
-    ctx.globalAlpha = 1;
+  // Cobblestone ground — sampietrini pattern
+  const groundGrad = ctx.createLinearGradient(0, 410, 0, 550);
+  groundGrad.addColorStop(0, '#342a20');
+  groundGrad.addColorStop(0.3, '#2c2218');
+  groundGrad.addColorStop(1, '#1e1812');
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, 410, W, 140);
+  // Curb edge
+  drawRect(0, 410, W, 4, '#4e3d2e');
+  drawRect(0, 410, W, 1, '#6d5f50');
+  // Sampietrini cobblestones (3 rows, offset pattern)
+  const stoneColors = ['#3d3428', '#453a2e', '#3a3024', '#4a3f32', '#352c22'];
+  for (let row = 0; row < 4; row++) {
+    const ry = 416 + row * 14;
+    const offset = (row % 2) * 14;
+    for (let i = 0; i < 35; i++) {
+      const sx = i * 28 + offset;
+      const ci = (i * 3 + row * 7) % 5;
+      ctx.globalAlpha = 0.2;
+      drawRect(sx, ry, 25, 11, stoneColors[ci]);
+      // Highlight on top edge
+      ctx.globalAlpha = 0.06;
+      drawRect(sx + 1, ry, 23, 1, '#8d7b6a');
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // === Secret 2: Cicca the Cat ===
+  const catY = 400;
+  if (hubCatSitting > 0) {
+    hubCatSitting--;
+  } else if (!hubCatPetted || hubCatSitting <= 0) {
+    hubCatTimer++;
+    if (hubCatTimer > 120 + Math.random() * 60) {
+      hubCatDir = Math.random() > 0.5 ? 1 : -1;
+      hubCatTimer = 0;
+    }
+    hubCatX += hubCatDir * 0.4;
+    if (hubCatX < 40) { hubCatX = 40; hubCatDir = 1; }
+    if (hubCatX > 680) { hubCatX = 680; hubCatDir = -1; }
+  }
+  // Draw cat — polished pixel cat with ears, whiskers, paws, curved tail
+  const tailWag = Math.sin(gameTime * 0.08) * 5;
+  const cf = hubCatDir; // facing direction
+  const cx = hubCatX, cy = catY;
+  // Shadow
+  ctx.globalAlpha = 0.2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 4, 18, 4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // Body (rounded)
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - 6, 15, 8, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff8a65';
+  ctx.fill();
+  // Darker stripe on back
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - 9, 10, 3, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#e67e5a';
+  ctx.fill();
+  // Head
+  const hx = cx - cf * 14, hy = cy - 14;
+  ctx.beginPath();
+  ctx.ellipse(hx, hy, 7, 6, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff8a65';
+  ctx.fill();
+  // Ears (triangular)
+  ctx.fillStyle = '#ff8a65';
+  ctx.beginPath();
+  ctx.moveTo(hx - 5, hy - 4); ctx.lineTo(hx - 7, hy - 11); ctx.lineTo(hx - 1, hy - 5);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(hx + 5, hy - 4); ctx.lineTo(hx + 7, hy - 11); ctx.lineTo(hx + 1, hy - 5);
+  ctx.fill();
+  // Inner ear (pink)
+  ctx.fillStyle = '#f48fb1';
+  ctx.beginPath();
+  ctx.moveTo(hx - 5, hy - 5); ctx.lineTo(hx - 6, hy - 9); ctx.lineTo(hx - 2, hy - 5);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(hx + 5, hy - 5); ctx.lineTo(hx + 6, hy - 9); ctx.lineTo(hx + 2, hy - 5);
+  ctx.fill();
+  // Eyes
+  if (hubCatSitting > 0) {
+    // Happy closed eyes (curved lines)
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(hx - 3, hy - 1, 2, Math.PI, 0); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx + 3, hy - 1, 2, Math.PI, 0); ctx.stroke();
+    ctx.lineWidth = 1;
+  } else {
+    // Open eyes with pupils
+    drawRect(hx - 4, hy - 2, 3, 3, '#2e7d32'); // green iris left
+    drawRect(hx + 2, hy - 2, 3, 3, '#2e7d32'); // green iris right
+    drawRect(hx - 3, hy - 1, 1, 2, '#111'); // pupil left (slit)
+    drawRect(hx + 3, hy - 1, 1, 2, '#111'); // pupil right (slit)
+    // Eye shine
+    drawRect(hx - 4, hy - 2, 1, 1, 'rgba(255,255,255,0.7)');
+    drawRect(hx + 2, hy - 2, 1, 1, 'rgba(255,255,255,0.7)');
+  }
+  // Nose (tiny pink triangle)
+  ctx.fillStyle = '#f48fb1';
+  ctx.beginPath();
+  ctx.moveTo(hx - 1, hy + 2); ctx.lineTo(hx + 1, hy + 2); ctx.lineTo(hx, hy + 3.5);
+  ctx.fill();
+  // Whiskers
+  ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(hx - 3, hy + 2); ctx.lineTo(hx - 11, hy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx - 3, hy + 3); ctx.lineTo(hx - 11, hy + 4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx + 3, hy + 2); ctx.lineTo(hx + 11, hy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hx + 3, hy + 3); ctx.lineTo(hx + 11, hy + 4); ctx.stroke();
+  ctx.lineWidth = 1;
+  // Front paws
+  drawRect(cx - cf * 8 - 3, cy + 1, 4, 3, '#ffab91');
+  drawRect(cx - cf * 8 + 3, cy + 1, 4, 3, '#ffab91');
+  // Back paws
+  drawRect(cx + cf * 8 - 3, cy + 1, 4, 3, '#ffab91');
+  drawRect(cx + cf * 8 + 3, cy + 1, 4, 3, '#ffab91');
+  // Tail (curved using quadratic bezier)
+  const tailBaseX = cx + cf * 14, tailBaseY = cy - 6;
+  ctx.strokeStyle = '#e67e5a';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(tailBaseX, tailBaseY);
+  ctx.quadraticCurveTo(tailBaseX + cf * 12, tailBaseY - 14 + tailWag, tailBaseX + cf * 8, tailBaseY - 20 + tailWag);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'butt';
+  // Click to pet (once per visit)
+  if (!showCredits && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
+    hubCatPetted = true;
+    hubCatSitting = 120;
+    spawnParticles(hubCatX, catY - 12, '#ff69b4', 8, 3);
+    coins += 5;
+    playSFX('helper');
+    showQuickText('Prrrr... +5 coins!', '#ff69b4');
+    mouseClick = false;
   }
 
   // === BINGO DEGLI UBALDI building (right of Bar Vanni) ===
@@ -6547,14 +7081,14 @@ function drawHub() {
       drawText(alive ? '\u2665' : '\u2661', 34 + li * 22, 46, alive ? '#fff' : '#555', 11, 'center');
     }
   }
-  drawText('Base del Conte', W/2, 32, '#a1887f', 13, 'center');
+  drawText('Base del Conte', 180, 32, '#a1887f', 13, 'center');
   // Shop button
   const shopBx = 720, shopBy = 10;
   const shopHover = mouseX > shopBx && mouseX < shopBx + 150 && mouseY > shopBy && mouseY < shopBy + 32;
   drawRect(shopBx, shopBy, 150, 32, shopHover ? '#d84315' : '#bf360c');
   drawRect(shopBx, shopBy, 150, 2, '#ff6e40');
   drawText('ARMERIA [S]', shopBx + 75, shopBy + 22, '#fff', 13, 'center');
-  if (!showCredits && ((shopHover && mouseClick) || keys['KeyS'])) {
+  if (!showCredits && !hubConfirm && ((shopHover && mouseClick) || keys['KeyS'])) {
     state = 'shop';
     shopTab = 0;
     mouseClick = false;
@@ -6568,7 +7102,7 @@ function drawHub() {
   drawText('BINGO UBALDI [B]', casinoBx + 98, casinoBy + 22, '#fff', 13, 'center');
   // Door hitbox (matches the bingo building door drawn earlier)
   const bingoDoorClick = mouseX > 700 + 195/2 - 30 && mouseX < 700 + 195/2 + 30 && mouseY > 330 && mouseY < 410;
-  if (!showCredits && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
+  if (!showCredits && !hubConfirm && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
     state = 'casino';
     casinoTab = 0;
     pokerPhase = 'idle';
@@ -6604,17 +7138,20 @@ function drawHub() {
   drawRect(30, 435, W - 60, 2, '#e94560');
   drawText('SCEGLI BATTAGLIA', 60, 455, '#e94560', 13);
 
+  // Input cooldown (prevents bleed-through from Michele dialogue etc.)
+  if (hubInputCooldown > 0) hubInputCooldown--;
+
   // Keyboard navigation
-  if (!showCredits && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
+  if (!showCredits && !hubConfirm && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
     hubSelection = Math.max(0, hubSelection - 1);
     playSFX('hit');
   }
-  if (!showCredits && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
+  if (!showCredits && !hubConfirm && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
     hubSelection = Math.min(levels.length - 1, hubSelection + 1);
     playSFX('hit');
   }
   // Number keys to jump to level
-  if (!showCredits) {
+  if (!showCredits && !hubConfirm) {
   for (let n = 0; n < levels.length; n++) {
     if (keysJustPressed['Digit' + (n+1)]) {
       hubSelection = n;
@@ -6622,13 +7159,13 @@ function drawHub() {
     }
   }
   }
-  // Enter to start selected level
-  if (!showCredits && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+  // Enter to open confirmation (not start level directly)
+  if (!showCredits && !hubConfirm && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
     const selLocked = hubSelection > 0 && !bossDefeated[hubSelection - 1];
     if (!selLocked) {
-      currentLevel = hubSelection;
-      startLevel(hubSelection);
-      return;
+      hubConfirm = true;
+      hubInputCooldown = 12;
+      mouseClick = false;
     } else {
       playSFX('hurt');
     }
@@ -6643,7 +7180,7 @@ function drawHub() {
     const isSelected = i === hubSelection;
 
     // Mouse hover updates selection
-    if (isHover && (mouseX !== 0 || mouseY !== 0)) hubSelection = i;
+    if (!hubConfirm && isHover && (mouseX !== 0 || mouseY !== 0)) hubSelection = i;
 
     const bgColor = beaten ? '#1b5e20' : locked ? '#333' : (isSelected || isHover) ? '#b71c1c' : '#4a1a1a';
     drawRect(bx, by, 158, 68, bgColor);
@@ -6677,26 +7214,59 @@ function drawHub() {
       drawText(isSelected ? '[ ENTER ]' : '', bx + 80, by + 55, '#fff', 9, 'center');
     }
 
-    if (isHover && mouseClick && !locked) {
-      currentLevel = i;
-      startLevel(i);
+    // Click opens confirmation, not instant start
+    if (!hubConfirm && isHover && mouseClick && !locked) {
+      hubSelection = i;
+      hubConfirm = true;
+      hubInputCooldown = 12;
       mouseClick = false;
-      return;
     }
   }
 
-  // === HELPER INFO BAR ===
-  drawRect(30, 56, W - 60, 30, 'rgba(0,0,0,0.5)');
-  drawRect(30, 84, W - 60, 2, '#4e342e');
-  const helperLabels = ['1:Pirox STUN', '2:Tommy DMG', '3:Cicca HEAL', '4:Mostro SPD'];
-  for (let i = 0; i < 4; i++) {
-    const hx = 42 + i * 210;
-    drawRect(hx, 62, 8, 18, helpers[i].color);
-    drawText(helperLabels[i], hx + 14, 76, '#aaa', 10);
+  // === Level confirmation box ===
+  if (hubConfirm) {
+    const lv = levels[hubSelection];
+    const beaten = bossDefeated[hubSelection];
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, W, H);
+    const cW = 440, cH = 140;
+    const cx = W/2 - cW/2, cy = H/2 - cH/2 - 20;
+    drawRect(cx + 3, cy + 3, cW, cH, 'rgba(0,0,0,0.3)');
+    drawRect(cx, cy, cW, cH, 'rgba(20,16,12,0.97)');
+    drawRect(cx, cy, cW, 3, lv.bossColor);
+    ctx.strokeStyle = '#4a3828';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx, cy, cW, cH);
+    ctx.lineWidth = 1;
+    // Boss name + subtitle
+    drawText(lv.boss, W/2, cy + 30, lv.bossColor, 20, 'center');
+    drawText(lv.subtitle, W/2, cy + 52, '#aaa', 12, 'center');
+    drawText(beaten ? 'Rivuoi la rivincita?' : 'Sei pronto a sfidare ' + lv.boss + '?', W/2, cy + 78, '#e0e0e0', 13, 'center');
+    // Buttons
+    const btnW = 130, btnH = 32;
+    const yesX = W/2 - btnW - 15, noX = W/2 + 15, btnY = cy + 96;
+    const yesHover = mouseX > yesX && mouseX < yesX + btnW && mouseY > btnY && mouseY < btnY + btnH;
+    const noHover = mouseX > noX && mouseX < noX + btnW && mouseY > btnY && mouseY < btnY + btnH;
+    drawRect(yesX, btnY, btnW, btnH, yesHover ? '#b71c1c' : '#4a1a1a');
+    drawRect(yesX, btnY, btnW, 2, '#e94560');
+    drawText('COMBATTI!', yesX + btnW/2, btnY + 22, yesHover ? '#fff' : '#e94560', 14, 'center');
+    drawRect(noX, btnY, btnW, btnH, noHover ? '#3a3028' : '#2a2018');
+    drawRect(noX, btnY, btnW, 2, '#5d4037');
+    drawText('ANNULLA', noX + btnW/2, btnY + 22, noHover ? '#fff' : '#888', 13, 'center');
+    if (hubInputCooldown <= 0) {
+      if ((yesHover && mouseClick) || keysJustPressed['Enter'] || keysJustPressed['Space']) {
+        currentLevel = hubSelection;
+        startLevel(hubSelection);
+        hubConfirm = false;
+        mouseClick = false;
+        return;
+      }
+      if ((noHover && mouseClick) || keysJustPressed['Escape']) {
+        hubConfirm = false;
+        mouseClick = false;
+      }
+    }
   }
-
-  // Controls hint
-  drawText(isTouchDevice ? 'Tocca per scegliere e combattere' : '< A/D > Scegli   ENTER = Combatti   S = Armeria', W/2, 425, '#666', 10, 'center');
 
   // Small "Crediti" button bottom-right corner
   const credBtnX = W - 75, credBtnY = H - 24, credBtnW = 65, credBtnH = 18;
@@ -6820,6 +7390,15 @@ function drawHub() {
       startFreestyleVideo();
     }
 
+    // Check for YO code (sunglasses toggle)
+    if (codeInput === 'YO') {
+      hasSunglasses = !hasSunglasses;
+      codeInput = '';
+      screenFlash = 10; flashColor = '#333';
+      showQuickText(hasSunglasses ? 'STYLE ON!' : 'Occhiali rimossi.', '#333');
+      playSFX('perfect_dodge');
+    }
+
     mouseClick = false;
     return; // Block hub interaction while credits open
   }
@@ -6839,27 +7418,364 @@ function drawHub() {
 }
 
 // ==========================================
+// BACKROOM — Michele Lo Sbirro
+// ==========================================
+function drawBackroom() {
+  if (backroomCooldown > 0) backroomCooldown--;
+
+  // Dark smoky backroom background
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#1a1410');
+  bgGrad.addColorStop(0.5, '#1c1612');
+  bgGrad.addColorStop(1, '#120e0a');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Brick wall texture
+  for (let by = 0; by < 8; by++) {
+    for (let bx = 0; bx < 16; bx++) {
+      ctx.globalAlpha = 0.06;
+      const ox = (by % 2) * 30;
+      drawRect(bx * 60 + ox, by * 35 + 20, 56, 31, '#4e3328');
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Floor
+  drawRect(0, 400, W, 150, '#1a1510');
+  drawRect(0, 400, W, 2, '#2c2218');
+
+  // Dim ceiling bulb
+  const bulbPulse = 0.5 + Math.sin(gameTime * 0.03) * 0.08;
+  drawRect(348, 20, 4, 50, '#333');
+  ctx.beginPath();
+  ctx.arc(350, 75, 8, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffcc80';
+  ctx.globalAlpha = bulbPulse;
+  ctx.fill();
+  const bulbGlow = ctx.createRadialGradient(350, 75, 0, 350, 75, 120);
+  bulbGlow.addColorStop(0, 'rgba(255,200,120,' + (bulbPulse * 0.25).toFixed(2) + ')');
+  bulbGlow.addColorStop(1, 'rgba(255,180,100,0)');
+  ctx.fillStyle = bulbGlow;
+  ctx.beginPath();
+  ctx.arc(350, 75, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Table with two chairs
+  drawRect(250, 340, 180, 8, '#3e2723');
+  drawRect(290, 348, 8, 55, '#2c1e14');
+  drawRect(390, 348, 8, 55, '#2c1e14');
+  // Chair left
+  drawRect(210, 330, 30, 6, '#4e342e');
+  drawRect(215, 336, 6, 45, '#3e2723');
+  drawRect(235, 336, 6, 45, '#3e2723');
+  drawRect(210, 310, 6, 26, '#4e342e');
+  // Chair right (empty, for the Conte)
+  drawRect(440, 330, 30, 6, '#4e342e');
+  drawRect(445, 336, 6, 45, '#3e2723');
+  drawRect(465, 336, 6, 45, '#3e2723');
+
+  // Bottles on shelf behind
+  drawRect(580, 180, 140, 6, '#3e2723');
+  drawRect(578, 182, 4, 30, '#2c1e14');
+  drawRect(718, 182, 4, 30, '#2c1e14');
+  for (let b = 0; b < 5; b++) {
+    const bCol = ['#4a148c', '#1b5e20', '#b71c1c', '#e65100', '#004d40'][b];
+    drawRect(590 + b * 26, 158, 10, 22, bCol);
+    drawRect(593 + b * 26, 152, 4, 8, bCol);
+  }
+
+  // Smoke wisps
+  for (let s = 0; s < 3; s++) {
+    ctx.globalAlpha = 0.04 + Math.sin(gameTime * 0.01 + s * 2) * 0.02;
+    ctx.beginPath();
+    ctx.arc(200 + s * 250 + Math.sin(gameTime * 0.008 + s) * 30, 150 + s * 40, 60 + s * 20, 0, Math.PI * 2);
+    ctx.fillStyle = '#9e9e9e';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Michele Lo Sbirro (right side of room)
+  const mx = 620, my = 240;
+  drawPixelChar(mx, my, 40, 60, '#1a237e', '#d7ccc8', (x, y, w, h) => {
+    // Police cap
+    drawRect(x + 2, y - 8, w - 4, 6, '#1a237e');
+    drawRect(x - 2, y - 3, w + 4, 4, '#1a237e');
+    drawRect(x + w/2 - 4, y - 10, 8, 4, '#263238');
+    // Cap badge
+    drawRect(x + w/2 - 3, y - 9, 6, 3, '#ffd700');
+    // Badge on chest
+    drawRect(x + 6, y + 24, 8, 8, '#ffd700');
+    drawRect(x + 8, y + 26, 4, 4, '#fff');
+    // Blue uniform details
+    drawRect(x + w/2 - 1, y + 20, 2, h - 36, '#0d47a1');
+    // Arms in blue
+    drawRect(x - 3, y + 22, 6, 18, '#1a237e');
+    drawRect(x + w - 3, y + 22, 6, 18, '#1a237e');
+    // Legs dark
+    drawRect(x + 6, y + h - 16, 8, 16, '#0d1b3e');
+    drawRect(x + w - 14, y + h - 16, 8, 16, '#0d1b3e');
+    // Smirk
+    drawRect(x + 10, y + 15, 8, 2, '#8d6e63');
+  });
+
+  // "MICHELE LO SBIRRO" name label
+  ctx.globalAlpha = 0.7;
+  drawText('MICHELE LO SBIRRO', mx + 20, my - 16, '#78909c', 10, 'center');
+  ctx.globalAlpha = 1;
+
+  // Dialogue lines
+  const micheleLines = [
+    "Ehi, Conte... vieni, siediti.",
+    "Io sono Michele. Lo Sbirro, mi chiamano.",
+    "Sai qual e' il segreto della vita?",
+    "Vivere. VIVERE, Conte. Ogni giorno come fosse l'ultimo.",
+    "Io per esempio... lavoro? Boh. Forse si, forse no.",
+    "La ragazza? Cambio ogni settimana. La vita e' breve!",
+    "Allora dimmi..."
+  ];
+  const tmaxLines = [
+    "TMAX! Ecco uno che capisce!",
+    "Tieni, questo e' per te. Il mio Manganello.",
+    "Usalo bene... o male, a me non interessa.",
+    "Spero che vieni con me qualche volta...",
+    "Sembri uno che sa come godersi la vita!"
+  ];
+  const scarabeoLines = [
+    "Scarabeo?! Ma che, sei serio?",
+    "Vabbe'... scelta sbagliata, Conte.",
+    "Ora ti saluto, devo andare a jiu jitsu...",
+    "...o forse surf... o snowboard...",
+    "Insomma, ho da fare cose importanti!"
+  ];
+
+  // Dialogue box
+  drawRect(60, 430, W - 120, 80, 'rgba(0,0,0,0.85)');
+  drawRect(60, 430, W - 120, 2, '#78909c');
+
+  if (backroomPhase === 0) {
+    // Monologue
+    const line = micheleLines[backroomLine] || micheleLines[micheleLines.length - 1];
+    drawText('"' + line + '"', W/2, 470, '#e0e0e0', 14, 'center');
+    const hint = backroomLine < micheleLines.length - 1 ? '[Click / Enter]' : '[Click / Enter]';
+    ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+    drawText(hint, W/2, 498, '#78909c', 10, 'center');
+    ctx.globalAlpha = 1;
+
+    if (backroomCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+      backroomLine++;
+      backroomCooldown = 10;
+      playSFX('hit');
+      if (backroomLine >= micheleLines.length) {
+        backroomPhase = 1;
+        backroomChoice = -1;
+        backroomCooldown = 15;
+      }
+      mouseClick = false;
+    }
+  } else if (backroomPhase === 1) {
+    // Choice: Scarabeo or TMAX
+    drawText('"Scarabeo... o TMAX?"', W/2, 455, '#e0e0e0', 14, 'center');
+
+    const btnW = 160, btnH = 36;
+    const btn1X = W/2 - btnW - 20, btn2X = W/2 + 20, btnY = 468;
+
+    // Keyboard selection
+    if (backroomCooldown <= 0) {
+      if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) { backroomChoice = 0; playSFX('hit'); }
+      if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) { backroomChoice = 1; playSFX('hit'); }
+    }
+
+    const hover1 = mouseX > btn1X && mouseX < btn1X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+    const hover2 = mouseX > btn2X && mouseX < btn2X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+    if (hover1) backroomChoice = 0;
+    if (hover2) backroomChoice = 1;
+
+    drawRect(btn1X, btnY, btnW, btnH, backroomChoice === 0 ? '#4e342e' : '#2c1e14');
+    drawRect(btn1X, btnY, btnW, 2, backroomChoice === 0 ? '#ff8f00' : '#5d4037');
+    drawText('SCARABEO', btn1X + btnW/2, btnY + 24, backroomChoice === 0 ? '#ff8f00' : '#8d6e63', 14, 'center');
+
+    drawRect(btn2X, btnY, btnW, btnH, backroomChoice === 1 ? '#1a237e' : '#0d1b3e');
+    drawRect(btn2X, btnY, btnW, 2, backroomChoice === 1 ? '#42a5f5' : '#263238');
+    drawText('TMAX', btn2X + btnW/2, btnY + 24, backroomChoice === 1 ? '#42a5f5' : '#546e7a', 14, 'center');
+
+    if (backroomCooldown <= 0 && backroomChoice >= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+      backroomPhase = 2;
+      backroomLine = 0;
+      backroomCooldown = 15;
+      if (backroomChoice === 1) {
+        // TMAX chosen — award Manganello (player chooses whether to equip)
+        playSFX('victory_sweep');
+        screenFlash = 15;
+        flashColor = '#263238';
+        spawnParticles(mx + 20, my + 30, '#ffd700', 20, 5);
+      }
+      mouseClick = false;
+    }
+  } else if (backroomPhase === 2) {
+    // Response lines
+    const lines = backroomChoice === 1 ? tmaxLines : scarabeoLines;
+    const line = lines[backroomLine] || lines[lines.length - 1];
+    drawText('"' + line + '"', W/2, 470, backroomChoice === 1 ? '#42a5f5' : '#ff8f00', 14, 'center');
+
+    // Show equip prompt after showing the weapon award line (TMAX line index 1)
+    if (backroomChoice === 1 && backroomLine === 1) {
+      drawRect(W/2 - 120, 410, 240, 20, 'rgba(38,50,56,0.9)');
+      drawText('Ricevuto: Manganello!', W/2, 424, '#ffd700', 11, 'center');
+    }
+
+    ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+    drawText('[Click / Enter]', W/2, 498, '#78909c', 10, 'center');
+    ctx.globalAlpha = 1;
+
+    if (backroomCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+      backroomLine++;
+      backroomCooldown = 10;
+      playSFX('hit');
+      if (backroomLine >= lines.length) {
+        if (backroomChoice === 1) {
+          // Move to equip choice phase
+          backroomPhase = 4;
+          backroomCooldown = 15;
+          backroomChoice = -1;
+        } else {
+          backroomPhase = 3;
+        }
+      }
+      mouseClick = false;
+    }
+  } else if (backroomPhase === 4) {
+    // Equip choice for Manganello
+    drawText('Vuoi equipaggiare il Manganello?', W/2, 455, '#e0e0e0', 14, 'center');
+
+    const btnW = 120, btnH = 36;
+    const btn1X = W/2 - btnW - 20, btn2X = W/2 + 20, btnY = 468;
+
+    if (backroomCooldown <= 0) {
+      if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) { backroomChoice = 0; playSFX('hit'); }
+      if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) { backroomChoice = 1; playSFX('hit'); }
+    }
+
+    const hover1 = mouseX > btn1X && mouseX < btn1X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+    const hover2 = mouseX > btn2X && mouseX < btn2X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+    if (hover1) backroomChoice = 0;
+    if (hover2) backroomChoice = 1;
+
+    drawRect(btn1X, btnY, btnW, btnH, backroomChoice === 0 ? '#1b5e20' : '#1a2e1a');
+    drawRect(btn1X, btnY, btnW, 2, backroomChoice === 0 ? '#66bb6a' : '#2e7d32');
+    drawText('SI', btn1X + btnW/2, btnY + 24, backroomChoice === 0 ? '#66bb6a' : '#4caf50', 14, 'center');
+
+    drawRect(btn2X, btnY, btnW, btnH, backroomChoice === 1 ? '#4e342e' : '#2c1e14');
+    drawRect(btn2X, btnY, btnW, 2, backroomChoice === 1 ? '#ff8f00' : '#5d4037');
+    drawText('NO', btn2X + btnW/2, btnY + 24, backroomChoice === 1 ? '#ff8f00' : '#8d6e63', 14, 'center');
+
+    if (backroomCooldown <= 0 && backroomChoice >= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+      if (backroomChoice === 0) {
+        // Equip Manganello
+        weapons = [manganelloWeapon];
+        weaponTier = 0;
+        screenFlash = 10;
+        flashColor = '#263238';
+        spawnParticles(450, 300, '#ffd700', 15, 4);
+        showQuickText('Manganello equipaggiato!', '#42a5f5');
+      } else {
+        showQuickText('Manganello conservato. Magari un\'altra volta.', '#78909c');
+      }
+      backroomPhase = 3;
+      mouseClick = false;
+    }
+  }
+
+  if (backroomPhase === 3) {
+    micheleVisited = true;
+    state = 'hub';
+    hubVisitInited = false;
+  }
+
+  // ESC to exit at any time
+  if (keysJustPressed['Escape']) {
+    micheleVisited = true;
+    state = 'hub';
+    hubVisitInited = false;
+    mouseClick = false;
+  }
+
+  mouseClick = false;
+}
+
+// ==========================================
 // SHOP — 3 tabs: Potenzia Arma, Potenzia Helper, La Ruota (gacha)
 // ==========================================
 let shopScroll = 0;
+let meleComment = '';
+let meleCommentTimer = 0;
+let shopJustEntered = false;
+let shopPrevTab = -1;
 
 function drawShop() {
-  ctx.fillStyle = '#1a1a2e';
+  // Welcome trigger on entry
+  if (!shopJustEntered) {
+    shopJustEntered = true;
+    shopPrevTab = shopTab;
+    meleComment = getMeleComment('welcome');
+    meleCommentTimer = 240;
+  }
+  // Idle comment trigger
+  if (meleCommentTimer <= 0 && gameTime % 360 === 0) {
+    meleComment = getMeleComment('idle');
+    meleCommentTimer = 180;
+  }
+  // Warm interior background — inside Bar Vanni
+  const shopBg = ctx.createLinearGradient(0, 0, 0, H);
+  shopBg.addColorStop(0, '#2a2018');
+  shopBg.addColorStop(0.5, '#241c14');
+  shopBg.addColorStop(1, '#1a1510');
+  ctx.fillStyle = shopBg;
   ctx.fillRect(0, 0, W, H);
 
-  drawText('ARMERIA DI VANNI', W/2, 24, '#ffd700', 20, 'center');
-  drawText('COINS: ' + coins, W/2, 44, '#ffd700', 14, 'center');
+  // Subtle warm wall texture
+  for (let wy = 0; wy < 8; wy++) for (let wx = 0; wx < 12; wx++) {
+    ctx.globalAlpha = 0.02 + ((wx * 5 + wy * 9) % 4) * 0.005;
+    drawRect(wx * 78, wy * 70, 74, 66, (wx + wy) % 2 === 0 ? '#3a2e22' : '#2a2018');
+  }
+  ctx.globalAlpha = 1;
+
+  // Warm ceiling light glow
+  const shopGlow = ctx.createRadialGradient(W/2, 0, 20, W/2, 0, 350);
+  shopGlow.addColorStop(0, 'rgba(255,200,120,0.08)');
+  shopGlow.addColorStop(0.5, 'rgba(255,180,100,0.03)');
+  shopGlow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = shopGlow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Bar counter top strip (wooden bar feel)
+  drawRect(0, 120, W, 6, '#4a3828');
+  drawRect(0, 120, W, 1, '#6a5840');
+
+  // Draw Mele (left, behind counter)
+  drawMele(12, 30);
+  // Draw Giammy (right, behind counter)
+  drawGiammy(818, 24);
+
+  // Title
+  drawText('ARMERIA DI GIAMMY E MELE', W/2, 50, '#ffd54f', 18, 'center');
+  ctx.globalAlpha = 0.06;
+  drawText('ARMERIA DI GIAMMY E MELE', W/2, 50, '#fff', 19, 'center');
+  ctx.globalAlpha = 1;
+  drawText('COINS: ' + coins, W/2, 74, '#ffd700', 14, 'center');
 
   // === TAB BUTTONS ===
   const tabNames = ['ARMA', 'HELPER', 'LA RUOTA', 'STATS'];
   const tabColors = ['#ff8a65', '#e040fb', '#ffd700', '#4caf50'];
-  const tabW = 200, tabH = 28, tabY = 56;
+  const tabW = 205, tabH = 28, tabY = 128;
   for (let t = 0; t < 4; t++) {
-    const tx = 25 + t * (tabW + 10);
+    const tx = 18 + t * (tabW + 8);
     const active = shopTab === t;
     const hover = mouseX > tx && mouseX < tx + tabW && mouseY > tabY && mouseY < tabY + tabH;
-    drawRect(tx, tabY, tabW, tabH, active ? tabColors[t] : hover ? '#333' : '#222');
-    drawText(tabNames[t], tx + tabW/2, tabY + 19, active ? '#000' : '#888', 11, 'center');
+    drawRect(tx, tabY, tabW, tabH, active ? tabColors[t] : hover ? '#3a3028' : '#2a2218');
+    drawRect(tx, tabY + tabH - 2, tabW, 2, active ? tabColors[t] : '#3a3028');
+    drawText(tabNames[t], tx + tabW/2, tabY + 20, active ? '#000' : '#999', 13, 'center');
     if (hover && mouseClick) {
       shopTab = t;
       mouseClick = false;
@@ -6870,8 +7786,14 @@ function drawShop() {
   if (keysJustPressed['Digit2']) shopTab = 1;
   if (keysJustPressed['Digit3']) shopTab = 2;
   if (keysJustPressed['Digit4']) shopTab = 3;
+  // Mele comment on tab switch
+  if (shopTab !== shopPrevTab) {
+    meleComment = getMeleComment(shopTab === 2 ? 'gacha' : 'tab');
+    meleCommentTimer = 150;
+    shopPrevTab = shopTab;
+  }
 
-  const panelY = 92;
+  const panelY = 160;
 
   if (shopTab === 0) drawShopWeapon(panelY);
   else if (shopTab === 1) drawShopHelper(panelY);
@@ -6880,11 +7802,51 @@ function drawShop() {
 
   // Back button
   const backHover = mouseX > 30 && mouseX < 150 && mouseY > H - 38 && mouseY < H - 10;
-  drawRect(30, H - 38, 120, 28, backHover ? '#c62828' : '#b71c1c');
-  drawText('INDIETRO [ESC]', 90, H - 20, '#fff', 11, 'center');
+  drawRect(30, H - 38, 120, 28, backHover ? '#5a4433' : '#3a2e22');
+  drawRect(30, H - 38, 120, 2, backHover ? '#8a7460' : '#4a3828');
+  drawText('INDIETRO [ESC]', 90, H - 20, backHover ? '#ffd54f' : '#aaa', 11, 'center');
   if ((backHover && mouseClick) || keys['Escape']) {
     state = 'hub';
+    shopJustEntered = false;
+    meleComment = '';
+    meleCommentTimer = 0;
     mouseClick = false;
+  }
+
+  // Mele speech caption — compact inline, right of Mele in the header
+  if (meleCommentTimer > 0) {
+    meleCommentTimer--;
+    const capX = 58; // just right of Mele
+    const capY = 65; // vertically centered in header
+    const capMaxW = 240;
+    ctx.font = '10px monospace';
+    // Word wrap
+    const cWords = meleComment.split(' ');
+    const cLines = [];
+    let cCur = '';
+    for (const cw of cWords) {
+      const ct = cCur ? cCur + ' ' + cw : cw;
+      if (ctx.measureText(ct).width > capMaxW - 16) { if (cCur) cLines.push(cCur); cCur = cw; } else { cCur = ct; }
+    }
+    if (cCur) cLines.push(cCur);
+    const cLineH = 13;
+    const cBubW = capMaxW;
+    const cBubH = cLines.length * cLineH + 10;
+    const cBy = capY - cBubH / 2;
+    // Small tail pointing left toward Mele
+    ctx.fillStyle = 'rgba(30,24,18,0.92)';
+    ctx.beginPath();
+    ctx.moveTo(capX, capY);
+    ctx.lineTo(capX + 8, capY - 5);
+    ctx.lineTo(capX + 8, capY + 5);
+    ctx.fill();
+    // Caption background
+    drawRect(capX + 7, cBy, cBubW, cBubH, 'rgba(30,24,18,0.92)');
+    drawRect(capX + 7, cBy, 2, cBubH, '#ff8a65');
+    // Text
+    for (let ci = 0; ci < cLines.length; ci++) {
+      drawText(cLines[ci], capX + 16, cBy + 10 + ci * cLineH, '#ffcc80', 10);
+    }
   }
 
   mouseClick = false;
@@ -6897,13 +7859,14 @@ function drawShopWeapon(py) {
   const tierGlows = [null, '#ff8a65', '#ff5722', '#ffd700'];
 
   // Current weapon display
-  drawRect(40, py, W - 80, 120, '#222');
-  drawRect(40, py, 4, 120, w.color || '#888');
+  drawRect(30, py, W - 60, 130, '#1e1812');
+  drawRect(30, py, W - 60, 1, '#3a2e22');
+  drawRect(30, py, 5, 130, w.color || '#888');
 
   // Tier glow effect
   if (weaponTier > 0 && tierGlows[weaponTier]) {
     ctx.globalAlpha = 0.15 + Math.sin(gameTime * 0.05) * 0.05;
-    drawRect(40, py, W - 80, 120, tierGlows[weaponTier]);
+    drawRect(30, py, W - 60, 130, tierGlows[weaponTier]);
     ctx.globalAlpha = 1;
   }
 
@@ -6911,29 +7874,29 @@ function drawShopWeapon(py) {
   let shopRarLetter = 'C', shopRarColor = '#9e9e9e';
   if (rareWeapons.some(rw => rw.name === w.name)) { shopRarLetter = 'R'; shopRarColor = '#2196f3'; }
   else if (legendaryWeapons.some(lw => lw.name === w.name) || w.special === 'sbombo') { shopRarLetter = 'L'; shopRarColor = '#ffd700'; }
-  drawRect(48, py + 6, 20, 20, shopRarColor);
-  drawText(shopRarLetter, 58, py + 21, '#000', 12, 'center');
-  drawText(w.name + ' — ' + tierNames[weaponTier], 76, py + 20, '#fff', 16);
-  drawText(w.desc, 76, py + 38, '#aaa', 10);
+  drawRect(44, py + 8, 24, 24, shopRarColor);
+  drawText(shopRarLetter, 56, py + 26, '#000', 14, 'center');
+  drawText(w.name + ' — ' + tierNames[weaponTier], 78, py + 24, '#fff', 18);
+  drawText(w.desc, 78, py + 44, '#bbb', 12);
 
   // Stats display
-  const sx = 60, sy = py + 55;
-  drawText('DMG: ' + w.damage, sx, sy, '#ff8a80', 11);
-  drawText('RNG: ' + w.range, sx + 140, sy, '#80d8ff', 11);
-  drawText('SPD: ' + (30 - w.speed), sx + 280, sy, '#b9f6ca', 11);
-  drawText('CRIT: ' + w.crit + '%', sx + 420, sy, '#ffcc80', 11);
-  drawText('COMBO: ' + w.comboHits + ' colpi', sx + 560, sy, '#e040fb', 11);
-  drawText('Speciale: ' + (w.special || 'nessuno'), sx, sy + 18, '#ff8a65', 10);
+  const sx = 55, sy = py + 64;
+  drawText('DMG: ' + w.damage, sx, sy, '#ff8a80', 13);
+  drawText('RNG: ' + w.range, sx + 150, sy, '#80d8ff', 13);
+  drawText('SPD: ' + (30 - w.speed), sx + 300, sy, '#b9f6ca', 13);
+  drawText('CRIT: ' + w.crit + '%', sx + 440, sy, '#ffcc80', 13);
+  drawText('COMBO: ' + w.comboHits + ' colpi', sx + 580, sy, '#e040fb', 13);
+  drawText('Speciale: ' + (w.special || 'nessuno'), sx, sy + 20, '#ff8a65', 12);
 
   // Stat bars
-  const bsy = py + 90;
-  drawStatBar(60, bsy, 'DANNO', w.damage, 45, 160, '#f44336');
-  drawStatBar(260, bsy, 'RAGGIO', Math.min(w.range, 100), 100, 160, '#2196f3');
-  drawStatBar(460, bsy, 'VELOCITA\'', 20 - w.speed, 20, 160, '#4caf50');
-  drawStatBar(660, bsy, 'CRITICO', w.crit, 35, 160, '#ffeb3b');
+  const bsy = py + 100;
+  drawStatBar(55, bsy, 'DANNO', w.damage, 45, 170, '#f44336');
+  drawStatBar(255, bsy, 'RAGGIO', Math.min(w.range, 100), 100, 170, '#2196f3');
+  drawStatBar(455, bsy, 'VELOCITA\'', 20 - w.speed, 20, 170, '#4caf50');
+  drawStatBar(660, bsy, 'CRITICO', w.crit, 35, 170, '#ffeb3b');
 
   // Upgrade tiers
-  drawText('POTENZIAMENTI DISPONIBILI', W/2, py + 140, '#ff8a65', 13, 'center');
+  drawText('POTENZIAMENTI DISPONIBILI', W/2, py + 150, '#ff8a65', 14, 'center');
 
   const upgDescs = [
     { label: 'Lv.1 — Affilatura', desc: '+10% danno base', cost: WEAPON_UPGRADE_COSTS[0] },
@@ -6942,45 +7905,37 @@ function drawShopWeapon(py) {
   ];
 
   for (let i = 0; i < 3; i++) {
-    const uy = py + 155 + i * 55;
+    const uy = py + 168 + i * 58;
     const unlocked = weaponTier > i;
     const canBuy = weaponTier === i && coins >= upgDescs[i].cost;
     const isNext = weaponTier === i;
-    const hover = mouseX > 60 && mouseX < W - 60 && mouseY > uy && mouseY < uy + 48;
+    const hover = mouseX > 40 && mouseX < W - 40 && mouseY > uy && mouseY < uy + 52;
 
-    drawRect(60, uy, W - 120, 48, unlocked ? '#1b5e20' : hover && canBuy ? '#333' : '#1a1a1a');
-    drawRect(60, uy, 3, 48, unlocked ? '#4caf50' : isNext ? '#ff8a65' : '#333');
+    drawRect(40, uy, W - 80, 52, unlocked ? '#1b3a18' : hover && canBuy ? '#3a2e22' : '#1e1812');
+    drawRect(40, uy, W - 80, 1, unlocked ? '#2e5a28' : '#2a2018');
+    drawRect(40, uy, 4, 52, unlocked ? '#4caf50' : isNext ? '#ff8a65' : '#3a2e22');
 
-    drawText(upgDescs[i].label, 80, uy + 18, unlocked ? '#4caf50' : isNext ? '#fff' : '#555', 12);
-    drawText(upgDescs[i].desc, 80, uy + 34, unlocked ? '#81c784' : '#777', 9);
+    drawText(upgDescs[i].label, 60, uy + 22, unlocked ? '#4caf50' : isNext ? '#fff' : '#555', 14);
+    drawText(upgDescs[i].desc, 60, uy + 40, unlocked ? '#81c784' : '#888', 11);
 
     if (unlocked) {
-      drawText('SBLOCCATO', W - 120, uy + 26, '#4caf50', 11, 'center');
+      drawText('SBLOCCATO', W - 100, uy + 28, '#4caf50', 13, 'center');
     } else if (isNext) {
-      drawText(upgDescs[i].cost + ' COINS', W - 120, uy + 26, canBuy ? '#ffd700' : '#666', 12, 'center');
+      drawText(upgDescs[i].cost + ' COINS', W - 100, uy + 28, canBuy ? '#ffd700' : '#666', 14, 'center');
       if (hover && mouseClick && canBuy) {
         coins -= upgDescs[i].cost;
         applyWeaponUpgrade(weaponTier);
         weaponTier++;
         playSFX('coin');
         spawnParticles(W/2, uy + 24, '#ff8a65', 15, 4);
+        meleComment = getMeleComment('buy'); meleCommentTimer = 180;
         mouseClick = false;
       }
     } else {
-      drawText('BLOCCATO', W - 120, uy + 26, '#444', 10, 'center');
+      drawText('BLOCCATO', W - 100, uy + 28, '#444', 12, 'center');
     }
   }
 
-  // Consumables display at bottom
-  drawText('CONSUMABILI (usa 5-6-7 in battaglia)', W/2, py + 335, '#aaa', 10, 'center');
-  for (let i = 0; i < 3; i++) {
-    const ci = consumableItems[i];
-    const count = player.consumables.filter(c => c === ci.effect).length;
-    const cx = 200 + i * 200;
-    drawRect(cx, py + 345, 150, 30, '#222');
-    drawRect(cx, py + 345, 3, 30, ci.color);
-    drawText('[' + (i+5) + '] ' + ci.name + ' x' + count, cx + 10, py + 363, count > 0 ? '#fff' : '#555', 10);
-  }
 }
 
 function applyWeaponUpgrade(tier) {
@@ -7001,71 +7956,74 @@ function applyWeaponUpgrade(tier) {
 
 // --- Tab 1: Helper Upgrade ---
 function drawShopHelper(py) {
-  drawText('POTENZIA I TUOI ALLEATI', W/2, py + 15, '#e040fb', 14, 'center');
+  drawText('POTENZIA I TUOI ALLEATI', W/2, py + 15, '#e040fb', 16, 'center');
 
   for (let i = 0; i < 4; i++) {
     const h = helpers[i];
-    const hx = 40 + i * 212;
-    const hy = py + 35;
-    const boxH = 180;
+    const hx = 30 + i * 215;
+    const hy = py + 38;
+    const boxW = 205;
+    const boxH = 220;
     const nextTier = h.tier;
     const maxed = nextTier >= 3;
 
-    drawRect(hx, hy, 200, boxH, '#1a1a2e');
-    drawRect(hx, hy, 200, 3, h.color);
-    ctx.strokeStyle = '#333';
-    ctx.strokeRect(hx, hy, 200, boxH);
+    drawRect(hx, hy, boxW, boxH, '#1e1812');
+    drawRect(hx, hy, boxW, 3, h.color);
+    ctx.strokeStyle = '#2a2018';
+    ctx.strokeRect(hx, hy, boxW, boxH);
 
     // Helper name + level
-    drawText(h.icon + ' ' + h.name, hx + 100, hy + 22, '#fff', 13, 'center');
-    drawText('Livello ' + h.tier + '/3', hx + 100, hy + 38, h.color, 10, 'center');
-    drawText(h.desc, hx + 100, hy + 54, '#aaa', 9, 'center');
+    drawText(h.icon + ' ' + h.name, hx + boxW/2, hy + 24, '#fff', 14, 'center');
+    drawText('Livello ' + h.tier + '/3', hx + boxW/2, hy + 42, h.color, 12, 'center');
+    drawText(h.desc, hx + boxW/2, hy + 60, '#aaa', 10, 'center');
 
     // Tier pips
     for (let t = 0; t < 3; t++) {
-      const pipX = hx + 75 + t * 20;
-      drawRect(pipX, hy + 62, 14, 6, t < h.tier ? h.color : '#333');
+      const pipX = hx + boxW/2 - 30 + t * 22;
+      drawRect(pipX, hy + 70, 16, 8, t < h.tier ? h.color : '#2a2018');
     }
 
     // Current tier effects
     if (h.tier > 0) {
       for (let t = 0; t < h.tier; t++) {
-        drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, hx + 10, hy + 82 + t * 14, '#81c784', 7);
+        drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, hx + 12, hy + 96 + t * 16, '#81c784', 9);
       }
     }
 
     // Unlock or upgrade button
-    const btnY = hy + boxH - 40;
+    const btnY = hy + boxH - 46;
     if (!h.unlocked) {
       // Must unlock first
       const canUnlock = coins >= h.unlockCost;
-      const btnHover = mouseX > hx + 10 && mouseX < hx + 190 && mouseY > btnY && mouseY < btnY + 32;
-      drawRect(hx + 10, btnY, 180, 32, btnHover && canUnlock ? '#333' : '#222');
-      drawText('SBLOCCA', hx + 100, btnY + 12, '#fff', 10, 'center');
-      drawText(h.unlockCost + ' COINS', hx + 100, btnY + 26, canUnlock ? '#ffd700' : '#666', 10, 'center');
+      const btnHover = mouseX > hx + 10 && mouseX < hx + boxW - 10 && mouseY > btnY && mouseY < btnY + 38;
+      drawRect(hx + 10, btnY, boxW - 20, 38, btnHover && canUnlock ? '#3a2e22' : '#1e1812');
+      drawText('SBLOCCA', hx + boxW/2, btnY + 14, '#fff', 12, 'center');
+      drawText(h.unlockCost + ' COINS', hx + boxW/2, btnY + 30, canUnlock ? '#ffd700' : '#666', 12, 'center');
       if (btnHover && mouseClick && canUnlock) {
         coins -= h.unlockCost;
         h.unlocked = true;
         playSFX('coin');
-        spawnParticles(hx + 100, btnY + 16, h.color, 15, 5);
+        spawnParticles(hx + boxW/2, btnY + 19, h.color, 15, 5);
+        meleComment = getMeleComment('buy'); meleCommentTimer = 180;
         mouseClick = false;
       }
     } else if (maxed) {
-      drawText('MASSIMO', hx + 100, btnY + 20, '#4caf50', 12, 'center');
+      drawText('MASSIMO', hx + boxW/2, btnY + 22, '#4caf50', 14, 'center');
     } else {
       const tierData = h.tiers[nextTier];
       const canBuy = coins >= tierData.cost;
-      const btnHover = mouseX > hx + 10 && mouseX < hx + 190 && mouseY > btnY && mouseY < btnY + 32;
+      const btnHover = mouseX > hx + 10 && mouseX < hx + boxW - 10 && mouseY > btnY && mouseY < btnY + 38;
 
-      drawRect(hx + 10, btnY, 180, 32, btnHover && canBuy ? '#333' : '#222');
-      drawText('Lv.' + (nextTier+1) + ': ' + tierData.desc, hx + 100, btnY + 12, '#ccc', 7, 'center');
-      drawText(tierData.cost + ' COINS', hx + 100, btnY + 26, canBuy ? '#ffd700' : '#666', 10, 'center');
+      drawRect(hx + 10, btnY, boxW - 20, 38, btnHover && canBuy ? '#3a2e22' : '#1e1812');
+      drawText('Lv.' + (nextTier+1) + ': ' + tierData.desc, hx + boxW/2, btnY + 14, '#ccc', 9, 'center');
+      drawText(tierData.cost + ' COINS', hx + boxW/2, btnY + 30, canBuy ? '#ffd700' : '#666', 12, 'center');
 
       if (btnHover && mouseClick && canBuy) {
         coins -= tierData.cost;
         h.tier++;
         playSFX('coin');
-        spawnParticles(hx + 100, btnY + 16, h.color, 12, 4);
+        spawnParticles(hx + boxW/2, btnY + 19, h.color, 12, 4);
+        meleComment = getMeleComment('buy'); meleCommentTimer = 180;
         mouseClick = false;
       }
     }
@@ -7074,14 +8032,14 @@ function drawShopHelper(py) {
 
 // --- Tab 2: La Ruota (Gacha) ---
 function drawShopGacha(py) {
-  drawText('LA RUOTA DELLA FORTUNA', W/2, py + 15, '#ffd700', 16, 'center');
-  drawText('"Gira gira, Conte... vediamo che esce!"', W/2, py + 34, '#aaa', 10, 'center');
-  drawText('Costo: ' + GACHA_COST + ' coins', W/2, py + 52, coins >= GACHA_COST ? '#ffd700' : '#666', 12, 'center');
+  drawText('LA RUOTA DELLA FORTUNA', W/2, py + 15, '#ffd700', 18, 'center');
+  drawText('"Gira gira, Conte... vediamo che esce!"', W/2, py + 36, '#aaa', 12, 'center');
+  drawText('Costo: ' + GACHA_COST + ' coins', W/2, py + 56, coins >= GACHA_COST ? '#ffd700' : '#666', 14, 'center');
 
   // Slot machine frame
-  const slotX = W/2 - 150, slotY = py + 70, slotW = 300, slotH = 120;
+  const slotX = W/2 - 170, slotY = py + 72, slotW = 340, slotH = 140;
   drawRect(slotX - 4, slotY - 4, slotW + 8, slotH + 8, '#ffd700');
-  drawRect(slotX, slotY, slotW, slotH, '#111');
+  drawRect(slotX, slotY, slotW, slotH, '#1a1510');
 
   if (gachaSpinning) {
     // Spinning animation — show random items
@@ -7089,7 +8047,7 @@ function drawShopGacha(py) {
     const symbols = ['?', '!', '*', '$', '#', '@', '&', '%'];
     for (let s = 0; s < 3; s++) {
       const sym = symbols[Math.floor((gameTime + s * 7) / (gachaSpinTimer < 20 ? 6 : 2)) % symbols.length];
-      drawText(sym, slotX + 50 + s * 100, slotY + 68, '#ffd700', 36, 'center');
+      drawText(sym, slotX + 57 + s * 113, slotY + 80, '#ffd700', 40, 'center');
     }
 
     if (gachaSpinTimer <= 0) {
@@ -7104,65 +8062,65 @@ function drawShopGacha(py) {
     const bounce = Math.sin(gachaResultTimer * 0.1) * 3;
 
     if (r.type === 'nothing') {
-      drawText('NIENTE!', W/2, slotY + 40 + bounce, '#ff5722', 24, 'center');
-      drawText(r.joke, W/2, slotY + 70, '#ffcc80', 9, 'center');
+      drawText('NIENTE!', W/2, slotY + 48 + bounce, '#ff5722', 28, 'center');
+      drawText(r.joke, W/2, slotY + 82, '#ffcc80', 11, 'center');
       // Sad trombone particles
-      if (gachaResultTimer === 298) spawnParticles(W/2, slotY + 50, '#666', 8, 3);
+      if (gachaResultTimer === 298) spawnParticles(W/2, slotY + 60, '#666', 8, 3);
     } else if (r.type === 'consumable') {
-      drawText('CONSUMABILE!', W/2, slotY + 35 + bounce, '#4caf50', 20, 'center');
-      drawText(r.item.name + ' — ' + r.item.desc, W/2, slotY + 60, '#fff', 12, 'center');
-      drawText('(usa tasto ' + (5 + consumableItems.indexOf(r.item)) + ' in battaglia)', W/2, slotY + 80, '#aaa', 9, 'center');
+      drawText('CONSUMABILE!', W/2, slotY + 42 + bounce, '#4caf50', 24, 'center');
+      drawText(r.item.name + ' — ' + r.item.desc, W/2, slotY + 72, '#fff', 14, 'center');
+      drawText('(usa tasto ' + (5 + consumableItems.indexOf(r.item)) + ' in battaglia)', W/2, slotY + 94, '#aaa', 11, 'center');
     } else if (r.type === 'rare') {
-      drawText('ARMA RARA!', W/2, slotY + 30 + bounce, '#2196f3', 22, 'center');
+      drawText('ARMA RARA!', W/2, slotY + 36 + bounce, '#2196f3', 26, 'center');
       ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.1) * 0.1;
       drawRect(slotX + 20, slotY + 10, slotW - 40, slotH - 20, '#2196f3');
       ctx.globalAlpha = 1;
-      drawText(r.weapon.name, W/2, slotY + 58, '#fff', 16, 'center');
-      drawText(r.weapon.desc, W/2, slotY + 78, '#aaa', 10, 'center');
-      drawText('DMG:' + r.weapon.damage + '  RNG:' + r.weapon.range + '  CRIT:' + r.weapon.crit + '%', W/2, slotY + 96, '#80d8ff', 9, 'center');
+      drawText(r.weapon.name, W/2, slotY + 68, '#fff', 18, 'center');
+      drawText(r.weapon.desc, W/2, slotY + 90, '#aaa', 12, 'center');
+      drawText('DMG:' + r.weapon.damage + '  RNG:' + r.weapon.range + '  CRIT:' + r.weapon.crit + '%', W/2, slotY + 110, '#80d8ff', 11, 'center');
     } else if (r.type === 'legendary') {
       // Epic legendary reveal
       const flash = Math.sin(gameTime * 0.15) * 0.2 + 0.3;
       ctx.globalAlpha = flash;
       drawRect(slotX, slotY, slotW, slotH, '#ffd700');
       ctx.globalAlpha = 1;
-      drawText('LEGGENDARIA!!!', W/2, slotY + 30 + bounce, '#ffd700', 24, 'center');
-      drawText(r.weapon.name, W/2, slotY + 60, '#fff', 18, 'center');
-      drawText(r.weapon.desc, W/2, slotY + 80, '#ffcc80', 10, 'center');
-      drawText('DMG:' + r.weapon.damage + '  RNG:' + r.weapon.range + '  CRIT:' + r.weapon.crit + '%', W/2, slotY + 98, '#ffd700', 9, 'center');
-      if (gachaResultTimer % 10 === 0) spawnParticles(W/2 + (Math.random()-0.5)*200, slotY + 50, '#ffd700', 5, 3);
+      drawText('LEGGENDARIA!!!', W/2, slotY + 36 + bounce, '#ffd700', 28, 'center');
+      drawText(r.weapon.name, W/2, slotY + 70, '#fff', 20, 'center');
+      drawText(r.weapon.desc, W/2, slotY + 94, '#ffcc80', 12, 'center');
+      drawText('DMG:' + r.weapon.damage + '  RNG:' + r.weapon.range + '  CRIT:' + r.weapon.crit + '%', W/2, slotY + 114, '#ffd700', 11, 'center');
+      if (gachaResultTimer % 10 === 0) spawnParticles(W/2 + (Math.random()-0.5)*200, slotY + 60, '#ffd700', 5, 3);
     }
 
     // Equip button for weapon results
     if ((r.type === 'rare' || r.type === 'legendary') && r.equipped === false) {
-      const eqY = slotY + slotH + 15;
-      const eqHover = mouseX > W/2 - 80 && mouseX < W/2 + 80 && mouseY > eqY && mouseY < eqY + 30;
-      drawRect(W/2 - 80, eqY, 160, 30, eqHover ? '#1b5e20' : '#2e7d32');
-      drawText('EQUIPAGGIA [E]', W/2, eqY + 20, '#fff', 12, 'center');
+      const eqY = slotY + slotH + 18;
+      const eqHover = mouseX > W/2 - 90 && mouseX < W/2 + 90 && mouseY > eqY && mouseY < eqY + 34;
+      drawRect(W/2 - 90, eqY, 180, 34, eqHover ? '#1b5e20' : '#2e7d32');
+      drawText('EQUIPAGGIA [E]', W/2, eqY + 22, '#fff', 14, 'center');
       if ((eqHover && mouseClick) || keysJustPressed['KeyE']) {
         const newWeap = JSON.parse(JSON.stringify(r.weapon));
         if (newWeap.maxAmmo) newWeap.currentAmmo = newWeap.maxAmmo;
         weapons = [newWeap];
         weaponTier = 0;
         r.equipped = true;
-        spawnParticles(W/2, eqY + 15, r.weapon.color || '#fff', 20, 5);
+        spawnParticles(W/2, eqY + 17, r.weapon.color || '#fff', 20, 5);
         playSFX('coin');
         mouseClick = false;
       }
     }
   } else {
     // Idle state — show "GIRA!"
-    drawText('???', W/2, slotY + 68, '#555', 40, 'center');
+    drawText('???', W/2, slotY + 80, '#555', 44, 'center');
   }
 
   // Spin button
   if (!gachaSpinning) {
-    const btnY = slotY + slotH + 55;
+    const btnY = slotY + slotH + 60;
     const canSpin = coins >= GACHA_COST;
-    const btnHover = mouseX > W/2 - 100 && mouseX < W/2 + 100 && mouseY > btnY && mouseY < btnY + 40;
-    drawRect(W/2 - 100, btnY, 200, 40, canSpin ? (btnHover ? '#e65100' : '#bf360c') : '#333');
-    drawRect(W/2 - 100, btnY, 200, 3, canSpin ? '#ff6e40' : '#555');
-    drawText('GIRA! (' + GACHA_COST + ' coins)', W/2, btnY + 26, canSpin ? '#fff' : '#666', 14, 'center');
+    const btnHover = mouseX > W/2 - 110 && mouseX < W/2 + 110 && mouseY > btnY && mouseY < btnY + 44;
+    drawRect(W/2 - 110, btnY, 220, 44, canSpin ? (btnHover ? '#e65100' : '#bf360c') : '#333');
+    drawRect(W/2 - 110, btnY, 220, 3, canSpin ? '#ff6e40' : '#555');
+    drawText('GIRA! (' + GACHA_COST + ' coins)', W/2, btnY + 29, canSpin ? '#fff' : '#666', 16, 'center');
 
     if (btnHover && mouseClick && canSpin) {
       coins -= GACHA_COST;
@@ -7171,12 +8129,13 @@ function drawShopGacha(py) {
       gachaResult = null;
       gachaResultTimer = 0;
       playSFX('hit');
+      meleComment = getMeleComment('buy'); meleCommentTimer = 180;
       mouseClick = false;
     }
   }
 
   // Mystery hint
-  drawText('Tenta la fortuna, Conte...', W/2, H - 58, '#444', 8, 'center');
+  drawText('Tenta la fortuna, Conte...', W/2, H - 58, '#444', 10, 'center');
 }
 
 function rollGacha() {
@@ -7237,7 +8196,7 @@ function useConsumable(slot) {
 
 // --- Tab 3: Stats Upgrade ---
 function drawShopStats(py) {
-  drawText('POTENZIA IL CONTE', W/2, py + 15, '#4caf50', 16, 'center');
+  drawText('POTENZIA IL CONTE', W/2, py + 15, '#4caf50', 18, 'center');
 
   const stats = [
     { name: 'SALUTE', desc: 'Vita massima aumentata', tier: healthTier, icon: '\u2665',
@@ -7250,63 +8209,199 @@ function drawShopStats(py) {
 
   for (let i = 0; i < 3; i++) {
     const s = stats[i];
-    const sx = 40 + i * 280;
-    const sy = py + 35;
-    const boxW = 260, boxH = 360;
+    const sx = 30 + i * 286;
+    const sy = py + 38;
+    const boxW = 272, boxH = 310;
 
-    drawRect(sx, sy, boxW, boxH, '#1a1a2e');
+    drawRect(sx, sy, boxW, boxH, '#1e1812');
     drawRect(sx, sy, boxW, 3, s.color);
-    ctx.strokeStyle = '#333';
+    ctx.strokeStyle = '#2a2018';
     ctx.strokeRect(sx, sy, boxW, boxH);
 
     // Icon + name
-    drawText(s.icon, sx + boxW/2, sy + 40, s.color, 28, 'center');
-    drawText(s.name, sx + boxW/2, sy + 62, '#fff', 14, 'center');
-    drawText(s.desc, sx + boxW/2, sy + 78, '#aaa', 9, 'center');
+    drawText(s.icon, sx + boxW/2, sy + 36, s.color, 28, 'center');
+    drawText(s.name, sx + boxW/2, sy + 56, '#fff', 15, 'center');
+    drawText(s.desc, sx + boxW/2, sy + 72, '#aaa', 10, 'center');
 
     // Level pips
     for (let t = 0; t < 3; t++) {
-      const pipX = sx + boxW/2 - 30 + t * 22;
-      drawRect(pipX, sy + 88, 16, 8, t < s.tier ? s.color : '#333');
+      const pipX = sx + boxW/2 - 33 + t * 24;
+      drawRect(pipX, sy + 84, 18, 8, t < s.tier ? s.color : '#2a2018');
     }
-    drawText('Lv.' + s.tier + '/3', sx + boxW/2, sy + 112, s.color, 10, 'center');
+    drawText('Lv.' + s.tier + '/3', sx + boxW/2, sy + 106, s.color, 11, 'center');
 
     // Current effect
-    drawText(s.tierDescs[s.tier], sx + boxW/2, sy + 130, '#81c784', 9, 'center');
+    drawText(s.tierDescs[s.tier], sx + boxW/2, sy + 122, '#81c784', 10, 'center');
 
     // Upgrade tiers
     for (let t = 0; t < 3; t++) {
-      const uy = sy + 148 + t * 60;
+      const uy = sy + 138 + t * 56;
       const unlocked = s.tier > t;
       const isNext = s.tier === t;
       const cost = STAT_UPGRADE_COSTS[t];
       const canBuy = isNext && coins >= cost;
-      const hover = mouseX > sx + 10 && mouseX < sx + boxW - 10 && mouseY > uy && mouseY < uy + 50;
+      const hover = mouseX > sx + 10 && mouseX < sx + boxW - 10 && mouseY > uy && mouseY < uy + 48;
 
-      drawRect(sx + 10, uy, boxW - 20, 50, unlocked ? '#1b5e20' : hover && canBuy ? '#333' : '#1a1a1a');
-      drawRect(sx + 10, uy, 3, 50, unlocked ? '#4caf50' : isNext ? s.color : '#333');
+      drawRect(sx + 10, uy, boxW - 20, 48, unlocked ? '#1b3a18' : hover && canBuy ? '#3a2e22' : '#1e1812');
+      drawRect(sx + 10, uy, 4, 48, unlocked ? '#4caf50' : isNext ? s.color : '#2a2018');
 
-      drawText('Lv.' + (t+1), sx + 25, uy + 20, unlocked ? '#4caf50' : isNext ? '#fff' : '#555', 11);
-      drawText(stats[i].tierDescs[t+1], sx + 25, uy + 36, unlocked ? '#81c784' : '#777', 8);
+      drawText('Lv.' + (t+1), sx + 28, uy + 18, unlocked ? '#4caf50' : isNext ? '#fff' : '#555', 12);
+      drawText(stats[i].tierDescs[t+1], sx + 28, uy + 34, unlocked ? '#81c784' : '#777', 10);
 
       if (unlocked) {
-        drawText('SBLOCCATO', sx + boxW - 50, uy + 28, '#4caf50', 9, 'center');
+        drawText('SBLOCCATO', sx + boxW - 50, uy + 26, '#4caf50', 11, 'center');
       } else if (isNext) {
-        drawText(cost + ' COINS', sx + boxW - 50, uy + 28, canBuy ? '#ffd700' : '#666', 10, 'center');
+        drawText(cost + ' COINS', sx + boxW - 50, uy + 26, canBuy ? '#ffd700' : '#666', 12, 'center');
         if (hover && mouseClick && canBuy) {
           coins -= cost;
           if (i === 0) { healthTier++; const hpGain = HP_VALUES[healthTier] - HP_VALUES[healthTier - 1]; player.maxHp += hpGain; player.hp = Math.min(player.hp + hpGain, player.maxHp); }
           else if (i === 1) { dodgeTier++; }
           else { speedTier++; player.speed = SPEED_VALUES[speedTier]; }
           playSFX('coin');
-          spawnParticles(sx + boxW/2, uy + 25, s.color, 15, 4);
+          spawnParticles(sx + boxW/2, uy + 24, s.color, 15, 4);
+          meleComment = getMeleComment('buy'); meleCommentTimer = 180;
           mouseClick = false;
         }
       } else {
-        drawText('BLOCCATO', sx + boxW - 50, uy + 28, '#444', 9, 'center');
+        drawText('BLOCCATO', sx + boxW - 50, uy + 26, '#444', 11, 'center');
       }
     }
   }
+}
+
+// ==========================================
+// SHOP NPCs — Giammy e Mele
+// ==========================================
+
+// --- NPC: Mele (shorter brother, bartender) ---
+function drawMele(x, y) {
+  const bob = Math.sin(gameTime * 0.05) * 1;
+  const sc = 1.35;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.scale(sc, sc);
+  ctx.translate(-x, -(y + bob));
+  drawPixelChar(x, y + bob, 38, 44, '#5d4037', '#ffcc80', (px, py, w, h) => {
+    // Apron over casual shirt
+    drawRect(px + 4, py + 22, w - 8, h - 38, '#e0e0e0');
+    drawRect(px + w/2 - 3, py + 22, 6, h - 38, '#bdbdbd');
+    // Shirt collar peeking
+    drawRect(px + 8, py + 18, w - 16, 6, '#795548');
+    // Bar towel on left shoulder
+    drawRect(px - 2, py + 20, 8, 14, '#fff9c4');
+    drawRect(px - 1, py + 22, 6, 10, '#fff176');
+    // Tired face — bags under eyes
+    ctx.globalAlpha = 0.3;
+    drawRect(px + 7, py + 14, 7, 2, '#8d6e63');
+    drawRect(px + w - 14, py + 14, 7, 2, '#8d6e63');
+    ctx.globalAlpha = 1;
+    // Frown
+    drawRect(px + 12, py + 18, 14, 2, '#5d4037');
+    // Hair (short, messy)
+    drawRect(px + 6, py - 2, w - 12, 4, '#3e2723');
+    drawRect(px + 4, py, 4, 3, '#3e2723');
+    drawRect(px + w - 8, py, 4, 3, '#3e2723');
+    // Gesturing right arm
+    const gestBob = Math.sin(gameTime * 0.08) * 2;
+    drawRect(px + w - 2, py + 22, 8, 4, '#5d4037');
+    drawRect(px + w + 4, py + 18 + gestBob, 6, 5, '#ffcc80');
+  });
+  ctx.restore();
+}
+
+// --- NPC: Giammy (bigger brother, gamer) ---
+function drawGiammy(x, y) {
+  const bob = Math.sin(gameTime * 0.03) * 1.5;
+  const sc = 1.35;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.scale(sc, sc);
+  ctx.translate(-x, -(y + bob));
+  drawPixelChar(x, y + bob, 50, 48, '#37474f', '#ffcc80', (px, py, w, h) => {
+    // Hoodie body (dark blue-gray)
+    drawRect(px + 2, py + 20, w - 4, h - 36, '#37474f');
+    drawRect(px + w/2 - 3, py + 22, 6, 14, '#263238'); // hoodie zipper
+    // Hood behind head
+    drawRect(px + 2, py - 2, w - 4, 6, '#37474f');
+    // Headphones around neck
+    drawRect(px + 4, py + 16, 6, 5, '#333');
+    drawRect(px + w - 10, py + 16, 6, 5, '#333');
+    drawRect(px + 4, py + 14, w - 8, 3, '#444');
+    // Relaxed eyes (looking down at controller)
+    drawRect(px + 9, py + 10, 4, 3, '#fff');
+    drawRect(px + w - 13, py + 10, 4, 3, '#fff');
+    drawRect(px + 10, py + 11, 2, 2, '#111');
+    drawRect(px + w - 12, py + 11, 2, 2, '#111');
+    // Slight smile
+    drawRect(px + 14, py + 17, 8, 2, '#8d6e63');
+    // Arms holding controller (lowered)
+    drawRect(px - 3, py + 22, 8, 20, '#37474f');
+    drawRect(px + w - 5, py + 22, 8, 20, '#37474f');
+    // Hands (skin) holding controller
+    drawRect(px + 6, py + 40, 6, 5, '#ffcc80');
+    drawRect(px + w - 12, py + 40, 6, 5, '#ffcc80');
+    // Game controller
+    const ctrlBob = Math.sin(gameTime * 0.06) * 0.5;
+    drawRect(px + 8, py + 42 + ctrlBob, w - 16, 6, '#222');
+    drawRect(px + 10, py + 43 + ctrlBob, 4, 4, '#4caf50'); // green button
+    drawRect(px + w - 14, py + 43 + ctrlBob, 4, 4, '#f44336'); // red button
+    drawRect(px + w/2 - 3, py + 43 + ctrlBob, 6, 3, '#666'); // d-pad
+    // Hair (short)
+    drawRect(px + 6, py - 1, w - 12, 3, '#3e2723');
+  });
+  ctx.restore();
+}
+
+// --- Mele Dialogue Lines ---
+const MELE_WELCOME = [
+  '"Benvenuto all\'armeria! ...io faccio tutto, Giammy gioca."',
+  '"Ah, Conte! Entra, entra... tanto qui lavoro solo io."',
+  '"Eccolo il Conte! Giammy, saluta! ...no? Ok, come sempre."',
+  '"Benvenuto da Giammy e Mele! ...cioe\', da Mele. Giammy sta giocando."',
+  '"Che vuoi, Conte? Armi? Potenziamenti? Un fratello che lavora?"'
+];
+const MELE_IDLE = [
+  '"Giammy, aiutami col magazzino! ...niente, sta su \'sta console."',
+  '"Io pulisco, servo, ordino... lui gioca a Fortnite."',
+  '"Un giorno chiudo e me ne vado. Ma chi lo gestisce \'sto bar?"',
+  '"Senti che silenzio... ah no, e\' il pad di Giammy che clicca."',
+  '"Mamma diceva: aprite un negozio INSIEME. Insieme un cazzo."',
+  '"Ieri ho fatto 14 ore. Giammy ha fatto 14 kill su Warzone."',
+  '"Se mi pagassero per le bestemmie che tiro, sarei ricco."',
+  '"Giammy dice che e\' influencer. Ha 43 follower."',
+  '"Almeno al casino Andreino lavora... a modo suo, ma lavora."',
+  '"Io volevo fare il cuoco, non l\'armaiolo. Ma vabbe\'."'
+];
+const MELE_BUY = [
+  '"Ottima scelta! Almeno qualcuno spende qui."',
+  '"Grazie, Conte! Cosi\' pago l\'affitto... e il WiFi di Giammy."',
+  '"Venduto! Un giorno queste armi ci renderanno famosi."',
+  '"Eccoti servito. Giammy, segna sul registro! ...no? Ok."',
+  '"Bella roba! Provata personalmente. Cioe\', l\'ho provata IO."',
+  '"Affare fatto! Torno a pulire il bancone..."'
+];
+const MELE_TAB = [
+  '"Guarda pure con calma, tanto io non mi muovo da qui."',
+  '"Scegli bene, Conte... io consiglio tutto."',
+  '"Eh, abbiamo tanta roba! Tutta organizzata da ME, ovviamente."',
+  '"Sfoglia, sfoglia... Giammy non ti aiutera\' comunque."'
+];
+const MELE_GACHA = [
+  '"La Ruota! Io non ci gioco, ho gia\' abbastanza sfiga."',
+  '"Gira gira... magari esce qualcosa di bello!"',
+  '"La ruota e\' l\'unica cosa che Giammy sa usare. Oltre al pad."',
+  '"Tenta la fortuna, Conte! Peggio di lavorare con Giammy non puo\' andare."'
+];
+const MELE_BROKE = [
+  '"Sei al verde, Conte. Ti capisco, pure io."',
+  '"Zero coins? Vai a combattere e torna con i soldi."',
+  '"Non hai una lira... come me dopo che Giammy ordina le pizze."'
+];
+
+function getMeleComment(type) {
+  const lists = { welcome: MELE_WELCOME, idle: MELE_IDLE, buy: MELE_BUY, tab: MELE_TAB, gacha: MELE_GACHA, broke: MELE_BROKE };
+  const list = lists[type] || MELE_IDLE;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 // ==========================================
@@ -8462,6 +9557,7 @@ let isReplayLevel = false; // true if replaying a beaten level
 
 function startLevel(idx) {
   currentLevel = idx;
+  hubVisitInited = false; // reset hub visit flag so secrets reset next visit
   isReplayLevel = bossDefeated[idx]; // track if this was already beaten
   if (difficulty === 'medium') lives = 3; // medium: 3 lives per boss
   // hard: lives carry over; easy: infinite (lives never decremented)
@@ -9437,7 +10533,7 @@ function updatePlayerInput() {
   }
 
   // Dodge (blocked during end-lag)
-  if ((keys['KeyX'] || keys['ShiftLeft']) && !player.dodging && player.dodgeCooldown <= 0 && player.endLagTimer <= 0 && !player.grabbing) {
+  if ((keys['KeyX'] || keys['ShiftLeft']) && !player.dodging && player.dodgeCooldown <= 0 && player.endLagTimer <= 0) {
     player.dodging = true;
     player.dodgeTimer = 12;
     player.dodgeCooldown = DODGE_COOLDOWNS[dodgeTier];
@@ -9481,99 +10577,6 @@ function updatePlayerInput() {
     // Override movement to 50% speed during end-lag (already applied above via speed var)
   }
 
-  // Grab update: if grabbing, handle grab actions
-  if (player.grabbing && player.grabbedEnemy) {
-    player.grabTimer--;
-    const ge = player.grabbedEnemy;
-    if (ge.dead || player.grabTimer <= 0) {
-      player.grabbing = false;
-      player.grabbedEnemy = null;
-    } else {
-      // Position grabbed enemy in front of player
-      ge.x = player.x + player.facing * 30;
-      ge.y = player.y;
-      ge.stunTimer = 5; // keep stunned while grabbed
-
-      // Grab actions
-      if (keysJustPressed['KeyZ'] || keysJustPressed['Space']) {
-        const holdUp = !isTouchDevice && (keys['ArrowUp'] || keys['KeyW']);
-        if (holdUp) {
-          // Slam: high single-target damage, ground bounce
-          const slamDmg = weapons[player.weapon].damage * 2.5;
-          ge.hp -= slamDmg;
-          ge.knockbackVx = 0;
-          ge.stunTimer = 0;
-          ge.staggerTimer = 30;
-          player.stamina = Math.max(0, player.stamina - 15);
-          player.staminaRegenDelay = 30;
-          spawnDamageNumber(ge.x, ge.y - (ge.h || 50), 'SLAM! ' + Math.floor(slamDmg), '#ff9800');
-          spawnParticles(ge.x, ge.y, '#ff9800', 15, 6);
-          screenShake = 12;
-          playSFX('stomp');
-          if (ge.hp <= 0 && !ge.isBoss) {
-            ge.dead = true;
-            totalKills++;
-            spawnParticles(ge.x, ge.y - 25, '#ffd700', 12);
-            spawnCoinPickup(ge.x, ge.y - 20, 12);
-            playSFX('coin');
-          }
-        } else {
-          // Throw: fling into others
-          const throwDir = player.facing;
-          ge.knockbackVx = throwDir * 14;
-          ge.stunTimer = 0;
-          ge.staggerTimer = 20;
-          const throwDmg = weapons[player.weapon].damage * 1.5;
-          ge.hp -= throwDmg;
-          player.stamina = Math.max(0, player.stamina - 15);
-          player.staminaRegenDelay = 30;
-          spawnDamageNumber(ge.x, ge.y - (ge.h || 50), 'THROW! ' + Math.floor(throwDmg), '#64b5f6');
-          // Damage enemies hit by thrown enemy
-          const thrown = ge;
-          goons.forEach(g => {
-            if (g === thrown || g.dead) return;
-            if (Math.abs(g.x - thrown.x) < 60 && Math.abs(g.y - thrown.y) < 40) {
-              g.hp -= throwDmg * 0.7;
-              g.knockbackVx = throwDir * 6;
-              g.stunTimer = 20;
-              spawnDamageNumber(g.x, g.y - (g.h || 50), Math.floor(throwDmg * 0.7), '#64b5f6');
-              spawnParticles(g.x, g.y - 25, '#64b5f6', 6);
-              if (g.hp <= 0 && !g.isBoss) {
-                g.dead = true;
-                totalKills++;
-                spawnParticles(g.x, g.y - 25, '#ffd700', 12);
-                spawnCoinPickup(g.x, g.y - 20, 10);
-                playSFX('coin');
-              }
-            }
-          });
-          if (boss && !boss.dead && bossIntro && bossIntroTimer <= 0 && Math.abs(boss.x - thrown.x) < 60) {
-            boss.hp -= throwDmg * 0.5;
-            spawnDamageNumber(boss.x, boss.y - boss.h, Math.floor(throwDmg * 0.5), '#64b5f6');
-          }
-          screenShake = 8;
-          playSFX('hit');
-          if (thrown.hp <= 0 && !thrown.isBoss) {
-            thrown.dead = true;
-            totalKills++;
-            spawnParticles(thrown.x, thrown.y - 25, '#ffd700', 12);
-            spawnCoinPickup(thrown.x, thrown.y - 20, 10);
-            playSFX('coin');
-          }
-        }
-        player.grabbing = false;
-        player.grabbedEnemy = null;
-        player.endLagTimer = 12;
-      }
-
-      // Reposition while grabbing (slow walk)
-      if (keys['ArrowLeft'] || keys['KeyA']) { player.x -= 1.5; player.facing = -1; }
-      if (keys['ArrowRight'] || keys['KeyD']) { player.x += 1.5; player.facing = 1; }
-      player.x = Math.max(25, Math.min(W - 25, player.x));
-      return; // Skip normal attack processing while grabbing
-    }
-  }
-
   // Ultra activation — Q key, only when fully charged
   if (keysJustPressed['KeyQ'] && player.ultraAvailable && !player.ultraActive) {
     player.ultraActive = true;
@@ -9598,22 +10601,7 @@ function updatePlayerInput() {
       // Up + Attack = Overhead slam (keyboard only)
       playerOverhead();
     } else {
-      // Check for grab: attack near staggered enemy
-      let grabTarget = null;
-      if (player.comboStep === 0 && player.endLagTimer <= 0) {
-        const staggeredNearby = goons.filter(g => !g.dead && g.staggerTimer > 0 && Math.abs(g.x - player.x) < 50 && Math.abs(g.y - player.y) < 40);
-        if (staggeredNearby.length > 0) grabTarget = staggeredNearby[0];
-      }
-      if (grabTarget && !grabTarget.isBoss) {
-        player.grabbing = true;
-        player.grabbedEnemy = grabTarget;
-        player.grabTimer = 90;
-        grabTarget.stunTimer = 95;
-        showQuickText('GRAB!', '#64b5f6');
-        playSFX('hit');
-      } else {
-        playerAttack();
-      }
+      playerAttack();
     }
   }
 
@@ -9688,8 +10676,8 @@ function drawLevel() {
     toggleMovesScreen();
   }
 
-  // Camera zoom — 1.5x on mobile, 1.3x on desktop
-  const levelZoom = isTouchDevice ? 1.4 : 1.3;
+  // Camera zoom
+  const levelZoom = isTouchDevice ? 1.35 : 1.25;
   ctx.save();
   const camX = Math.max(W / (2 * levelZoom), Math.min(W - W / (2 * levelZoom), player.x));
   const camY = Math.max(H / (2 * levelZoom), Math.min(H - H / (2 * levelZoom), player.y - 40));
@@ -9732,17 +10720,6 @@ function drawLevel() {
   // HUD
   drawHUD();
   drawBossHpBar();
-
-  // Quick text - positioned above helper bar
-  if (quickTextTimer > 0) {
-    const qtY = isTouchDevice ? 108 : H - 65;
-    ctx.globalAlpha = Math.min(1, quickTextTimer / 20);
-    drawRect(W/2 - 260, qtY, 520, 24, 'rgba(0,0,0,0.85)');
-    drawRect(W/2 - 260, qtY, 520, 2, quickTextColor);
-    drawText(quickText, W/2, qtY + 17, quickTextColor, 12, 'center');
-    ctx.globalAlpha = 1;
-    quickTextTimer--;
-  }
 
   // Phase transition overlay
   if (phaseTransitionTimer > 0) {
@@ -10385,7 +11362,7 @@ function drawSabi() {
   ctx.fillRect(0, 0, W, H);
 
   // Zoom — camera follows Cicca
-  const sabiZoom = isTouchDevice ? 1.4 : 1.3;
+  const sabiZoom = isTouchDevice ? 1.35 : 1.25;
   {
     ctx.save();
     const camX = Math.max(W / (2 * sabiZoom), Math.min(W - W / (2 * sabiZoom), sabiCicca.x));
@@ -10750,6 +11727,14 @@ function drawVictory() {
       firstTime = true;
       victoryTimer = 0;
       freestyleFadeTimer = 0;
+      hasSunglasses = false;
+      micheleVisited = false;
+      micheleArgueIntroDone = false;
+      lampHit = false;
+      hubCatPetted = false;
+      drinkTaken = false;
+      drinkBuff = 0;
+      hubVisitInited = false;
       stopVictorySong();
       state = 'menu';
     }
@@ -10770,7 +11755,7 @@ function update() {
     case 'menu': playTrack('menu'); break;
     case 'difficultySelect': case 'weaponSelect': case 'helperSelect': playTrack('menu'); break;
     case 'tutorial': playTrack('menu'); break;
-    case 'hub': case 'shop': case 'upgrade': playTrack('hub'); break;
+    case 'hub': case 'shop': case 'upgrade': case 'backroom': playTrack('hub'); break;
     case 'moves': break; // keep whatever music was playing
     case 'dialogue':
       // During dialogue, keep appropriate music playing (don't let it die)
@@ -10809,6 +11794,7 @@ function update() {
     case 'victory': break;
     case 'sabi': break;
     case 'casino': break;
+    case 'backroom': break;
   }
 
   // Screen shake
@@ -10827,6 +11813,11 @@ function draw() {
     ctx.translate(sx, sy);
   }
 
+  // Drink wobble effect
+  if (drinkWobble > 0) {
+    ctx.rotate(Math.sin(gameTime * 0.15) * 0.01 * (drinkWobble / 180));
+  }
+
   switch(state) {
     case 'menu': drawMenu(); break;
     case 'difficultySelect': drawDifficultySelect(); break;
@@ -10843,6 +11834,7 @@ function draw() {
     case 'victory': drawVictory(); break;
     case 'sabi': drawSabi(); break;
     case 'casino': drawCasino(); break;
+    case 'backroom': drawBackroom(); break;
   }
 
   // Screen flash
@@ -10851,6 +11843,17 @@ function draw() {
     ctx.fillStyle = flashColor;
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
+  }
+
+  // Quick text overlay (global — works in hub, shop, backroom, level, etc.)
+  if (quickTextTimer > 0) {
+    const qtY = (state === 'level' && isTouchDevice) ? 108 : H - 65;
+    ctx.globalAlpha = Math.min(1, quickTextTimer / 20);
+    drawRect(W/2 - 260, qtY, 520, 24, 'rgba(0,0,0,0.85)');
+    drawRect(W/2 - 260, qtY, 520, 2, quickTextColor);
+    drawText(quickText, W/2, qtY + 17, quickTextColor, 12, 'center');
+    ctx.globalAlpha = 1;
+    quickTextTimer--;
   }
 
   ctx.restore();
