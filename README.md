@@ -76,19 +76,20 @@ Use the touchpad as a mouse for hub menus and the shop. Any standard gamepad (Xb
 
 ### Weapons
 
-Buy weapons at Giammy & Mele's shop between levels:
+Pick one of 4 starter weapons at game start. Upgrade at Giammy & Mele's shop, or spin La Ruota (gacha) for rare/legendary weapons.
 
-| Weapon | Style |
-|--------|-------|
-| Pugni | Starting fists |
-| Sanpietrino | Fast 4-hit combo, crit scales with chain |
-| Bastone | Balanced stick |
-| Bottiglia Rotta | Glass bottle, bleeds on crit |
-| Machete | Slow but heavy damage |
-| Catena | Chain with wide range |
-| Pistola | Ranged |
-| La Lupa | Legendary — the she-wolf blade |
-| Manganello | Michele's police baton (backroom secret) — Ultra slows all enemies |
+| Weapon | Type | Style |
+|--------|------|-------|
+| Sanpietrino | Starter | Fast 4-hit combo, crit scales with chain |
+| Cacciavite | Starter | Always bleeds on hit, Ultra boosts bleed |
+| Spranga | Starter | Heavy, long range, high poise, double hit |
+| Fionda | Starter | Ranged slingshot, 3rd hit pierces (Ultra only) |
+| Machete | Rare (gacha) | Ultra: 2x damage on enemies below 25% HP |
+| Catena | Rare (gacha) | Always AoE, Ultra pulls enemies in |
+| Bottiglia Rotta | Rare (gacha) | Very fast, high crit, Ultra bleeds |
+| La Lupa | Legendary (gacha) | The she-wolf blade, Ultra shockwave |
+| Pistola del Nonno | Legendary (gacha) | Ranged, all shots pierce |
+| Manganello | Secret | Michele's police baton — Ultra slows all enemies |
 
 ### Helpers
 
