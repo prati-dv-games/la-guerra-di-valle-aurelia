@@ -107,9 +107,6 @@ const touchButtons = {
   helper3: { x: 390, y: H - 80, w: 55, h: 46, key: 'Digit3', label: '3', color: '#4caf50', justPress: true },
   helper4: { x: 450, y: H - 80, w: 55, h: 46, key: 'Digit4', label: '4', color: '#4caf50', justPress: true },
   // Consumables — right of helpers, slightly separated
-  cons5:   { x: 525, y: H - 80, w: 50, h: 46, key: 'Digit5', label: '5', color: '#9c27b0', justPress: true },
-  cons6:   { x: 579, y: H - 80, w: 50, h: 46, key: 'Digit6', label: '6', color: '#9c27b0', justPress: true },
-  cons7:   { x: 633, y: H - 80, w: 50, h: 46, key: 'Digit7', label: '7', color: '#9c27b0', justPress: true },
   // Utility
   tab:     { x: W - 95, y: 36, w: 38, h: 28, key: 'Tab', label: 'TAB', color: '#555', justPress: true },
   enter:   { x: W/2 - 50, y: H - 50, w: 100, h: 38, key: 'Enter', label: 'OK', color: '#4caf50', justPress: true },
@@ -131,7 +128,7 @@ function hitTestButton(tx, ty) {
 }
 
 function getTouchButtonsForState() {
-  if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'cons5', 'cons6', 'cons7', 'tab', 'pause'];
+  if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'tab', 'pause'];
   if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'enter'];
   if (state === 'sabi') return ['left', 'right', 'attack', 'pause'];
   if (state === 'casino') return ['enter', 'tab', 'pause'];
@@ -1089,8 +1086,6 @@ const player = {
   sameTargetTimer: 0, // frames since last hit on same target
   lastHitTarget: null,
   reloadTimer: 0, // ammo reload countdown for ranged weapons
-  consumables: [],
-  consumableTimers: {},
   // Combo counter (scoring)
   comboHitCount: 0,
   comboHitTimer: 0,
@@ -1287,12 +1282,6 @@ const SLOT_PAYOUTS_2 = [5, 3, 2, 1, 0, 0, 0]; // pair multipliers (best symbols 
 const POKER_BET_MIN = 5, POKER_BET_MAX = 100, POKER_BET_STEP = 5;
 const SLOT_BET_MIN = 5, SLOT_BET_MAX = 50, SLOT_BET_STEP = 5;
 
-// Consumable items
-const consumableItems = [
-  { name: 'Supplì', desc: '+30 HP', color: '#ff8f00', effect: 'heal', value: 30, icon: 'S' },
-  { name: 'Caffè', desc: 'Stamina gratis 10s', color: '#4e342e', effect: 'freeStamina', value: 600, icon: 'E' },
-  { name: 'Cornetto', desc: '+30% danno 15s', color: '#ffcc80', effect: 'dmgBoost', value: 900, icon: 'O' }
-];
 
 const helpers = [
   { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 30,
@@ -3094,19 +3083,17 @@ function launchComboHit(stepIndex) {
   const weap = weapons[player.weapon];
   const maxHits = weap.comboHits;
 
-  // Stamina cost: all hits cost 12 (7 during Ultra), free if Caffè active
+  // Stamina cost: all hits cost 12 (7 during Ultra)
   let staminaPenalty = false;
-  const freeStamina = player.consumableTimers.freeStamina > 0;
   const staminaCost = player.ultraActive ? 7 : 12;
-  if (!freeStamina) {
-    if (player.stamina < staminaCost) {
-      staminaPenalty = true; // low stamina: 30% damage, 50% more end-lag
-    }
+  if (player.stamina < staminaCost) {
+    staminaPenalty = true; // low stamina: 30% damage, 50% more end-lag
+  } else {
     player.stamina = Math.max(0, player.stamina - staminaCost);
     player.staminaRegenDelay = Math.max(player.staminaRegenDelay, 20);
   }
   // Exhaustion check
-  if (!freeStamina && player.stamina <= 0 && player.exhaustedTimer <= 0) {
+  if (player.stamina <= 0 && player.exhaustedTimer <= 0) {
     player.exhaustedTimer = 60;
     showQuickText('ESAUSTO!', '#ff8f00');
   }
@@ -3130,10 +3117,9 @@ function launchComboHit(stepIndex) {
   const dcMult = dodgeCounter > 0 ? 1.5 : 1;
   const staminaMult = staminaPenalty ? 0.3 : 1;
   const upgDmg = player.upgrades.some(u => u.effect === 'dmg15') ? 1.15 : 1;
-  const consumableDmg = (player.consumableTimers.dmgBoost > 0) ? 1.3 : 1;
   const ultraMult = player.ultraActive ? 1.5 : 1;
   const amaroMult = drinkBuff ? 1.1 : 1;
-  let dmg = weap.damage * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * consumableDmg * ultraMult * amaroMult;
+  let dmg = weap.damage * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * ultraMult * amaroMult;
   const poiseMult = player.upgrades.some(u => u.effect === 'poise25') ? 1.25 : 1;
   const effectivePoise = Math.round(weap.poise * poiseMult);
 
@@ -5556,11 +5542,10 @@ const tutorialSteps = [
   { text: 'Ora fai un COMBO completo! Premi Z piu\' volte di fila veloce!', hint: 'Completa tutto il combo (3 colpi) sul manichino!', check: 'combo' },
   { text: 'Premi X per schivare! Breve invincibilita\'.', hint: 'Schiva!', check: 'dodge' },
   { text: 'Colpire carica la barra ULTRA! Continua a colpire fino a riempirla!', hint: 'Riempi la barra dorata colpendo il manichino!', check: 'ultra' },
-  { text: isTouchDevice ? 'I consumabili si usano con i tasti 5-6-7 in battaglia.' : 'Prova i consumabili! Premi 5, 6 o 7 per usarli in battaglia.', hint: isTouchDevice ? 'Premi OK per continuare!' : 'Premi 5, 6 o 7 per usare un consumabile!', check: 'consumable' },
   { text: 'TAB = schermata aiuto completa. Helper: tasti 1-4.', hint: 'Premi TAB per aprire l\'aiuto!' },
   { text: 'Sei pronto, Conte. La gang di Valle Aurelia ti aspetta!', hint: '[ENTER] per iniziare!' }
 ];
-let tutorialChecks = { move: false, jump: false, attack: false, combo: false, dodge: false, ultra: false, consumable: false };
+let tutorialChecks = { move: false, jump: false, attack: false, combo: false, dodge: false, ultra: false };
 
 function updateTutorial() {
   tutorialTimer++;
@@ -5588,14 +5573,6 @@ function updateTutorial() {
       // Ultra bar is full
       tutorialChecks.ultra = true;
     }
-    if (check === 'consumable' && (keysJustPressed['Digit5'] || keysJustPressed['Digit6'] || keysJustPressed['Digit7'] || (isTouchDevice && (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'])))) {
-      tutorialChecks.consumable = true;
-    }
-  }
-
-  // Give tutorial consumables for the consumable step
-  if (tutorialSteps[tutorialStep] && tutorialSteps[tutorialStep].check === 'consumable' && player.consumables.length === 0) {
-    player.consumables = ['freeStamina', 'dmgBoost', 'freeStamina'];
   }
 
   updatePlayerInput();
@@ -5754,10 +5731,9 @@ function drawTutorial() {
 
   ctx.restore();
 
-  // === Tutorial mini-HUD (ultra bar + consumable slots) ===
+  // === Tutorial mini-HUD (ultra bar) ===
   const tutStep = tutorialSteps[tutorialStep];
   const isUltraStep = tutStep && tutStep.check === 'ultra';
-  const isConsumableStep = tutStep && tutStep.check === 'consumable';
   const showTutHud = tutorialStep >= 3; // show from attack step onward
 
   if (showTutHud) {
@@ -5790,39 +5766,6 @@ function drawTutorial() {
       ctx.fill();
       ctx.globalAlpha = 1;
       drawText('COLPISCI PER CARICARE!', aX, aY + 18, '#ffd700', 10, 'center');
-    }
-  }
-
-  // Consumable slots display during tutorial (desktop only — mobile skips with OK)
-  if (isConsumableStep && player.consumables.length > 0 && !isTouchDevice) {
-    const csX = W - 210, csY = H - 60;
-    drawRect(csX - 4, csY - 16, 210, 30, 'rgba(0,0,0,0.7)');
-    drawText('CONSUMABILI', csX, csY - 4, '#a1887f', 9);
-    for (let i = 0; i < player.consumables.length; i++) {
-      const cx = csX + i * 62;
-      const cy = csY;
-      const effect = player.consumables[i];
-      const ci = consumableItems.find(c => c.effect === effect);
-      if (ci) {
-        drawRect(cx, cy, 56, 12, 'rgba(255,255,255,0.15)');
-        drawRect(cx, cy, 56, 2, ci.color);
-        drawText('[' + (i+5) + '] ' + ci.icon, cx + 4, cy + 11, '#fff', 9);
-      }
-    }
-    // Pulsing arrow
-    if (!tutorialChecks.consumable) {
-      const arrowPulse = Math.sin(gameTime * 0.1) * 8;
-      const aX = csX + 90, aY = csY - 22 + arrowPulse;
-      ctx.fillStyle = '#a1887f';
-      ctx.globalAlpha = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(aX - 8, aY - 10);
-      ctx.lineTo(aX + 8, aY - 10);
-      ctx.lineTo(aX, aY);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      drawText('PREMI 5, 6 O 7!', aX, aY - 16, '#a1887f', 10, 'center');
     }
   }
 
@@ -6263,7 +6206,6 @@ function drawMovesScreen() {
   drawSection(20, 250, 430, 68, 'STAMINA', '#fdd835', [
     ['Costo', 'Colpo = 12 | Ultra = 7 per colpo'],
     ['Esaurito', 'Stamina a 0 → bloccato brevemente'],
-    ['Caffe\'', 'Consumabile: stamina gratis 10s'],
   ], '#fff59d');
 
   // Col 2 — right side
@@ -6278,12 +6220,11 @@ function drawMovesScreen() {
   ], '#ffcc80');
 
   // HELPER
-  drawSection(460, 198, 420, 98, 'HELPER & CONSUMABILI', '#e040fb', [
+  drawSection(460, 198, 420, 78, 'HELPER', '#e040fb', [
     ['1', 'Pirox — Stun'],
     ['2', 'Tommy — Coltellata'],
     ['3', 'Cicca — Cura'],
     ['4', 'Il Mostro — Speed'],
-    ['5-6-7', 'Usa consumabile (Suppli\'/Caffe\'/Cornetto)'],
   ], '#ce93d8');
 
   // TASTI
@@ -8091,10 +8032,6 @@ function drawShopGacha(py) {
       drawText(r.joke, W/2, slotY + 82, '#ffcc80', 11, 'center');
       // Sad trombone particles
       if (gachaResultTimer === 298) spawnParticles(W/2, slotY + 60, '#666', 8, 3);
-    } else if (r.type === 'consumable') {
-      drawText('CONSUMABILE!', W/2, slotY + 42 + bounce, '#4caf50', 24, 'center');
-      drawText(r.item.name + ' — ' + r.item.desc, W/2, slotY + 72, '#fff', 14, 'center');
-      drawText('(usa tasto ' + (5 + consumableItems.indexOf(r.item)) + ' in battaglia)', W/2, slotY + 94, '#aaa', 11, 'center');
     } else if (r.type === 'rare') {
       drawText('ARMA RARA!', W/2, slotY + 36 + bounce, '#2196f3', 26, 'center');
       ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.1) * 0.1;
@@ -8165,19 +8102,9 @@ function drawShopGacha(py) {
 
 function rollGacha() {
   const roll = Math.random();
-  if (roll < 0.50) {
+  if (roll < 0.80) {
     // Nothing — joke
     return { type: 'nothing', joke: gachaJokes[Math.floor(Math.random() * gachaJokes.length)] };
-  } else if (roll < 0.80) {
-    // Consumable
-    const item = consumableItems[Math.floor(Math.random() * consumableItems.length)];
-    if (player.consumables.length < 3) {
-      player.consumables.push(item.effect);
-    } else {
-      // Inventory full — give a random replacement or just notify
-      return { type: 'nothing', joke: '"Hai le tasche piene, Conte! Usa qualcosa prima."' };
-    }
-    return { type: 'consumable', item: item };
   } else if (roll < 0.95) {
     // Rare weapon (15% chance)
     const w = rareWeapons[Math.floor(Math.random() * rareWeapons.length)];
@@ -8189,35 +8116,6 @@ function rollGacha() {
   }
 }
 
-// Consumable usage function (called during level)
-function useConsumable(slot) {
-  if (state !== 'level') return;
-  if (slot < 0 || slot >= player.consumables.length) return;
-  const effect = player.consumables[slot];
-  const item = consumableItems.find(c => c.effect === effect);
-  if (!item) return;
-
-  player.consumables.splice(slot, 1);
-
-  switch(effect) {
-    case 'heal':
-      player.hp = Math.min(player.hp + item.value, player.maxHp);
-      spawnParticles(player.x, player.y - 20, '#4caf50', 10, 3);
-      showQuickText('+' + item.value + ' HP!', '#4caf50');
-      break;
-    case 'freeStamina':
-      player.consumableTimers.freeStamina = item.value;
-      spawnParticles(player.x, player.y - 20, '#4e342e', 10, 3);
-      showQuickText('STAMINA GRATIS!', '#4e342e');
-      break;
-    case 'dmgBoost':
-      player.consumableTimers.dmgBoost = item.value;
-      spawnParticles(player.x, player.y - 20, '#ffcc80', 10, 3);
-      showQuickText('+30% DANNO!', '#ffcc80');
-      break;
-  }
-  playSFX('coin');
-}
 
 // --- Tab 3: Stats Upgrade ---
 function drawShopStats(py) {
@@ -10434,9 +10332,6 @@ function updateLevel() {
       }
     }
   }
-  // Consumable timers
-  if (player.consumableTimers.freeStamina > 0) player.consumableTimers.freeStamina--;
-  if (player.consumableTimers.dmgBoost > 0) player.consumableTimers.dmgBoost--;
   // Stamina regen
   if (player.staminaRegenDelay > 0) {
     player.staminaRegenDelay--;
@@ -10689,10 +10584,6 @@ function updatePlayerInput() {
   if (keys['Digit2']) { activateHelper(1); keys['Digit2'] = false; }
   if (keys['Digit3']) { activateHelper(2); keys['Digit3'] = false; }
   if (keys['Digit4']) { activateHelper(3); keys['Digit4'] = false; }
-  // Consumable keys (5-7)
-  if (keys['Digit5']) { useConsumable(0); keys['Digit5'] = false; }
-  if (keys['Digit6']) { useConsumable(1); keys['Digit6'] = false; }
-  if (keys['Digit7']) { useConsumable(2); keys['Digit7'] = false; }
 }
 
 function drawLevel() {
@@ -10908,16 +10799,6 @@ function drawHUD() {
     drawText('Q', ultraBarX + 6, ultraBarY + 11, '#ff8f00', 9);
   }
 
-  // Active consumable buff indicators — below ultra bar
-  let buffY = 104;
-  if (player.consumableTimers.freeStamina > 0) {
-    drawText('CAFFE\' ' + Math.ceil(player.consumableTimers.freeStamina / 60) + 's', 14, buffY, '#6d4c41', 8);
-    buffY += 10;
-  }
-  if (player.consumableTimers.dmgBoost > 0) {
-    drawText('+DMG ' + Math.ceil(player.consumableTimers.dmgBoost / 60) + 's', 14, buffY, '#ffcc80', 8);
-  }
-
   // === TOP RIGHT: Coins ===
   drawRect(W - 110, 8, 102, 22, 'rgba(0,0,0,0.7)');
   drawText('COINS: ' + coins, W - 58, 24, '#ffd700', 12, 'center');
@@ -11029,24 +10910,6 @@ function drawHUD() {
     ctx.globalAlpha = 1;
   }
 
-  // === CONSUMABLE SLOTS (bottom right) ===
-  if (player.consumables.length > 0) {
-    drawRect(W - 200, bottomBarY, 192, 30, 'rgba(0,0,0,0.6)');
-    for (let i = 0; i < player.consumables.length; i++) {
-      const cx = W - 194 + i * 62;
-      const cy = bottomBarY + 4;
-      const effect = player.consumables[i];
-      const ci = consumableItems.find(c => c.effect === effect);
-      if (ci) {
-        drawRect(cx, cy, 56, 22, 'rgba(255,255,255,0.1)');
-        drawRect(cx, cy, 56, 2, ci.color);
-        drawText((i+5) + ':' + ci.icon, cx + 4, cy + 16, '#fff', 9);
-      }
-    }
-  }
-
-  // (buff indicators moved into panel area above)
-
   // === Wave indicator ===
   if (!bossIntro && waveConfig.length > 1) {
     drawRect(W/2 - 50, 8, 100, 18, 'rgba(0,0,0,0.6)');
@@ -11125,7 +10988,7 @@ function drawGameOver() {
         coins = 0; weapons = [starterWeapons[0]]; weaponTier = 0;
         healthTier = 0; dodgeTier = 0; speedTier = 0;
         player.maxHp = 120; player.maxStamina = 100; player.speed = 4.0;
-        player.upgrades = []; player.consumables = []; player.consumableTimers = {};
+        player.upgrades = [];
         helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
         bossDefeated = [false, false, false, false, false];
         lives = 3; firstTime = true;
@@ -11744,8 +11607,6 @@ function drawVictory() {
       player.maxStamina = 100;
       player.speed = 4.0;
       player.upgrades = [];
-      player.consumables = [];
-      player.consumableTimers = {};
       helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
       bossDefeated = [false, false, false, false, false];
       lives = 3;

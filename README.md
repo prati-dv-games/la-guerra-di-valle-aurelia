@@ -26,7 +26,6 @@ Choose at game start:
 | W or Arrow Up | Jump |
 | Z or Space | Attack (combo chains) |
 | X | Dodge (invincibility frames) |
-| C | Use consumable |
 | V | Ultra attack (when bar is full) |
 | 1 | Helper: Pirox (DJ stun) |
 | 2 | Helper: Tommy (drunk knife) |
@@ -52,7 +51,6 @@ The game supports the DualSense controller via the Gamepad API. Since the PS5 br
 | Square | Ultra (when bar is full) |
 | L1 / R1 | Helper 1 (Pirox) / Helper 2 (Tommy) |
 | L2 / R2 | Helper 3 (Cicca) / Helper 4 (Il Mostro) |
-| L3 / R3 | Use consumable |
 | Options | Pause / Back |
 | Create | Moves screen |
 
@@ -63,7 +61,6 @@ Use the touchpad as a mouse for hub menus and the shop. Any standard gamepad (Xb
 - **Combo chains**: chain attacks together; timing the next hit in the combo window keeps the chain going
 - **Dodge**: invincibility frames, builds dodge counter for bonus damage
 - **Ultra**: fills by dealing damage; press V when full for a powerful attack
-- **Consumables**: buy from the shop, use mid-fight for heals or buffs
 - **Chain multiplier**: consecutive hits without getting hit increase damage output
 
 ### Bosses
