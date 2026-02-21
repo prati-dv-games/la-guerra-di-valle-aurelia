@@ -1324,8 +1324,8 @@ const levels = [
     bossColor: '#ffd54f',
     bossHp: 300,
     subtitle: 'Il rugbista narcisista',
-    bgColor: '#1a1a30',
-    groundColor: '#3a3a4a',
+    bgColor: '#151828',
+    groundColor: '#38332c',
     goonCount: 3,
     music: 'level1',
     weaponMatchups: { sanpietrino: 1.0, cacciavite: 1.25, spranga: 0.85, fionda: 0.85 },
@@ -3026,10 +3026,9 @@ function hurtPlayer(dmg) {
   player.comboHitCount = 0; // reset combo counter on hit
   player.comboHitTimer = 0;
   player.scoreMultiplier = 1;
-  // Ultra charge drain on taking damage (reduced penalty)
-  if (!player.ultraActive) {
+  // Ultra charge drain on taking damage (reduced penalty) — once full, it stays full
+  if (!player.ultraActive && !player.ultraAvailable) {
     player.ultraCharge = Math.max(0, player.ultraCharge - 12);
-    if (player.ultraCharge < player.ultraMaxCharge) player.ultraAvailable = false;
   }
   screenShake = 8;
   spawnParticles(player.x, player.y - 30, '#f44336', 8);
@@ -5545,18 +5544,28 @@ function drawDifficultySelect() {
 // ==========================================
 // TUTORIAL
 // ==========================================
-const tutorialSteps = [
-  { text: 'Benvenuto, Conte! Questo e\' il tuo addestramento.', hint: '[ENTER] per continuare' },
+const tutorialSteps = isTouchDevice ? [
+  { text: 'Benvenuto, Conte! Questo e\' il tuo addestramento.', hint: '' },
+  { text: 'Usa le frecce per muoverti.', hint: 'Muoviti a sinistra e destra!', check: 'move' },
+  { text: 'Premi il tasto SALTO per saltare!', hint: 'Salta!', check: 'jump' },
+  { text: 'Premi ATTACCO per colpire il manichino!', hint: 'Attacca il manichino!', check: 'attack' },
+  { text: 'Fai un COMBO! Premi attacco piu\' volte di fila!', hint: 'Completa il combo sul manichino!', check: 'combo' },
+  { text: 'Premi SCHIVA per schivare! Breve invincibilita\'.', hint: 'Schiva!', check: 'dodge' },
+  { text: 'Colpire carica la barra ULTRA! Riempila!', hint: 'Colpisci il manichino fino a riempire la barra!', check: 'ultra' },
+  { text: 'ULTRA pronta! Premi il tasto ULTRA per attivarla!', hint: 'Attiva l\'ULTRA!', check: 'ultraUse' },
+  { text: 'Sei pronto, Conte. Valle Aurelia ti aspetta!', hint: '' }
+] : [
+  { text: 'Benvenuto, Conte! Questo e\' il tuo addestramento.', hint: '' },
   { text: 'Usa A/D o FRECCE per muoverti.', hint: 'Muoviti a sinistra e destra!', check: 'move' },
   { text: 'Premi W o FRECCIA SU per saltare!', hint: 'Salta!', check: 'jump' },
-  { text: 'Premi Z o SPAZIO per attaccare! Colpisci il manichino!', hint: 'Attacca il manichino!', check: 'attack' },
-  { text: 'Ora fai un COMBO completo! Premi Z piu\' volte di fila veloce!', hint: 'Completa tutto il combo (3 colpi) sul manichino!', check: 'combo' },
+  { text: 'Premi Z o SPAZIO per attaccare il manichino!', hint: 'Attacca il manichino!', check: 'attack' },
+  { text: 'Fai un COMBO! Premi Z piu\' volte di fila veloce!', hint: 'Completa il combo sul manichino!', check: 'combo' },
   { text: 'Premi X per schivare! Breve invincibilita\'.', hint: 'Schiva!', check: 'dodge' },
-  { text: 'Colpire carica la barra ULTRA! Continua a colpire fino a riempirla!', hint: 'Riempi la barra dorata colpendo il manichino!', check: 'ultra' },
-  { text: 'TAB = schermata aiuto completa. Helper: tasti 1-4.', hint: 'Premi TAB per aprire l\'aiuto!' },
-  { text: 'Sei pronto, Conte. La gang di Valle Aurelia ti aspetta!', hint: '[ENTER] per iniziare!' }
+  { text: 'Colpire carica la barra ULTRA! Riempila!', hint: 'Colpisci il manichino fino a riempire la barra!', check: 'ultra' },
+  { text: 'ULTRA pronta! Premi Q per attivarla!', hint: 'Attiva l\'ULTRA!', check: 'ultraUse' },
+  { text: 'Sei pronto, Conte. Valle Aurelia ti aspetta!', hint: '' }
 ];
-let tutorialChecks = { move: false, jump: false, attack: false, combo: false, dodge: false, ultra: false };
+let tutorialChecks = { move: false, jump: false, attack: false, combo: false, dodge: false, ultra: false, ultraUse: false };
 
 function updateTutorial() {
   tutorialTimer++;
@@ -5583,6 +5592,9 @@ function updateTutorial() {
     if (check === 'ultra' && player.ultraAvailable) {
       // Ultra bar is full
       tutorialChecks.ultra = true;
+    }
+    if (check === 'ultraUse' && player.ultraActive) {
+      tutorialChecks.ultraUse = true;
     }
   }
 
@@ -5646,7 +5658,12 @@ function updateTutorial() {
 }
 
 function drawTutorial() {
-  // Camera zoom
+  // Moves screen (TAB/P)
+  if (keysJustPressed['Tab'] || keysJustPressed['KeyP']) {
+    toggleMovesScreen();
+  }
+
+  // Camera zoom — same as level
   const tutZoom = isTouchDevice ? 1.35 : 1.25;
   ctx.save();
   const tutCamX = Math.max(W / (2 * tutZoom), Math.min(W - W / (2 * tutZoom), player.x));
@@ -5655,82 +5672,25 @@ function drawTutorial() {
   ctx.scale(tutZoom, tutZoom);
   ctx.translate(-tutCamX, -tutCamY);
 
-  // Background - training area at Vanni bar
-  const trainSky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  trainSky.addColorStop(0, '#0d1b2a');
-  trainSky.addColorStop(1, '#1b2838');
-  ctx.fillStyle = trainSky;
-  ctx.fillRect(0, 0, W, GROUND_Y);
-  drawRect(0, GROUND_Y, W, H - GROUND_Y, '#3e2723');
-  drawRect(0, GROUND_Y, W, 3, '#5d4037');
+  // Background — reuse level bg for consistency
+  drawLevelBg();
 
-  // Back wall - bar interior feel
-  drawRect(0, 95, W, GROUND_Y - 95, '#2d2233');
-  // Brick texture (reduced)
-  ctx.globalAlpha = 0.08;
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 10; col++) {
-      const offset = row % 2 === 0 ? 0 : 50;
-      drawRect(col * 100 + offset, 100 + row * 76, 92, 68, '#5d4037');
-    }
-  }
-  ctx.globalAlpha = 1;
-
-  // Vanni bar counter at back
-  drawRect(0, GROUND_Y - 45, W, 8, '#5d4037');
-  drawRect(0, GROUND_Y - 37, W, 37, '#3e2723');
-  // Bottles on shelf
-  const bColors = ['#4caf50','#f44336','#2196f3','#ff9800','#9c27b0','#ffeb3b','#4caf50','#f44336'];
-  bColors.forEach((c, i) => {
-    drawRect(60 + i * 100, GROUND_Y - 72, 8, 28, c);
-    drawRect(58 + i * 100, GROUND_Y - 74, 12, 4, c);
-  });
-
-  // Training targets on wall (punching bag outlines)
-  ctx.globalAlpha = 0.15;
-  ctx.fillStyle = '#f44336';
-  ctx.beginPath(); ctx.arc(180, GROUND_Y - 130, 25, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(720, GROUND_Y - 130, 25, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 1;
-  // Target rings
-  [180, 720].forEach(tx => {
-    ctx.strokeStyle = '#f44336'; ctx.lineWidth = 1; ctx.globalAlpha = 0.3;
-    ctx.beginPath(); ctx.arc(tx, GROUND_Y - 130, 15, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(tx, GROUND_Y - 130, 8, 0, Math.PI * 2); ctx.stroke();
-    ctx.globalAlpha = 1;
-  });
-
-  // Warm hanging lights
-  [200, 450, 700].forEach(lx => {
-    drawRect(lx, 95, 2, 20, '#444');
-    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.03 + lx) * 0.1;
-    ctx.fillStyle = '#ffcc80';
-    ctx.beginPath(); ctx.arc(lx + 1, 118, 14, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    drawRect(lx - 5, 114, 12, 6, '#ffd54f');
-  });
-
-  // Floor mat (training area)
-  ctx.globalAlpha = 0.15;
+  // Training area overlay — subtle mat on ground
+  ctx.globalAlpha = 0.12;
   drawRect(300, GROUND_Y + 3, 300, H - GROUND_Y - 3, '#1565c0');
   ctx.globalAlpha = 1;
-
-  // Vanni sign (below tutorial panel)
-  drawRect(350, 92, 200, 28, '#b71c1c');
-  drawRect(350, 92, 200, 2, '#e53935');
-  drawText('VANNI - ADDESTRAMENTO', W/2, 112, '#fff', 13, 'center');
 
   // Draw dummy
   if (tutorialDummy && !tutorialDummy.dead) {
     const dx = tutorialDummy.x - tutorialDummy.w/2, dy = tutorialDummy.y - tutorialDummy.h;
     if (tutorialDummy.hitFlash > 0 && Math.floor(gameTime / 3) % 2 === 0) ctx.globalAlpha = 0.5;
     drawPixelChar(dx, dy, tutorialDummy.w, tutorialDummy.h, '#777', '#aaa', (px, py, w, h) => {
-      drawText('DUMMY', px - 2, py - 8, '#999', 9);
       // X eyes
       drawRect(px + 10, py + 10, 2, 2, '#f00');
       drawRect(px + w - 12, py + 10, 2, 2, '#f00');
     });
     ctx.globalAlpha = 1;
+    // HP bar above dummy
     const hpR = tutorialDummy.hp / tutorialDummy.maxHp;
     drawRect(dx, dy - 6, 30, 4, '#333');
     drawRect(dx, dy - 6, 30 * hpR, 4, '#ff5722');
@@ -5742,77 +5702,100 @@ function drawTutorial() {
 
   ctx.restore();
 
-  // === Tutorial mini-HUD (ultra bar) ===
-  const tutStep = tutorialSteps[tutorialStep];
-  const isUltraStep = tutStep && tutStep.check === 'ultra';
-  const showTutHud = tutorialStep >= 3; // show from attack step onward
+  // === HUD — same style as level ===
+  const step = tutorialSteps[tutorialStep];
+  const showTutHud = tutorialStep >= 3;
 
   if (showTutHud) {
-    // Ultra bar — same position and style as level HUD
-    const ubX = 8, ubY = 84, ubW = 195, ubH = 14;
+    // Player info panel — matches level HUD
+    drawRect(8, 8, 195, 42, 'rgba(0,0,0,0.7)');
+    drawRect(8, 8, 195, 2, '#e94560');
+
+    // HP bar
+    const hpW = 130, barX = 38;
+    const hpR = player.hp / player.maxHp;
+    drawText('HP', 14, 24, '#fff', 8);
+    drawRect(barX, 16, hpW, 9, '#333');
+    drawRect(barX, 16, hpW * hpR, 9, hpR > 0.3 ? '#4caf50' : '#f44336');
+
+    // Stamina bar
+    const stR = player.stamina / player.maxStamina;
+    const exhausted = player.exhaustedTimer > 0;
+    drawText('ST', 14, 34, exhausted ? '#f44336' : '#fdd835', 8);
+    drawRect(barX, 28, hpW, 6, '#333');
+    drawRect(barX, 28, hpW * stR, 6, exhausted ? '#f44336' : stR > 0.25 ? '#fdd835' : '#ff8f00');
+
+    // Ultra bar
+    const ubX = 8, ubY = 54, ubW = 195, ubH = 14;
     drawRect(ubX, ubY, ubW, ubH, 'rgba(0,0,0,0.7)');
     const ultraR = player.ultraCharge / player.ultraMaxCharge;
     if (player.ultraAvailable) {
       const pulse = Math.sin(gameTime * 0.15) * 0.3 + 0.7;
       ctx.globalAlpha = pulse;
       drawRect(ubX + 1, ubY + 1, ubW - 2, ubH - 2, '#ffd700');
-      drawText('Q  PRONTO!', ubX + ubW / 2, ubY + 11, '#1a1a2e', 10, 'center');
+      drawText('Q  ULTRA PRONTO!', ubX + ubW / 2, ubY + 11, '#1a1a2e', 10, 'center');
       ctx.globalAlpha = 1;
     } else {
       drawRect(ubX + 1, ubY + 1, (ubW - 2) * ultraR, ubH - 2, '#ff8f00');
-      drawText('Q', ubX + 6, ubY + 11, '#ff8f00', 9);
+      drawText('ULTRA', ubX + 6, ubY + 11, '#ff8f00', 9);
     }
 
-    // Pulsing highlight arrow during ultra step
-    if (isUltraStep && !tutorialChecks.ultra) {
-      const arrowPulse = Math.sin(gameTime * 0.1) * 8;
-      const aX = ubX + ubW / 2, aY = ubY + ubH + 8 + arrowPulse;
-      ctx.fillStyle = '#ffd700';
-      ctx.globalAlpha = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(aX - 8, aY + 10);
-      ctx.lineTo(aX + 8, aY + 10);
-      ctx.lineTo(aX, aY);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      drawText('COLPISCI PER CARICARE!', aX, aY + 18, '#ffd700', 10, 'center');
+    // Pulsing hint during ultra step
+    if (step && step.check === 'ultra' && !tutorialChecks.ultra) {
+      const arrowPulse = Math.sin(gameTime * 0.1) * 6;
+      drawText('COLPISCI!', ubX + ubW / 2, ubY + ubH + 14 + arrowPulse, '#ffd700', 10, 'center');
     }
   }
 
-  // === Tutorial UI - at the TOP ===
-  const step = tutorialSteps[tutorialStep];
+  // === Instruction panel — bottom center, dialogue-box style ===
   if (step) {
-    drawRect(0, 0, W, 80, 'rgba(10,10,30,0.92)');
-    drawRect(0, 78, W, 2, '#4caf50');
+    const panW = 480, panH = 70;
+    const panX = W/2 - panW/2, panY = H - panH - (isTouchDevice ? 80 : 16);
 
-    // Step progress dots
-    for (let i = 0; i < tutorialSteps.length; i++) {
-      const dotX = W/2 - (tutorialSteps.length * 8) + i * 16;
-      drawRect(dotX, 6, 8, 4, i < tutorialStep ? '#4caf50' : i === tutorialStep ? '#fff' : '#333');
+    // Panel background
+    drawRect(panX, panY, panW, panH, 'rgba(10,10,30,0.88)');
+    drawRect(panX, panY, panW, 2, '#e94560');
+
+    // Progress dots — top of panel
+    const dotTotal = tutorialSteps.length;
+    const dotSpacing = 14;
+    const dotsStartX = W/2 - (dotTotal * dotSpacing) / 2;
+    for (let i = 0; i < dotTotal; i++) {
+      const dx = dotsStartX + i * dotSpacing + 3;
+      if (i < tutorialStep) {
+        drawRect(dx, panY + 6, 8, 4, '#4caf50');
+      } else if (i === tutorialStep) {
+        drawRect(dx, panY + 6, 8, 4, '#fff');
+      } else {
+        drawRect(dx, panY + 6, 8, 4, '#333');
+      }
     }
 
-    // Step indicator
-    drawText('TUTORIAL ' + (tutorialStep + 1) + '/' + tutorialSteps.length, W/2, 22, '#4caf50', 11, 'center');
-    drawText(step.text, W/2, 42, '#fff', 14, 'center');
-    drawText(step.hint, W/2, 62, '#aaa', 11, 'center');
+    // Main text
+    drawText(step.text, W/2, panY + 28, '#fff', 13, 'center');
+    // Hint text
+    drawText(step.hint, W/2, panY + 46, '#aaa', 10, 'center');
 
-    // Auto-advance or manual advance
+    // Advance logic
     const hasCheck = step.check;
-    const confirmPressed = keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'];
+    const panelTap = mouseClick && mouseY > panY && mouseY < panY + panH && mouseX > panX && mouseX < panX + panW;
+    const confirmPressed = keysJustPressed['Enter'] || panelTap;
+
     if (hasCheck) {
       if (tutorialChecks[step.check]) {
-        const bravoPulse = Math.sin(gameTime * 0.12) * 0.3 + 0.7;
+        const bravoPulse = 0.5 + Math.sin(gameTime * 0.12) * 0.3;
         ctx.globalAlpha = bravoPulse;
-        drawText('Bravo! [Z/ENTER]', W/2, 76, '#4caf50', 10, 'center');
+        drawText('Bravo!', W/2 - 40, panY + 60, '#4caf50', 10, 'center');
+        drawText(isTouchDevice ? '[TAP]' : '[ENTER]', W/2 + 30, panY + 60, '#4caf50', 10, 'center');
         ctx.globalAlpha = 1;
-        if (confirmPressed) { tutorialStep++; }
+        if (confirmPressed) { tutorialStep++; mouseClick = false; }
       }
     } else {
-      if (Math.floor(gameTime / 30) % 2 === 0) {
-        drawText('[Z/ENTER]', W/2, 76, '#888', 10, 'center');
-      }
-      if (confirmPressed) { tutorialStep++; }
+      const promptPulse = 0.4 + Math.sin(gameTime * 0.08) * 0.3;
+      ctx.globalAlpha = promptPulse;
+      drawText(isTouchDevice ? '[TAP]' : '[ENTER]', W/2, panY + 60, '#888', 10, 'center');
+      ctx.globalAlpha = 1;
+      if (confirmPressed) { tutorialStep++; mouseClick = false; }
     }
   }
 
@@ -5822,22 +5805,17 @@ function drawTutorial() {
     resetPlayer();
   }
 
-  // Moves screen (TAB/P) — handled in draw phase to avoid double-toggle
-  if (keysJustPressed['Tab'] || keysJustPressed['KeyP']) {
-    toggleMovesScreen();
-  }
-
   // Mobile touch buttons
   drawTouchButtons();
 
-  // Skip option — top right, big enough to tap on mobile
-  const skipBtnW = 140, skipBtnH = 36;
-  const skipBtnX = W - skipBtnW - 10, skipBtnY = 86;
-  const skipHover = mouseX >= skipBtnX && mouseX <= skipBtnX + skipBtnW && mouseY >= skipBtnY && mouseY <= skipBtnY + skipBtnH;
-  drawRect(skipBtnX, skipBtnY, skipBtnW, skipBtnH, skipHover ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)');
-  drawRect(skipBtnX, skipBtnY, skipBtnW, 2, '#888');
-  drawText('SALTA TUTORIAL >', skipBtnX + skipBtnW / 2, skipBtnY + 23, skipHover ? '#fff' : '#aaa', 12, 'center');
-  if ((mouseClick && skipHover) || keys['Escape']) {
+  // Skip button — top right corner
+  const skipW = isTouchDevice ? 120 : 110, skipH = isTouchDevice ? 34 : 28;
+  const skipX = W - skipW - 8, skipY = 8;
+  const skipHover = mouseX >= skipX && mouseX <= skipX + skipW && mouseY >= skipY && mouseY <= skipY + skipH;
+  drawRect(skipX, skipY, skipW, skipH, skipHover ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.5)');
+  drawRect(skipX, skipY, skipW, 2, '#666');
+  drawText('SALTA >', skipX + skipW / 2, skipY + (skipH / 2) + 5, skipHover ? '#fff' : '#888', 11, 'center');
+  if ((mouseClick && skipHover) || keysJustPressed['Escape']) {
     state = 'hub';
     resetPlayer();
     mouseClick = false;
@@ -6118,6 +6096,9 @@ function drawHelperSelect() {
     player.x = 200;
     tutorialStep = 0;
     tutorialTimer = 0;
+    tutorialChecks = { move: false, jump: false, attack: false, combo: false, dodge: false, ultra: false, ultraUse: false };
+    goons = [];
+    boss = null;
     tutorialDummy = { x: 550, y: GROUND_Y, w: 34, h: 52, hp: 50, maxHp: 50, hitFlash: 0, stunTimer: 0, dead: false, color: '#777' };
     spawnParticles(W/2, H/2, helpers[helperSelectIndex].color, 25, 6);
     playSFX('coin');
@@ -6323,6 +6304,7 @@ function drawMovesScreen() {
     helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
     bossDefeated = [false, false, false, false, false];
     lives = 3; firstTime = true;
+    hubStoryShown = false; hubStoryLine = 0;
     state = 'menu';
     resetPlayer();
     mouseClick = false;
@@ -6372,6 +6354,9 @@ let startapparoFirstSeen = false;
 let startapparoBubbleTimer = 0;
 let startapparoBubbleLine = '';
 let hubVisitInited = false;
+let hubStoryShown = false;
+let hubStoryLine = 0;
+let hubStoryCooldown = 0;
 
 function drawHub() {
   // Reset per-visit secrets on hub entry
@@ -6388,6 +6373,7 @@ function drawHub() {
     }
   }
 
+  const hubStoryActive = !hubStoryShown;
   const startapparoActive = (startapparoPhase > 0 && startapparoPhase < 4) || (startapparoPayoffPhase > 0 && startapparoPayoffPhase < 3);
   const startapparoIntroShowing = bossDefeated[1] && !startapparoVisited && startapparoPhase === 0 && !startapparoIntroDone;
 
@@ -6705,7 +6691,7 @@ function drawHub() {
   ctx.lineWidth = 1;
 
   // Backroom door click — Michele Lo Sbirro (only after beating LaFed)
-  const vanniDoorHover = bossDefeated[0] && !hubConfirm && !startapparoIntroShowing && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
+  const vanniDoorHover = bossDefeated[0] && !hubConfirm && !hubStoryActive && !startapparoIntroShowing && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
   if (vanniDoorHover) {
     ctx.globalAlpha = 0.15;
     drawRect(385, 280, 70, 130, '#ffcc80');
@@ -6794,7 +6780,7 @@ function drawHub() {
   }
 
   // === Secret 3: Secret Graffiti on left wall ===
-  if (!showCredits && !startapparoIntroShowing && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
     wallTaps++;
     if (wallTaps >= 5) {
       graffitiRevealed = true;
@@ -6898,7 +6884,7 @@ function drawHub() {
   ctx.globalAlpha = 1;
 
   // === Secret 4: Bartender Drink ===
-  if (!showCredits && !startapparoIntroShowing && !drinkTaken && mouseClick && mouseX > 180 && mouseX < 240 && mouseY > 360 && mouseY < 390) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !drinkTaken && mouseClick && mouseX > 180 && mouseX < 240 && mouseY > 360 && mouseY < 390) {
     drinkTaken = true;
     drinkWobble = 180;
     drinkBuff = 1;
@@ -6942,7 +6928,7 @@ function drawHub() {
   ctx.fill();
   ctx.globalAlpha = 1;
   // Secret 1: Punch the lamp (once per run)
-  if (!showCredits && !startapparoIntroShowing && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
     lampHit = true;
     lampFlicker = 60;
     const lampCoins = 5 + Math.floor(Math.random() * 11);
@@ -7087,7 +7073,7 @@ function drawHub() {
   ctx.lineWidth = 1;
   ctx.lineCap = 'butt';
   // Click to pet (once per visit)
-  if (!showCredits && !startapparoIntroShowing && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
     hubCatPetted = true;
     hubCatSitting = 120;
     spawnParticles(hubCatX, catY - 12, '#ff69b4', 8, 3);
@@ -7247,7 +7233,7 @@ function drawHub() {
   drawRect(shopBx, shopBy, 150, 32, shopHover ? '#d84315' : '#bf360c');
   drawRect(shopBx, shopBy, 150, 2, '#ff6e40');
   drawText('ARMERIA [S]', shopBx + 75, shopBy + 22, '#fff', 13, 'center');
-  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && ((shopHover && mouseClick) || (armDoorHover && mouseClick) || keys['KeyS'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && ((shopHover && mouseClick) || (armDoorHover && mouseClick) || keys['KeyS'])) {
     state = 'shop';
     shopTab = 0;
     mouseClick = false;
@@ -7261,7 +7247,7 @@ function drawHub() {
   drawText('BINGO UBALDI [B]', casinoBx + 98, casinoBy + 22, '#fff', 13, 'center');
   // Door hitbox (matches the bingo building door drawn earlier)
   const bingoDoorClick = mouseX > 700 + 195/2 - 30 && mouseX < 700 + 195/2 + 30 && mouseY > 330 && mouseY < 410;
-  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
     state = 'casino';
     casinoTab = 0;
     pokerPhase = 'idle';
@@ -7287,7 +7273,7 @@ function drawHub() {
   drawRect(movesBx, movesBy, 155, 32, movesHover ? '#1565c0' : '#0d47a1');
   drawRect(movesBx, movesBy, 155, 2, '#42a5f5');
   drawText('AIUTO [TAB]', movesBx + 78, movesBy + 22, '#fff', 13, 'center');
-  if (!showCredits && !startapparoActive && !startapparoIntroShowing && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
+  if (!showCredits && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
     toggleMovesScreen();
     mouseClick = false;
   }
@@ -7301,16 +7287,16 @@ function drawHub() {
   if (hubInputCooldown > 0) hubInputCooldown--;
 
   // Keyboard navigation
-  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
     hubSelection = Math.max(0, hubSelection - 1);
     playSFX('hit');
   }
-  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
     hubSelection = Math.min(levels.length - 1, hubSelection + 1);
     playSFX('hit');
   }
   // Number keys to jump to level
-  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing) {
   for (let n = 0; n < levels.length; n++) {
     if (keysJustPressed['Digit' + (n+1)]) {
       hubSelection = n;
@@ -7319,7 +7305,7 @@ function drawHub() {
   }
   }
   // Enter to open confirmation (not start level directly)
-  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
     const selLocked = hubSelection > 0 && !bossDefeated[hubSelection - 1];
     if (!selLocked) {
       hubConfirm = true;
@@ -7374,7 +7360,7 @@ function drawHub() {
     }
 
     // Click opens confirmation, not instant start
-    if (!hubConfirm && !startapparoActive && !startapparoIntroShowing && isHover && mouseClick && !locked) {
+    if (!hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && isHover && mouseClick && !locked) {
       hubSelection = i;
       hubConfirm = true;
       hubInputCooldown = 12;
@@ -7432,10 +7418,168 @@ function drawHub() {
   const hoverCred = mouseX >= credBtnX && mouseX <= credBtnX + credBtnW && mouseY >= credBtnY && mouseY <= credBtnY + credBtnH;
   drawRect(credBtnX, credBtnY, credBtnW, credBtnH, hoverCred ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
   drawText('Crediti', credBtnX + 33, credBtnY + 14, hoverCred ? '#aaa' : '#555', 10, 'center');
-  if (!startapparoActive && !startapparoIntroShowing && mouseClick && hoverCred) {
+  if (!hubStoryActive && !startapparoActive && !startapparoIntroShowing && mouseClick && hoverCred) {
     showCredits = true;
     codeInput = '';
     mouseClick = false;
+  }
+
+  // === Story intro (first hub visit) — parchment style ===
+  if (hubStoryActive) {
+    if (hubStoryCooldown > 0) hubStoryCooldown--;
+
+    const storyPages = [
+      [
+        'Daniele "il Conte" e\' il',
+        'protettore di Prati,',
+        'il quartiere piu\' nobile',
+        'di Roma.'
+      ],
+      [
+        'Ma la gang di Valle Aurelia,',
+        'guidata dal temibile Pisellino,',
+        'vuole prendere il controllo',
+        'delle strade.'
+      ],
+      [
+        'Il Conte non puo\' permetterlo.',
+        '',
+        'E\' ora di combattere.'
+      ],
+      [
+        'Sconfiggi i boss di',
+        'Valle Aurelia uno per uno,',
+        'dalle strade di Via Plava',
+        'fino a Piazza Mazzini.'
+      ],
+      [
+        'Potenzia le tue armi e abilita\'',
+        'all\'Armeria di Giammy e Mele.',
+        '',
+        'Tenta la fortuna al Bingo',
+        'degli Ubaldi se hai',
+        'bisogno di coins.'
+      ],
+      [
+        'Salva Prati dall\'esercito',
+        'di Pisellino.',
+        '',
+        'Conte... il destino di Prati',
+        'e\' nelle tue mani.'
+      ]
+    ];
+
+    // Dark overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Parchment panel
+    const pW = 380, pH = 280;
+    const pX = W/2 - pW/2, pY = H/2 - pH/2 - 10;
+
+    // Parchment background gradient (aged paper)
+    const parchGrad = ctx.createLinearGradient(pX, pY, pX, pY + pH);
+    parchGrad.addColorStop(0, '#e8d5b0');
+    parchGrad.addColorStop(0.3, '#dcc8a0');
+    parchGrad.addColorStop(0.7, '#d4bc90');
+    parchGrad.addColorStop(1, '#c8b080');
+    ctx.fillStyle = parchGrad;
+    ctx.fillRect(pX, pY, pW, pH);
+
+    // Stain/texture spots
+    for (let s = 0; s < 8; s++) {
+      const sx = pX + 30 + ((s * 47 + 13) % (pW - 60));
+      const sy = pY + 20 + ((s * 31 + 7) % (pH - 40));
+      ctx.globalAlpha = 0.04 + (s % 3) * 0.015;
+      ctx.fillStyle = s % 2 === 0 ? '#a08050' : '#c8a060';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 10 + (s % 4) * 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Burnt/worn edges
+    ctx.fillStyle = '#b89860';
+    ctx.fillRect(pX, pY, pW, 3);
+    ctx.fillRect(pX, pY + pH - 3, pW, 3);
+    ctx.fillRect(pX, pY, 3, pH);
+    ctx.fillRect(pX + pW - 3, pY, 3, pH);
+    // Darker inner border
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#8a6830';
+    ctx.fillRect(pX + 3, pY + 3, pW - 6, 1);
+    ctx.fillRect(pX + 3, pY + pH - 4, pW - 6, 1);
+    ctx.fillRect(pX + 3, pY + 3, 1, pH - 6);
+    ctx.fillRect(pX + pW - 4, pY + 3, 1, pH - 6);
+    ctx.globalAlpha = 1;
+
+    // Corner fold (bottom-right)
+    ctx.fillStyle = '#c0a878';
+    ctx.beginPath();
+    ctx.moveTo(pX + pW - 20, pY + pH);
+    ctx.lineTo(pX + pW, pY + pH - 20);
+    ctx.lineTo(pX + pW, pY + pH);
+    ctx.fill();
+    ctx.fillStyle = '#a89060';
+    ctx.beginPath();
+    ctx.moveTo(pX + pW - 20, pY + pH);
+    ctx.lineTo(pX + pW, pY + pH - 20);
+    ctx.lineTo(pX + pW - 10, pY + pH - 10);
+    ctx.fill();
+
+    // Title on first page
+    if (hubStoryLine === 0) {
+      ctx.font = '18px monospace';
+      ctx.fillStyle = '#3a2010';
+      ctx.textAlign = 'center';
+      ctx.fillText('LA GUERRA DI', W/2, pY + 38);
+      ctx.fillText('VALLE AURELIA', W/2, pY + 58);
+      // Decorative line under title
+      ctx.fillStyle = '#8a5a20';
+      ctx.fillRect(W/2 - 60, pY + 66, 120, 1);
+    }
+
+    // Text lines — ink on parchment
+    const page = storyPages[hubStoryLine] || storyPages[storyPages.length - 1];
+    const lineH = 22;
+    const textStartY = hubStoryLine === 0 ? pY + 100 : pY + 60;
+    const textColor = '#2a1a08';
+
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = textColor;
+    for (let i = 0; i < page.length; i++) {
+      if (page[i] !== '') {
+        ctx.fillText(page[i], W/2, textStartY + i * lineH);
+      }
+    }
+
+    // Page number — bottom center, like a book
+    ctx.fillStyle = '#8a6a40';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('- ' + (hubStoryLine + 1) + ' / ' + storyPages.length + ' -', W/2, pY + pH - 30);
+
+    // Advance prompt
+    const promptPulse = 0.4 + Math.sin(gameTime * 0.06) * 0.3;
+    ctx.globalAlpha = promptPulse;
+    ctx.fillStyle = '#5a3a10';
+    ctx.font = '11px monospace';
+    ctx.fillText('[Click / Enter]', W/2, pY + pH - 14);
+    ctx.globalAlpha = 1;
+
+    if (hubStoryCooldown <= 0 && (mouseClick || keysJustPressed['Enter'])) {
+      hubStoryLine++;
+      hubStoryCooldown = 10;
+      playSFX('hit');
+      if (hubStoryLine >= storyPages.length) {
+        hubStoryShown = true;
+      }
+      mouseClick = false;
+    }
+
+    mouseClick = false;
+    return;
   }
 
   // === Credits overlay with code entry ===
@@ -8523,6 +8667,25 @@ function drawShopGacha(py) {
       drawText(r.joke, W/2, slotY + 82, '#ffcc80', 11, 'center');
       // Sad trombone particles
       if (gachaResultTimer === 298) spawnParticles(W/2, slotY + 60, '#666', 8, 3);
+    } else if (r.type === 'upgrade') {
+      if (weaponTier >= 3) {
+        // Already maxed — show consolation
+        drawText('GIA\' AL MASSIMO!', W/2, slotY + 48 + bounce, '#ff9800', 24, 'center');
+        drawText('L\'arma e\' gia\' Lv.3... niente da fare!', W/2, slotY + 82, '#ffcc80', 11, 'center');
+      } else {
+        drawText('POTENZIAMENTO!', W/2, slotY + 36 + bounce, '#4caf50', 26, 'center');
+        ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.1) * 0.1;
+        drawRect(slotX + 20, slotY + 10, slotW - 40, slotH - 20, '#4caf50');
+        ctx.globalAlpha = 1;
+        drawText(weapons[0].name + ' Lv.' + weaponTier + ' \u2192 Lv.' + (weaponTier + 1), W/2, slotY + 70, '#fff', 16, 'center');
+        drawText('+1 livello arma gratis!', W/2, slotY + 94, '#a5d6a7', 12, 'center');
+        if (gachaResultTimer === 298) {
+          applyWeaponUpgrade(weaponTier);
+          weaponTier++;
+          spawnParticles(W/2, slotY + 60, '#4caf50', 15, 5);
+          playSFX('coin');
+        }
+      }
     } else if (r.type === 'rare') {
       drawText('ARMA RARA!', W/2, slotY + 36 + bounce, '#2196f3', 26, 'center');
       ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.1) * 0.1;
@@ -8593,15 +8756,18 @@ function drawShopGacha(py) {
 
 function rollGacha() {
   const roll = Math.random();
-  if (roll < 0.80) {
-    // Nothing — joke
+  if (roll < 0.40) {
+    // Nothing (40%)
     return { type: 'nothing', joke: gachaJokes[Math.floor(Math.random() * gachaJokes.length)] };
+  } else if (roll < 0.75) {
+    // Weapon upgrade +1 lvl (35%)
+    return { type: 'upgrade' };
   } else if (roll < 0.95) {
-    // Rare weapon (15% chance)
+    // Rare weapon (20%)
     const w = rareWeapons[Math.floor(Math.random() * rareWeapons.length)];
     return { type: 'rare', weapon: w, equipped: false };
   } else {
-    // Legendary!
+    // Legendary (5%)
     const w = legendaryWeapons[Math.floor(Math.random() * legendaryWeapons.length)];
     return { type: 'legendary', weapon: w, equipped: false };
   }
@@ -10162,91 +10328,145 @@ function drawLevelBg() {
 
 // Via Plava - residential Roman street with palazzi
 function drawBgViaPlava() {
-  // Sky gradient - deep evening
+  // Sky gradient — deep Roman evening, warm-cool transition
   const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  sky.addColorStop(0, '#0d0d25');
-  sky.addColorStop(1, '#1a1a38');
+  sky.addColorStop(0, '#0c0e22');
+  sky.addColorStop(0.4, '#151830');
+  sky.addColorStop(1, '#1e2040');
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, W, GROUND_Y);
 
-  // Roman palazzi - darker ochre/terracotta for contrast with characters
+  // Stars
+  for (let i = 0; i < 15; i++) {
+    const sx = (i * 83 + 17) % W;
+    const sy = (i * 37 + 5) % 100 + 8;
+    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.015 + i * 2) * 0.15;
+    drawRect(sx, sy, 2, 2, '#fff');
+  }
+  ctx.globalAlpha = 1;
+
+  // Roman palazzi — muted ochre/terracotta palette
   const buildings = [
-    { x: -20, w: 200, h: 260, color: '#7a6540' },
-    { x: 190, w: 180, h: 240, color: '#856d48' },
-    { x: 380, w: 160, h: 280, color: '#6e5838' },
-    { x: 550, w: 200, h: 250, color: '#7a6540' },
-    { x: 760, w: 180, h: 270, color: '#856d48' }
+    { x: -20, w: 200, h: 260, color: '#6a5540', trim: '#5a4830' },
+    { x: 190, w: 180, h: 235, color: '#72604a', trim: '#625040' },
+    { x: 380, w: 160, h: 275, color: '#5e4e3a', trim: '#4e3e2a' },
+    { x: 550, w: 200, h: 248, color: '#6a5540', trim: '#5a4830' },
+    { x: 760, w: 180, h: 268, color: '#72604a', trim: '#625040' }
   ];
-  buildings.forEach(b => {
-    drawRect(b.x, GROUND_Y - b.h, b.w, b.h, b.color);
-    drawRect(b.x, GROUND_Y - b.h, b.w, 6, shadeColor(b.color, -20));
-    // Windows (simplified for performance — fewer, bigger)
+  buildings.forEach((b, bi) => {
+    // Building body with gradient
+    const bGrad = ctx.createLinearGradient(0, GROUND_Y - b.h, 0, GROUND_Y);
+    bGrad.addColorStop(0, b.color);
+    bGrad.addColorStop(1, shadeColor(b.color, -12));
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(b.x, GROUND_Y - b.h, b.w, b.h);
+    // Cornice
+    drawRect(b.x, GROUND_Y - b.h, b.w, 4, b.trim);
+    drawRect(b.x, GROUND_Y - b.h, b.w, 1, shadeColor(b.trim, 20));
+    // Subtle stucco
+    ctx.globalAlpha = 0.03;
+    for (let ty = 0; ty < 3; ty++) for (let tx = 0; tx < Math.floor(b.w / 40); tx++) {
+      drawRect(b.x + tx * 40 + 4, GROUND_Y - b.h + 10 + ty * 80, 36, 72,
+        (tx + ty + bi) % 2 === 0 ? shadeColor(b.color, 15) : shadeColor(b.color, -10));
+    }
+    ctx.globalAlpha = 1;
+    // Windows — warm-toned shutters, some lit
     for (let row = 0; row < Math.min(3, Math.floor(b.h / 80)); row++) {
-      for (let col = 0; col < Math.min(2, Math.floor(b.w / 70)); col++) {
-        const wx = b.x + 20 + col * 70;
-        const wy = GROUND_Y - b.h + 25 + row * 80;
-        drawRect(wx, wy, 28, 36, '#1a1a2e');
-        drawRect(wx - 3, wy, 3, 36, '#2e7d32');
-        drawRect(wx + 28, wy, 3, 36, '#2e7d32');
-        if ((row + col) % 2 === 0) {
-          ctx.globalAlpha = 0.35;
-          drawRect(wx + 2, wy + 2, 24, 32, '#fff9c4');
+      for (let col = 0; col < Math.min(2, Math.floor(b.w / 80)); col++) {
+        const wx = b.x + 25 + col * 75;
+        const wy = GROUND_Y - b.h + 28 + row * 75;
+        // Window recess
+        drawRect(wx, wy, 26, 34, '#12121e');
+        // Shutters (muted sage green — Roman style)
+        drawRect(wx - 4, wy, 4, 34, '#4a5e4a');
+        drawRect(wx + 26, wy, 4, 34, '#4a5e4a');
+        drawRect(wx - 4, wy, 4, 1, '#5a6e5a');
+        drawRect(wx + 26, wy, 4, 1, '#5a6e5a');
+        // Window sill
+        drawRect(wx - 2, wy + 34, 30, 3, b.trim);
+        // Warm light from some windows
+        if ((row + col + bi) % 3 !== 0) {
+          ctx.globalAlpha = 0.25 + Math.sin(gameTime * 0.01 + bi + row) * 0.06;
+          drawRect(wx + 2, wy + 2, 22, 30, '#ffe8b0');
           ctx.globalAlpha = 1;
         }
       }
     }
   });
-  // Laundry lines between buildings
-  ctx.strokeStyle = '#888';
+
+  // Laundry line between buildings 1 and 2
+  ctx.strokeStyle = '#6a6a6a';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(180, GROUND_Y - 180);
-  ctx.lineTo(390, GROUND_Y - 190);
+  ctx.moveTo(175, GROUND_Y - 175);
+  ctx.lineTo(380, GROUND_Y - 185);
   ctx.stroke();
-  // Clothes
-  const clothes = ['#e53935','#1e88e5','#fff','#ffb300'];
+  // Clothes — subtle sway
+  const clothColors = ['#c62828','#1565c0','#e8e0d0','#e6a020'];
   for (let i = 0; i < 4; i++) {
-    drawRect(200 + i * 45, GROUND_Y - 185 + Math.sin(gameTime*0.02+i)*3, 15, 20, clothes[i]);
+    const cx = 195 + i * 42;
+    const cy = GROUND_Y - 180 + Math.sin(gameTime * 0.018 + i * 1.3) * 2;
+    drawRect(cx, cy, 14, 18, clothColors[i]);
+    drawRect(cx + 1, cy, 12, 2, shadeColor(clothColors[i], -15));
   }
-  // Street lamps
+
+  // Street lamps — ornate Roman style
   [80, 500, 830].forEach(lx => {
-    drawRect(lx, GROUND_Y - 100, 4, 100, '#424242');
-    drawRect(lx - 8, GROUND_Y - 105, 20, 6, '#616161');
-    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.03 + lx * 0.1) * 0.1;
-    ctx.fillStyle = '#ffcc80';
-    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 110, 16, 0, Math.PI * 2); ctx.fill();
+    drawRect(lx, GROUND_Y - 95, 4, 95, '#3a3a3a');
+    drawRect(lx - 1, GROUND_Y - 2, 6, 4, '#444');
+    drawRect(lx - 6, GROUND_Y - 99, 16, 5, '#4a4a4a');
+    drawRect(lx - 4, GROUND_Y - 100, 12, 2, '#555');
+    // Lantern housing
+    drawRect(lx - 4, GROUND_Y - 110, 12, 12, '#4a4a4a');
+    drawRect(lx - 2, GROUND_Y - 108, 8, 8, '#555');
+    // Warm glow
+    ctx.globalAlpha = 0.18 + Math.sin(gameTime * 0.025 + lx * 0.1) * 0.08;
+    ctx.fillStyle = '#ffe0a0';
+    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 104, 18, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
   });
 
-  // Parked Vespa
-  drawRect(650, GROUND_Y - 30, 40, 20, '#1e88e5'); // body
-  drawRect(645, GROUND_Y - 38, 12, 12, '#1565c0'); // handlebar
-  drawRect(640, GROUND_Y - 12, 14, 12, '#424242'); // front wheel
-  drawRect(680, GROUND_Y - 12, 14, 12, '#424242'); // back wheel
-  drawRect(660, GROUND_Y - 42, 4, 8, '#90a4ae'); // mirror
+  // Parked Vespa — more detailed
+  const vx = 650, vy = GROUND_Y;
+  drawRect(vx, vy - 28, 38, 16, '#2a6aaa'); // body
+  drawRect(vx + 2, vy - 30, 34, 4, '#3a7abb'); // top edge
+  drawRect(vx - 4, vy - 34, 10, 10, '#1e5a8e'); // handlebar
+  drawRect(vx - 2, vy - 38, 3, 6, '#78909c'); // mirror
+  drawRect(vx + 32, vy - 24, 8, 4, '#e53935'); // tail light
+  // Wheels
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.arc(vx + 4, vy - 6, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(vx + 34, vy - 6, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#555';
+  ctx.beginPath(); ctx.arc(vx + 4, vy - 6, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(vx + 34, vy - 6, 3, 0, Math.PI * 2); ctx.fill();
 
   // Trash bins
-  drawRect(42, GROUND_Y - 28, 18, 28, '#424242');
-  drawRect(40, GROUND_Y - 30, 22, 4, '#616161');
+  drawRect(42, GROUND_Y - 26, 16, 26, '#3a3a3a');
+  drawRect(40, GROUND_Y - 28, 20, 4, '#4a4a4a');
+  drawRect(41, GROUND_Y - 24, 18, 1, '#2a2a2a');
 
-  // Stray cat (small pixel silhouette, subtle animation)
+  // Stray cat
   const catX = 280, catY = GROUND_Y - 10;
   const catBob = Math.sin(gameTime * 0.02) * 1;
-  drawRect(catX, catY + catBob - 8, 12, 8, '#333'); // body
-  drawRect(catX + 10, catY + catBob - 12, 6, 6, '#333'); // head
-  drawRect(catX + 10, catY + catBob - 15, 2, 4, '#333'); // ear
-  drawRect(catX + 14, catY + catBob - 15, 2, 4, '#333'); // ear
-  drawRect(catX - 4, catY + catBob - 6, 6, 2, '#333'); // tail
-  ctx.globalAlpha = 0.8;
-  drawRect(catX + 12, catY + catBob - 10, 2, 2, '#76ff03'); // eye
+  drawRect(catX, catY + catBob - 8, 12, 8, '#2a2a2a');
+  drawRect(catX + 10, catY + catBob - 12, 6, 6, '#2a2a2a');
+  drawRect(catX + 10, catY + catBob - 15, 2, 4, '#2a2a2a');
+  drawRect(catX + 14, catY + catBob - 15, 2, 4, '#2a2a2a');
+  drawRect(catX - 4, catY + catBob - 6, 6, 2, '#2a2a2a');
+  ctx.globalAlpha = 0.7;
+  drawRect(catX + 12, catY + catBob - 10, 2, 2, '#66bb6a');
   ctx.globalAlpha = 1;
 
-  // Cobblestone hint on ground
-  for (let i = 0; i < 30; i++) {
-    ctx.globalAlpha = 0.15;
-    drawRect(i * 32, GROUND_Y + 5, 28, 12, '#5d4037');
-    ctx.globalAlpha = 1;
+  // Sampietrini cobblestones — staggered pattern
+  for (let row = 0; row < 3; row++) {
+    const offset = row % 2 === 0 ? 0 : 14;
+    for (let i = 0; i < 34; i++) {
+      ctx.globalAlpha = 0.08 + (((i + row) * 7) % 5) * 0.015;
+      drawRect(i * 28 + offset, GROUND_Y + 4 + row * 14, 24, 11, '#4a3e34');
+    }
   }
+  ctx.globalAlpha = 1;
 }
 
 // Down Under Pub - interior
@@ -11551,6 +11771,7 @@ function drawGameOver() {
         helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
         bossDefeated = [false, false, false, false, false];
         lives = 3; firstTime = true;
+        hubStoryShown = false; hubStoryLine = 0;
         state = 'menu';
         resetPlayer();
         bossIntro = false;
@@ -12188,6 +12409,9 @@ function drawVictory() {
       hubCatPetted = false;
       drinkTaken = false;
       drinkBuff = 0;
+      hubStoryShown = false;
+      hubStoryLine = 0;
+      hubStoryCooldown = 0;
       hubVisitInited = false;
       stopVictorySong();
       state = 'menu';
