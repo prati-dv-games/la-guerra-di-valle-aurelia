@@ -10329,9 +10329,9 @@ function drawSabi() {
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // Mobile zoom — camera follows Cicca
-  const sabiZoom = isTouchDevice ? 1.5 : 1;
-  if (sabiZoom > 1) {
+  // Zoom — camera follows Cicca
+  const sabiZoom = isTouchDevice ? 1.5 : 1.3;
+  {
     ctx.save();
     const camX = Math.max(W / (2 * sabiZoom), Math.min(W - W / (2 * sabiZoom), sabiCicca.x));
     const camY = 340;
@@ -10543,7 +10543,7 @@ function drawSabi() {
   sabiMessages = sabiMessages.filter(m => m.timer < 120);
 
   // Restore zoom before drawing UI
-  if (sabiZoom > 1) ctx.restore();
+  ctx.restore();
 
   // === UI text ===
   // Title — floating
