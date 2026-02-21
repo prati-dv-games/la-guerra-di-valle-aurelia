@@ -94,12 +94,12 @@ const inMobileWrapper = (window.self !== window.top);
 // Virtual button definitions
 const touchButtons = {
   // Left side: movement + ultra on top
-  left:    { x: 4,   y: H - 126, w: 120, h: 106, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 128, y: H - 126, w: 120, h: 106, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  left:    { x: 4,   y: H - 146, w: 132, h: 126, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 140, y: H - 146, w: 132, h: 126, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
   ultra:   { x: 4,   y: H - 240, w: 244, h: 96,  key: 'KeyQ', label: 'ULTRA', color: '#ffd700', justPress: true },
   // Right side: jump on top, dodge + ATK at bottom
   jump:    { x: W - 270, y: H - 248, w: 264, h: 98, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
-  dodge:   { x: W - 270, y: H - 140, w: 128, h: 116, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  dodge:   { x: W - 270, y: H - 140, w: 128, h: 116, key: 'KeyX', label: 'DODGE', color: '#2196f3', justPress: true },
   attack:  { x: W - 138, y: H - 140, w: 132, h: 116, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Helpers — centered between left and right controls
   helper1: { x: 310, y: H - 84, w: 62, h: 52, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
