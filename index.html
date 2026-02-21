@@ -8485,7 +8485,7 @@ function startLevel(idx) {
   levelStartTime = gameTime;
   initHazards(idx);
   // Wave configs: L0: 2+2, L1: 2+2+2, L2: 2+3+2, L3: 3+3+2, L4: 3+3+3
-  const WAVE_CONFIGS = [[3,3],[3,3,3],[3,4,3],[4,4,3],[4,4,4]];
+  const WAVE_CONFIGS = [[3,3],[3,3,3],[3,4,3],[4,3,3],[4,4,3]];
   waveConfig = WAVE_CONFIGS[idx] || [3,3];
   currentWave = 0;
 
