@@ -8936,6 +8936,14 @@ function drawVideoPoker(panelY) {
 
       if (revealed && pokerHand[i]) {
         drawCard(cx, cy, pokerHand[i], cardW, cardH);
+        // Subtle border on non-held cards to hint they're tappable
+        if (!pokerHeld[i] && pokerDealAnim === 0) {
+          ctx.globalAlpha = 0.25 + Math.sin(gameTime * 0.1 + i) * 0.15;
+          ctx.strokeStyle = '#ffd700';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cx, cy, cardW, cardH);
+          ctx.globalAlpha = 1;
+        }
         // Hold indicator
         if (pokerHeld[i]) {
           drawRect(cx, cy + cardH + 2, cardW, 18, '#ffd700');
@@ -8970,14 +8978,14 @@ function drawVideoPoker(panelY) {
       const drawBx = cardStartX + totalCardsW / 2 - 95;
       const drawBw = 190;
       const drawHover = mouseX > drawBx && mouseX < drawBx + drawBw && mouseY > drawBtnY && mouseY < drawBtnY + 38;
-      const pulse = 0.85 + Math.sin(gameTime * 0.12) * 0.15;
-      ctx.globalAlpha = pulse;
       drawRect(drawBx, drawBtnY, drawBw, 38, drawHover ? '#e65100' : '#bf360c');
       drawRect(drawBx, drawBtnY, drawBw, 2, '#ff6e40');
-      ctx.globalAlpha = 1;
-      drawText('PESCA [ENTER]', drawBx + drawBw/2, drawBtnY + 25, '#fff', 14, 'center');
+      drawText('PESCA [ENTER]', drawBx + drawBw/2, drawBtnY + 25, '#fff', 13, 'center');
 
-      drawText('Clicca o premi 1-5 per tenere', drawBx + drawBw/2, drawBtnY + 52, '#666', 9, 'center');
+      const hintPulse = 0.5 + Math.sin(gameTime * 0.1) * 0.3;
+      ctx.globalAlpha = hintPulse;
+      drawText('TOCCA LE CARTE PER TENERLE', drawBx + drawBw/2, drawBtnY + 52, '#ffd700', 10, 'center');
+      ctx.globalAlpha = 1;
 
       if ((drawHover && mouseClick) || keysJustPressed['Enter']) {
         for (let i = 0; i < 5; i++) {
