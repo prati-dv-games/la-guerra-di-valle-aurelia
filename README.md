@@ -15,8 +15,8 @@ Choose at game start:
 | Difficulty | Lives | Damage Taken | Enemy HP |
 |------------|-------|--------------|----------|
 | **Easy** | Infinite | -30% | -20% |
-| **Medium** | 3 total | Normal | Normal |
-| **Hard** | 3 total | +10% | +10% |
+| **Medium** | 3 per boss | Normal | Normal |
+| **Hard** | 3 total (no resets) | +10% | +10% |
 
 ### Controls
 

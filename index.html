@@ -10257,6 +10257,7 @@ function updateLevel() {
   if (boss && boss.hp <= 0 && !boss.dead) {
     boss.dead = true;
     bossDefeated[currentLevel] = true;
+    if (difficulty === 'medium') lives = 3; // medium: lives replenish after beating a boss
     // Boss coin drops (physical pickups) — first clear gives big bonus
     const bossCoins = isReplayLevel ? 15 + currentLevel * 10 : 50 + currentLevel * 35;
     spawnCoinPickup(boss.x, boss.y - 30, bossCoins);
