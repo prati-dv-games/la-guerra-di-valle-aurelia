@@ -2,7 +2,7 @@
 
 ## Architecture
 
-- **Single-file game**: everything lives in `index.html` (~9500 lines of JS inside a `<script>` tag)
+- **Single-file game**: everything lives in `index.html` (~10800 lines of JS inside a `<script>` tag)
 - **Canvas**: 900x550, scaled responsively to viewport
 - **Music**: Web Audio API oscillator-based synthesizer, no audio files
 - **Video**: `prati_freestyle.mp4` — freestyle music video by Cicca & Daniele

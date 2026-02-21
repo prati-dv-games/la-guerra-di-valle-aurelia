@@ -104,8 +104,8 @@ Press **B** from the hub (Vanni's Bar) to enter the casino. Two mini-games are a
 
 | Game | NPC | Rules |
 |------|-----|-------|
-| **Video Poker** (Jacks or Better) | Andreino Volpi | Deal 5 cards, hold the ones you want, draw replacements. Jacks or Better pays 1x up to Royal Flush at 250x. Bet 10-100 coins. |
-| **Slot Machine** | Panda | Spin 3 reels. Three-of-a-kind pays big, pairs pay small. Bet 10-50 coins. |
+| **Video Poker** (Jacks or Better) | Andreino Volpi | Deal 5 cards, hold the ones you want, draw replacements. Jacks or Better pays 1x up to Royal Flush at 250x. Bet 5-100 coins. |
+| **Slot Machine** | Panda | Spin 3 reels. Three-of-a-kind pays big, pairs pay small. Bet 5-50 coins. |
 
 Casino controls:
 
@@ -130,7 +130,7 @@ Type these on the credits screen:
 |------|--------|
 | `CONTE` | Unlock everything — all weapons, max upgrades, all helpers tier 3 |
 | `LUDO` | +100 coins |
-| `FREESTYLE` | Play the Cicca & Daniele freestyle music video |
+| `FREE` | Play the Cicca & Daniele freestyle music video |
 
 ## How to Share
 
@@ -149,7 +149,7 @@ Send `index.html` (+ `prati_freestyle.mp4` for the video) via WhatsApp, Telegram
 
 ## Tech
 
-- Single `index.html` file (~9500 lines)
+- Single `index.html` file (~10800 lines)
 - HTML5 Canvas (900x550) with responsive scaling
 - Web Audio API synthesizer for music (no audio files)
 - Mobile touch controls with virtual buttons
