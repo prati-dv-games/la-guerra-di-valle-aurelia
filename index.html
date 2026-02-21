@@ -58,16 +58,31 @@ window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 let mouseX = 0, mouseY = 0, mouseClick = false;
 canvas.addEventListener('mousemove', e => {
-  const r = canvas.getBoundingClientRect();
+  const r = getCanvasContentRect();
   mouseX = (e.clientX - r.left) * (W / r.width);
   mouseY = (e.clientY - r.top) * (H / r.height);
 });
 canvas.addEventListener('click', e => {
-  const r = canvas.getBoundingClientRect();
+  const r = getCanvasContentRect();
   mouseX = (e.clientX - r.left) * (W / r.width);
   mouseY = (e.clientY - r.top) * (H / r.height);
   mouseClick = true;
 });
+
+// Account for object-fit: contain letterboxing when converting coordinates
+function getCanvasContentRect() {
+  const r = canvas.getBoundingClientRect();
+  const canvasAspect = W / H;
+  const elemAspect = r.width / r.height;
+  if (elemAspect > canvasAspect) {
+    const rW = r.height * canvasAspect;
+    return { left: r.left + (r.width - rW) / 2, top: r.top, width: rW, height: r.height };
+  } else {
+    const rH = r.width / canvasAspect;
+    return { left: r.left, top: r.top + (r.height - rH) / 2, width: r.width, height: rH };
+  }
+}
+
 // Touch device detection
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 const mobileMenuStates = new Set([
@@ -178,7 +193,7 @@ function handleTouchMove(tx, ty, id) {
 if (!inMobileWrapper) {
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
-  const r = canvas.getBoundingClientRect();
+  const r = getCanvasContentRect();
   for (const t of e.changedTouches) {
     const tx = (t.clientX - r.left) * (W / r.width);
     const ty = (t.clientY - r.top) * (H / r.height);
@@ -188,7 +203,7 @@ canvas.addEventListener('touchstart', e => {
 }, { passive: false });
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
-  const r = canvas.getBoundingClientRect();
+  const r = getCanvasContentRect();
   for (const t of e.changedTouches) {
     const tx = (t.clientX - r.left) * (W / r.width);
     const ty = (t.clientY - r.top) * (H / r.height);
