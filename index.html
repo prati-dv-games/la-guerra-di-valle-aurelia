@@ -2399,35 +2399,45 @@ function drawCiccioRuver(x, y, b) {
 }
 
 function drawPisellino(x, y, b) {
-  // Ghost-like, tall and skinny
+  // Ghost-like, tall and skinny — drawn at original size then scaled 1.5x
   const ghostAlpha = 0.85 + Math.sin(gameTime * 0.05) * 0.15;
   ctx.globalAlpha *= ghostAlpha;
+  const sc = 1.5;
+  const ow = 38, oh = 72; // original dimensions
+  // Center the scaled drawing on the hitbox
+  const cx = x + b.w / 2, cy = y + b.h;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(sc, sc);
+  ctx.translate(-ow / 2, -oh);
 
   // Extra tall, skinny body
-  drawRect(x + 8, y + 22, b.w - 16, b.h - 22, '#37474f');
+  drawRect(8, 22, ow - 16, oh - 22, '#37474f');
   // Skinny legs
-  drawRect(x + 10, y + b.h - 18, 5, 18, '#263238');
-  drawRect(x + b.w - 15, y + b.h - 18, 5, 18, '#263238');
+  drawRect(10, oh - 18, 5, 18, '#263238');
+  drawRect(ow - 15, oh - 18, 5, 18, '#263238');
   // Head - pale
-  drawRect(x + 6, y, b.w - 12, 24, '#cfd8dc');
+  drawRect(6, 0, ow - 12, 24, '#cfd8dc');
   // Dark eyes
-  drawRect(x + 10, y + 8, 6, 6, '#111');
-  drawRect(x + b.w - 16, y + 8, 6, 6, '#111');
-  drawRect(x + 12, y + 10, 2, 2, '#f44336');
-  drawRect(x + b.w - 14, y + 10, 2, 2, '#f44336');
+  drawRect(10, 8, 6, 6, '#111');
+  drawRect(ow - 16, 8, 6, 6, '#111');
+  drawRect(12, 10, 2, 2, '#f44336');
+  drawRect(ow - 14, 10, 2, 2, '#f44336');
   // Thin mouth - sinister grin
-  drawRect(x + 10, y + 18, b.w - 20, 2, '#b71c1c');
+  drawRect(10, 18, ow - 20, 2, '#b71c1c');
   // Hood
-  drawRect(x + 2, y - 4, b.w - 4, 10, '#263238');
-  drawRect(x, y - 2, 6, 14, '#263238');
-  drawRect(x + b.w - 6, y - 2, 6, 14, '#263238');
+  drawRect(2, -4, ow - 4, 10, '#263238');
+  drawRect(0, -2, 6, 14, '#263238');
+  drawRect(ow - 6, -2, 6, 14, '#263238');
 
-  // Moped nearby
+  ctx.restore();
+
+  // Moped nearby (drawn at world scale, not character scale)
   if (b.onMoped) {
-    drawRect(b.x - 30, b.y - 20, 60, 15, '#616161');
-    drawRect(b.x - 35, b.y - 10, 12, 12, '#333');
-    drawRect(b.x + 23, b.y - 10, 12, 12, '#333');
-    drawRect(b.x - 20, b.y - 30, 8, 15, '#757575');
+    drawRect(b.x - 45, b.y - 30, 90, 22, '#616161');
+    drawRect(b.x - 52, b.y - 15, 18, 18, '#333');
+    drawRect(b.x + 34, b.y - 15, 18, 18, '#333');
+    drawRect(b.x - 30, b.y - 45, 12, 22, '#757575');
   }
 }
 
@@ -3781,7 +3791,7 @@ function createBoss(levelIdx) {
 
   if (levelIdx === 2) { b.h = 80; b.w = 48; } // Dale is tall
   if (levelIdx === 3) { b.w = 52; } // Ciccio is wider
-  if (levelIdx === 4) { b.h = 72; b.w = 38; } // Pisellino is tall and thin
+  if (levelIdx === 4) { b.h = 108; b.w = 57; b.drawScale = 1.5; } // Pisellino 50% bigger
 
   return b;
 }
@@ -6289,6 +6299,27 @@ function drawMovesScreen() {
       mouseClick = false;
       return;
     }
+  }
+
+  // Restart game button (always visible)
+  const rgW = 180, rgH = 28;
+  const rgX = W - rgW - 20, rgY = 8;
+  const rgHover = mouseX >= rgX && mouseX <= rgX + rgW && mouseY >= rgY && mouseY <= rgY + rgH;
+  drawRect(rgX, rgY, rgW, rgH, rgHover ? '#b71c1c' : 'rgba(183,28,28,0.3)');
+  drawText('RICOMINCIA DA CAPO', rgX + rgW/2, rgY + 20, rgHover ? '#fff' : '#ef5350', 11, 'center');
+  if (rgHover && mouseClick) {
+    movesScreenOpen = false;
+    coins = 0; weapons = [starterWeapons[0]]; weaponTier = 0;
+    healthTier = 0; dodgeTier = 0; speedTier = 0;
+    player.maxHp = 120; player.maxStamina = 100; player.speed = 4.0;
+    player.upgrades = [];
+    helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
+    bossDefeated = [false, false, false, false, false];
+    lives = 3; firstTime = true;
+    state = 'menu';
+    resetPlayer();
+    mouseClick = false;
+    return;
   }
 
   // Close on TAB, P, ESC, or tap
