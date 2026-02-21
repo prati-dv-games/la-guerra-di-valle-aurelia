@@ -86,21 +86,21 @@ function getCanvasContentRect() {
 // Touch device detection
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 const mobileMenuStates = new Set([
-  'menu', 'shop', 'upgrade', 'hub', 'moves', 'tutorial'
+  'menu', 'upgrade', 'hub', 'moves', 'tutorial'
 ]);
 // When inside mobile.html iframe, the HTML overlay handles all controls — disable canvas touch buttons
 const inMobileWrapper = (window.self !== window.top);
 
 // Virtual button definitions
 const touchButtons = {
-  // Left side: movement + jump on top
-  left:    { x: 4,   y: H - 120, w: 110, h: 98, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 118, y: H - 120, w: 110, h: 98, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  jump:    { x: 4,   y: H - 224, w: 224, h: 90, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
-  // Right side: dodge + ultra on top, ATK at bottom
-  dodge:   { x: W - 232, y: H - 214, w: 114, h: 82, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  ultra:   { x: W - 114, y: H - 214, w: 112, h: 82, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
-  attack:  { x: W - 200, y: H - 120, w: 140, h: 98, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  // Left side: movement + ultra on top
+  left:    { x: 4,   y: H - 120, w: 110, h: 98,  key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 118, y: H - 120, w: 110, h: 98,  key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  ultra:   { x: 4,   y: H - 228, w: 224, h: 96,  key: 'KeyQ', label: 'ULTRA', color: '#ffd700', justPress: true },
+  // Right side: jump on top, dodge + ATK at bottom
+  jump:    { x: W - 270, y: H - 248, w: 264, h: 98, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
+  dodge:   { x: W - 270, y: H - 140, w: 128, h: 116, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  attack:  { x: W - 138, y: H - 140, w: 132, h: 116, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Helpers — bottom center between left and right controls
   helper1: { x: 270, y: H - 80, w: 55, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
   helper2: { x: 330, y: H - 80, w: 55, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
@@ -135,7 +135,8 @@ function getTouchButtonsForState() {
   if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'enter'];
   if (state === 'sabi') return ['left', 'right', 'attack', 'pause'];
   if (state === 'casino') return ['enter', 'tab', 'pause'];
-  if (state === 'hub' || state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
+  if (state === 'hub') return ['enter'];
+  if (state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
   if (state === 'dialogue') return ['enter'];
   if (state === 'menu' || state === 'difficultySelect' || state === 'weaponSelect' || state === 'helperSelect') return ['enter'];
   if (state === 'gameover' || state === 'victory') return ['enter'];
@@ -1683,7 +1684,7 @@ function drawRect(x, y, w, h, color) {
 function drawText(text, x, y, color, size, align) {
   ctx.fillStyle = color || '#fff';
   let s = size || 16;
-  if (isTouchDevice && mobileMenuStates.has(state) && s < 16) s = Math.round(s * 1.4);
+  if (isTouchDevice && mobileMenuStates.has(state) && s < 16) s = Math.round(s * 1.15);
   ctx.font = s + 'px monospace';
   ctx.textAlign = align || 'left';
   ctx.fillText(text, x, y);
