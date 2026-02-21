@@ -1174,11 +1174,11 @@ let helperSelectTimer = 0;
 
 // Weapon upgrade tier (0-3)
 let weaponTier = 0;
-const WEAPON_UPGRADE_COSTS = [75, 150, 250];
+const WEAPON_UPGRADE_COSTS = [95, 190, 380];
 
 // Player stat upgrade tiers (0-3 each), purchased in shop tab 3
 let healthTier = 0, dodgeTier = 0, speedTier = 0;
-const STAT_UPGRADE_COSTS = [50, 125, 225];
+const STAT_UPGRADE_COSTS = [65, 160, 320];
 const HP_VALUES = [120, 140, 165, 195];
 const JUMP_FORCES = [-13.0, -14.2, -15.4, -16.5];
 const DODGE_COOLDOWNS = [48, 40, 33, 26];
@@ -1285,29 +1285,29 @@ const SLOT_BET_MIN = 5, SLOT_BET_MAX = 50, SLOT_BET_STEP = 5;
 
 
 const helpers = [
-  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 30,
+  { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 50, desc: 'Stun +50%, area piu\' grande' },
-      { cost: 100, desc: 'Spacca poise: 3x danno poise' },
-      { cost: 175, desc: 'Raduno: nemici stunnati -30% poise' }
+      { cost: 65, desc: 'Stun +50%, area piu\' grande' },
+      { cost: 125, desc: 'Spacca poise: 3x danno poise' },
+      { cost: 250, desc: 'Raduno: nemici stunnati -30% poise' }
     ]},
-  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 30,
+  { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 50, desc: 'Danno +50%, attacca piu\' spesso' },
-      { cost: 100, desc: 'Combo assist: attacca staggerati' },
-      { cost: 175, desc: 'Grido: +30% danno per 4s ogni 30s' }
+      { cost: 65, desc: 'Danno +50%, attacca piu\' spesso' },
+      { cost: 125, desc: 'Combo assist: attacca staggerati' },
+      { cost: 250, desc: 'Grido: +30% danno per 4s ogni 30s' }
     ]},
-  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#ff8a65', icon: 'C', tier: 0, unlocked: false, unlockCost: 30,
+  { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#ff8a65', icon: 'C', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 50, desc: 'Cura +50%' },
-      { cost: 100, desc: 'Buff attacco: +20% danno per 5s' },
-      { cost: 175, desc: 'Revive: auto-cura se muori (1x)' }
+      { cost: 65, desc: 'Cura +50%' },
+      { cost: 125, desc: 'Buff attacco: +20% danno per 5s' },
+      { cost: 250, desc: 'Revive: auto-cura se muori (1x)' }
     ]},
-  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 30,
+  { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 50, desc: 'Durata speed +50%' },
-      { cost: 100, desc: 'Speed +20% velocita\' attacco' },
-      { cost: 175, desc: 'Scia: lasci danno quando boost' }
+      { cost: 65, desc: 'Durata speed +50%' },
+      { cost: 125, desc: 'Speed +20% velocita\' attacco' },
+      { cost: 250, desc: 'Scia: lasci danno quando boost' }
     ]},
 ];
 let helperReviveUsed = false; // Cicca tier 3 one-time per level
