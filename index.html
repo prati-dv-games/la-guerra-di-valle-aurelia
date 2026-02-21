@@ -5334,8 +5334,8 @@ function drawDifficultySelect() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  drawText('SCEGLI LA DIFFICOLTA\'', W/2, 60, '#e94560', 24, 'center');
-  drawText('Puoi sempre cambiare dopo', W/2, 82, '#666', 10, 'center');
+  drawText('SCEGLI LA DIFFICOLTA\'', W/2, 45, '#e94560', 24, 'center');
+  drawText('Puoi sempre cambiare dopo', W/2, 68, '#666', 10, 'center');
 
   diffSelectTimer++;
   if (diffSelectTimer > 15) diffSelectReady = true;
@@ -5356,12 +5356,17 @@ function drawDifficultySelect() {
   if (keysJustPressed['Digit2']) { diffSelectIndex = 1; playSFX('hit'); }
   if (keysJustPressed['Digit3']) { diffSelectIndex = 2; playSFX('hit'); }
 
+  const cardW = 230, cardH = 340, gap = 25;
+  const totalW = 3 * cardW + 2 * gap;
+  const startX = (W - totalW) / 2;
+  const startY = 85;
+
   diffs.forEach((d, i) => {
-    const cx = 120 + i * 240;
+    const cx = startX + i * (cardW + gap);
     const selected = (i === diffSelectIndex);
 
     // Click detection
-    if (mouseX >= cx && mouseX <= cx + 200 && mouseY >= 110 && mouseY <= 380 && mouseClick) {
+    if (mouseX >= cx && mouseX <= cx + cardW && mouseY >= startY && mouseY <= startY + cardH && mouseClick) {
       diffSelectIndex = i;
       playSFX('hit');
     }
@@ -5369,62 +5374,65 @@ function drawDifficultySelect() {
     // Card
     const cardAlpha = selected ? 1 : 0.5;
     ctx.globalAlpha = cardAlpha;
-    drawRect(cx, 110, 200, 270, selected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.4)');
-    drawRect(cx, 110, 200, 3, d.color);
+    drawRect(cx, startY, cardW, cardH, selected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.4)');
+    drawRect(cx, startY, cardW, 3, d.color);
     if (selected) {
-      drawRect(cx, 377, 200, 3, d.color);
-      drawRect(cx, 110, 3, 270, d.color);
-      drawRect(cx + 197, 110, 3, 270, d.color);
+      drawRect(cx, startY + cardH - 3, cardW, 3, d.color);
+      drawRect(cx, startY, 3, cardH, d.color);
+      drawRect(cx + cardW - 3, startY, 3, cardH, d.color);
     }
 
     // Icon
-    drawText(d.icon, cx + 100, 170, d.color, 32, 'center');
+    drawText(d.icon, cx + cardW/2, startY + 60, d.color, 32, 'center');
 
     // Name
-    drawText(d.name, cx + 100, 210, d.color, 18, 'center');
+    drawText(d.name, cx + cardW/2, startY + 100, d.color, 18, 'center');
 
     // Description
-    drawText(d.desc, cx + 100, 240, '#ccc', 10, 'center');
+    drawText(d.desc, cx + cardW/2, startY + 130, '#ccc', 10, 'center');
 
     // Detail lines (word wrap manually)
     const words = d.detail.split(' ');
     let line1 = '', line2 = '';
     words.forEach(w => {
-      if ((line1 + w).length < 28) line1 += (line1 ? ' ' : '') + w;
+      if ((line1 + w).length < 30) line1 += (line1 ? ' ' : '') + w;
       else line2 += (line2 ? ' ' : '') + w;
     });
-    drawText(line1, cx + 100, 270, '#888', 9, 'center');
-    if (line2) drawText(line2, cx + 100, 284, '#888', 9, 'center');
+    drawText(line1, cx + cardW/2, startY + 160, '#888', 9, 'center');
+    if (line2) drawText(line2, cx + cardW/2, startY + 174, '#888', 9, 'center');
 
     // Difficulty-specific info
     if (i === 0) {
-      drawText('Vite: \u221E', cx + 100, 310, '#4caf50', 11, 'center');
-      drawText('Nemici: -30% HP', cx + 100, 326, '#4caf50', 10, 'center');
-      drawText('Danni subiti: -40%', cx + 100, 342, '#4caf50', 10, 'center');
+      drawText('Vite: \u221E', cx + cardW/2, startY + 210, '#4caf50', 11, 'center');
+      drawText('Nemici: -30% HP', cx + cardW/2, startY + 228, '#4caf50', 10, 'center');
+      drawText('Danni subiti: -40%', cx + cardW/2, startY + 246, '#4caf50', 10, 'center');
     } else if (i === 1) {
-      drawText('Vite: 3 per boss', cx + 100, 310, '#ff9800', 11, 'center');
-      drawText('Nemici: normali', cx + 100, 326, '#ff9800', 10, 'center');
-      drawText('Danni subiti: normali', cx + 100, 342, '#ff9800', 10, 'center');
+      drawText('Vite: 3 per boss', cx + cardW/2, startY + 210, '#ff9800', 11, 'center');
+      drawText('Nemici: normali', cx + cardW/2, startY + 228, '#ff9800', 10, 'center');
+      drawText('Danni subiti: normali', cx + cardW/2, startY + 246, '#ff9800', 10, 'center');
     } else {
-      drawText('Vite: 3 in TOTALE', cx + 100, 310, '#f44336', 11, 'center');
-      drawText('Nemici: normali', cx + 100, 326, '#f44336', 10, 'center');
-      drawText('Danni subiti: normali', cx + 100, 342, '#f44336', 10, 'center');
+      drawText('Vite: 3 in TOTALE', cx + cardW/2, startY + 210, '#f44336', 11, 'center');
+      drawText('Nemici: normali', cx + cardW/2, startY + 228, '#f44336', 10, 'center');
+      drawText('Danni subiti: normali', cx + cardW/2, startY + 246, '#f44336', 10, 'center');
     }
 
     ctx.globalAlpha = 1;
   });
 
   // Key hint
-  drawText('Frecce/1-2-3 per scegliere', W/2, 400, '#555', 10, 'center');
+  drawText('Frecce/1-2-3 per scegliere', W/2, startY + cardH + 18, '#555', 10, 'center');
 
   // Confirm button
-  const confirmW = 220, confirmH = 36;
-  const confirmX = W/2 - confirmW/2, confirmY = 420;
+  const confirmW = 220, confirmH = 40;
+  const confirmX = W/2 - confirmW/2, confirmY = startY + cardH + 30;
   const confirmHover = mouseX >= confirmX && mouseX <= confirmX + confirmW && mouseY >= confirmY && mouseY <= confirmY + confirmH;
   const selColor = diffs[diffSelectIndex].color;
+  const pulse = Math.sin(gameTime * 0.08) * 0.3 + 0.7;
+  ctx.globalAlpha = pulse;
   drawRect(confirmX, confirmY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.1)');
-  drawRect(confirmX, confirmY, confirmW, 2, selColor);
-  drawText('CONFERMA: ' + diffs[diffSelectIndex].name, W/2, confirmY + 25, '#fff', 14, 'center');
+  drawRect(confirmX, confirmY, confirmW, 3, selColor);
+  drawText('CONFERMA: ' + diffs[diffSelectIndex].name, W/2, confirmY + 27, '#fff', 14, 'center');
+  ctx.globalAlpha = 1;
 
   const confirmTap = diffSelectReady && confirmHover && mouseClick;
   if (diffSelectReady && (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || confirmTap)) {
@@ -5844,13 +5852,13 @@ function drawWeaponSelect() {
   if (weaponSelectTimer > 20) weaponSelectReady = true;
 
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, '#1a1a2e');
-  grad.addColorStop(1, '#0d0d1a');
+  grad.addColorStop(0, '#0d0d1a');
+  grad.addColorStop(1, '#1a1a2e');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  drawText('SCEGLI LA TUA ARMA', W/2, 40, '#ffd700', 24, 'center');
-  drawText('"Conte, da Vanni c\'e\' rimasto \'sto ben di Dio..."', W/2, 65, '#aaa', 11, 'center');
+  drawText('SCEGLI LA TUA ARMA', W/2, 45, '#ffd700', 24, 'center');
+  drawText('"Conte, da Vanni c\'e\' rimasto \'sto ben di Dio..."', W/2, 68, '#aaa', 11, 'center');
 
   // Navigate with arrows/WASD or 1-4
   if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) {
@@ -5866,7 +5874,7 @@ function drawWeaponSelect() {
   if (keysJustPressed['Digit3']) { weaponSelectIndex = 2; playSFX('hit'); }
   if (keysJustPressed['Digit4']) { weaponSelectIndex = 3; playSFX('hit'); }
 
-  const cardW = 190, cardH = 320, gap = 15;
+  const cardW = 190, cardH = 340, gap = 15;
   const totalW = 4 * cardW + 3 * gap;
   const startX = (W - totalW) / 2;
   const startY = 85;
@@ -5883,22 +5891,14 @@ function drawWeaponSelect() {
     }
 
     // Card background
-    const cardColor = selected ? '#2a2a4a' : '#1a1a2e';
-    drawRect(cx, cy, cardW, cardH, cardColor);
-    // Selection border
+    ctx.globalAlpha = selected ? 1 : 0.5;
+    drawRect(cx, cy, cardW, cardH, selected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.4)');
+    drawRect(cx, cy, cardW, 3, sw.color);
     if (selected) {
-      ctx.strokeStyle = sw.color;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(cx, cy, cardW, cardH);
-      ctx.lineWidth = 1;
-    } else {
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(cx, cy, cardW, cardH);
+      drawRect(cx, cy + cardH - 3, cardW, 3, sw.color);
+      drawRect(cx, cy, 3, cardH, sw.color);
+      drawRect(cx + cardW - 3, cy, 3, cardH, sw.color);
     }
-
-    // Color accent bar
-    drawRect(cx, cy, cardW, 4, sw.color);
 
     // Number key hint
     drawText((i+1) + '', cx + 12, cy + 22, selected ? sw.color : '#555', 14);
@@ -5908,10 +5908,7 @@ function drawWeaponSelect() {
 
     // Weapon icon/visual
     const iconY = cy + 85;
-    ctx.save();
-    ctx.globalAlpha = selected ? 1 : 0.5;
     drawWeaponIcon(cx + cardW/2, iconY, sw, selected);
-    ctx.restore();
 
     // Type label
     const types = ['VELOCE', 'BILANCIATO', 'PESANTE', 'RANGED'];
@@ -5931,19 +5928,23 @@ function drawWeaponSelect() {
 
     // Description
     drawText(sw.desc, cx + cardW/2, cy + cardH - 20, selected ? '#ccc' : '#555', 8, 'center');
+    ctx.globalAlpha = 1;
   }
 
-  // Confirm button (tappable on mobile)
-  const confirmBtnW = 200, confirmBtnH = 36;
-  const confirmBtnX = W/2 - confirmBtnW/2, confirmBtnY = H - 55;
-  const confirmHover = mouseX >= confirmBtnX && mouseX <= confirmBtnX + confirmBtnW && mouseY >= confirmBtnY && mouseY <= confirmBtnY + confirmBtnH;
+  // Key hint
+  drawText('Frecce/1-4 per scegliere', W/2, startY + cardH + 18, '#555', 10, 'center');
+
+  // Confirm button
+  const confirmW = 220, confirmH = 40;
+  const confirmX = W/2 - confirmW/2, confirmY = startY + cardH + 30;
+  const confirmHover = mouseX >= confirmX && mouseX <= confirmX + confirmW && mouseY >= confirmY && mouseY <= confirmY + confirmH;
+  const selColor = starterWeapons[weaponSelectIndex].color;
   const pulse = Math.sin(gameTime * 0.08) * 0.3 + 0.7;
   ctx.globalAlpha = pulse;
-  drawRect(confirmBtnX, confirmBtnY, confirmBtnW, confirmBtnH, confirmHover ? '#ffd700' : 'rgba(255,215,0,0.3)');
-  drawRect(confirmBtnX, confirmBtnY, confirmBtnW, 3, '#ffd700');
-  drawText('CONFERMA', W/2, confirmBtnY + 24, confirmHover ? '#1a1a2e' : '#ffd700', 16, 'center');
+  drawRect(confirmX, confirmY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.1)');
+  drawRect(confirmX, confirmY, confirmW, 3, selColor);
+  drawText('CONFERMA', W/2, confirmY + 27, '#fff', 14, 'center');
   ctx.globalAlpha = 1;
-  drawText('Frecce/1-4 = Seleziona', W/2, H - 10, '#666', 10, 'center');
 
   // Confirm selection (keyboard, or tap confirm button)
   const confirmTap = weaponSelectReady && confirmHover && mouseClick;
@@ -5958,7 +5959,7 @@ function drawWeaponSelect() {
     helperSelectIndex = 0;
     helperSelectReady = false;
     helperSelectTimer = 0;
-    spawnParticles(W/2, H/2, starterWeapons[weaponSelectIndex].color, 25, 6);
+    spawnParticles(W/2, H/2, selColor, 25, 6);
     playSFX('coin');
   }
 
@@ -5966,14 +5967,17 @@ function drawWeaponSelect() {
 }
 
 function drawHelperSelect() {
-  ctx.fillStyle = '#0d0d1a';
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0d0d1a');
+  grad.addColorStop(1, '#1a1a2e');
+  ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
   helperSelectTimer++;
   if (helperSelectTimer > 15) helperSelectReady = true;
 
-  drawText('SCEGLI IL TUO ALLEATO', W/2, 40, '#e040fb', 22, 'center');
-  drawText('Gli altri si sbloccano dall\'armeria di Vanni', W/2, 60, '#888', 10, 'center');
+  drawText('SCEGLI IL TUO ALLEATO', W/2, 45, '#e040fb', 24, 'center');
+  drawText('Gli altri si sbloccano dall\'armeria di Vanni', W/2, 68, '#888', 10, 'center');
 
   // Navigate
   if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) {
@@ -5987,67 +5991,75 @@ function drawHelperSelect() {
   if (keysJustPressed['Digit3']) { helperSelectIndex = 2; playSFX('hit'); }
   if (keysJustPressed['Digit4']) { helperSelectIndex = 3; playSFX('hit'); }
 
+  const cardW = 190, cardH = 340, gap = 15;
+  const totalW = 4 * cardW + 3 * gap;
+  const startX = (W - totalW) / 2;
+  const startY = 85;
+
   for (let i = 0; i < 4; i++) {
     const h = helpers[i];
-    const cx = 60 + i * 205;
-    const cy = 80;
-    const cw = 190, ch = 280;
-    const isHover = mouseX > cx && mouseX < cx + cw && mouseY > cy && mouseY < cy + ch;
+    const cx = startX + i * (cardW + gap);
+    const cy = startY;
+    const isHover = mouseX > cx && mouseX < cx + cardW && mouseY > cy && mouseY < cy + cardH;
     const selected = (i === helperSelectIndex);
 
-    if (isHover && (mouseX !== 0 || mouseY !== 0)) helperSelectIndex = i;
-
-    const bg = selected ? 'rgba(224,64,251,0.15)' : 'rgba(255,255,255,0.04)';
-    drawRect(cx, cy, cw, ch, bg);
-    drawRect(cx, cy, cw, 3, h.color);
-
-    if (selected) {
-      const pulse = 0.5 + Math.sin(gameTime * 0.08) * 0.5;
-      ctx.strokeStyle = h.color;
-      ctx.lineWidth = 2 + pulse;
-      ctx.strokeRect(cx - 2, cy - 2, cw + 4, ch + 4);
-      ctx.lineWidth = 1;
-    }
-
-    // Icon
-    drawRect(cx + cw/2 - 25, cy + 25, 50, 50, 'rgba(0,0,0,0.5)');
-    drawText(h.icon, cx + cw/2, cy + 60, h.color, 32, 'center');
-
-    // Name
-    drawText(h.name, cx + cw/2, cy + 100, '#fff', 16, 'center');
-    drawText('[' + (i+1) + ']', cx + cw/2, cy + 116, '#666', 9, 'center');
-
-    // Description
-    drawText(h.desc, cx + cw/2, cy + 140, '#aaa', 10, 'center');
-
-    // Tier info
-    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cw/2, cy + 170, '#888', 9, 'center');
-
-    // Tier upgrades preview
-    drawText('Potenziamenti:', cx + cw/2, cy + 200, '#666', 8, 'center');
-    for (let t = 0; t < 3; t++) {
-      drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, cx + cw/2, cy + 218 + t * 16, '#555', 7, 'center');
-    }
-
-    // Click to select
     if (isHover && mouseClick && helperSelectReady) {
       helperSelectIndex = i;
     }
+
+    ctx.globalAlpha = selected ? 1 : 0.5;
+    drawRect(cx, cy, cardW, cardH, selected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.4)');
+    drawRect(cx, cy, cardW, 3, h.color);
+    if (selected) {
+      drawRect(cx, cy + cardH - 3, cardW, 3, h.color);
+      drawRect(cx, cy, 3, cardH, h.color);
+      drawRect(cx + cardW - 3, cy, 3, cardH, h.color);
+    }
+
+    // Number key hint
+    drawText((i+1) + '', cx + 12, cy + 22, selected ? h.color : '#555', 14);
+
+    // Icon
+    drawRect(cx + cardW/2 - 25, cy + 35, 50, 50, 'rgba(0,0,0,0.5)');
+    drawText(h.icon, cx + cardW/2, cy + 70, h.color, 32, 'center');
+
+    // Name
+    drawText(h.name, cx + cardW/2, cy + 110, '#fff', 16, 'center');
+
+    // Description
+    drawText(h.desc, cx + cardW/2, cy + 140, '#aaa', 10, 'center');
+
+    // Tier info
+    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 170, '#888', 9, 'center');
+
+    // Tier upgrades preview
+    drawText('Potenziamenti:', cx + cardW/2, cy + 200, '#666', 9, 'center');
+    for (let t = 0; t < 3; t++) {
+      drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, cx + cardW/2, cy + 220 + t * 18, '#555', 8, 'center');
+    }
+
+    ctx.globalAlpha = 1;
   }
 
-  // Instructions + Confirm button
-  drawText('Frecce/1-4 = Seleziona', W/2, H - 65, '#666', 10, 'center');
+  // Key hint
+  drawText('Frecce/1-4 per scegliere', W/2, startY + cardH + 18, '#555', 10, 'center');
 
-  const confirmX = W/2 - 100, confirmY = H - 52;
-  const confirmHover = mouseX > confirmX && mouseX < confirmX + 200 && mouseY > confirmY && mouseY < confirmY + 36;
-  drawRect(confirmX, confirmY, 200, 36, helperSelectReady ? (confirmHover ? '#e040fb' : 'rgba(224,64,251,0.4)') : '#333');
-  drawRect(confirmX, confirmY, 200, 2, '#e040fb');
-  drawText(helperSelectReady ? 'CONFERMA [ENTER]' : '...', W/2, confirmY + 24, helperSelectReady ? '#fff' : '#555', 14, 'center');
+  // Confirm button
+  const confirmW = 220, confirmH = 40;
+  const confirmBtnX = W/2 - confirmW/2, confirmBtnY = startY + cardH + 30;
+  const confirmHover = mouseX > confirmBtnX && mouseX < confirmBtnX + confirmW && mouseY > confirmBtnY && mouseY < confirmBtnY + confirmH;
+  const selColor = helpers[helperSelectIndex].color;
+  const pulse = Math.sin(gameTime * 0.08) * 0.3 + 0.7;
+  ctx.globalAlpha = pulse;
+  drawRect(confirmBtnX, confirmBtnY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.1)');
+  drawRect(confirmBtnX, confirmBtnY, confirmW, 3, selColor);
+  drawText('CONFERMA', W/2, confirmBtnY + 27, '#fff', 14, 'center');
+  ctx.globalAlpha = 1;
 
   const confirmTap = helperSelectReady && confirmHover && mouseClick;
   if (helperSelectReady && (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || confirmTap)) {
     // Unlock the chosen helper for free
-    helpers.forEach((h, idx) => { h.unlocked = (idx === helperSelectIndex); });
+    helpers.forEach((hlp, idx) => { hlp.unlocked = (idx === helperSelectIndex); });
     // Go to tutorial
     state = 'tutorial';
     resetPlayer();
