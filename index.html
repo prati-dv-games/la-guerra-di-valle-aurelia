@@ -93,14 +93,14 @@ const inMobileWrapper = (window.self !== window.top);
 
 // Virtual button definitions
 const touchButtons = {
-  // Left side: movement + Q (ultra) on top
+  // Left side: movement + jump on top
   left:    { x: 4,   y: H - 120, w: 110, h: 98, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
   right:   { x: 118, y: H - 120, w: 110, h: 98, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  ultra:   { x: 16,  y: H - 194, w: 110, h: 74, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
-  // Right side: X and W on top, ATK at bottom
-  dodge:   { x: W - 206, y: H - 194, w: 100, h: 74, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
-  jump:    { x: W - 102, y: H - 194, w: 100, h: 74, key: 'KeyW', label: 'W', color: '#4caf50', justPress: false },
-  attack:  { x: W - 170, y: H - 106, w: 106, h: 84, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
+  jump:    { x: 4,   y: H - 224, w: 224, h: 90, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
+  // Right side: dodge + ultra on top, ATK at bottom
+  dodge:   { x: W - 232, y: H - 214, w: 114, h: 82, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
+  ultra:   { x: W - 114, y: H - 214, w: 112, h: 82, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
+  attack:  { x: W - 200, y: H - 120, w: 140, h: 98, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
   // Helpers — bottom center between left and right controls
   helper1: { x: 270, y: H - 80, w: 55, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
   helper2: { x: 330, y: H - 80, w: 55, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
@@ -132,7 +132,7 @@ function hitTestButton(tx, ty) {
 
 function getTouchButtonsForState() {
   if (state === 'level') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'helper1', 'helper2', 'helper3', 'helper4', 'cons5', 'cons6', 'cons7', 'tab', 'pause'];
-  if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'enter'];
+  if (state === 'tutorial') return ['attack', 'dodge', 'jump', 'left', 'right', 'ultra', 'enter'];
   if (state === 'sabi') return ['left', 'right', 'attack', 'pause'];
   if (state === 'casino') return ['enter', 'tab', 'pause'];
   if (state === 'hub' || state === 'shop' || state === 'upgrade') return ['enter', 'tab', 'pause'];
@@ -2166,7 +2166,7 @@ function drawCreditsKeyboard(baseY) {
     ['A','S','D','F','G','H','J','K','L'],
     ['Z','X','C','V','B','N','M','DEL']
   ];
-  const kw = 30, kh = 26, gap = 2;
+  const kw = 42, kh = 36, gap = 3;
   for (let r = 0; r < rows.length; r++) {
     const row = rows[r];
     const totalW = row.length * (kw + gap) - gap;
@@ -2176,10 +2176,10 @@ function drawCreditsKeyboard(baseY) {
       const kx = startX + c * (kw + gap);
       const letter = row[c];
       const isDelKey = letter === 'DEL';
-      const keyW = isDelKey ? kw + 10 : kw;
+      const keyW = isDelKey ? kw + 14 : kw;
       const hov = mouseX >= kx && mouseX <= kx + keyW && mouseY >= ky && mouseY <= ky + kh;
       drawRect(kx, ky, keyW, kh, hov ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)');
-      drawText(letter, kx + keyW / 2, ky + 18, hov ? '#fff' : '#aaa', isDelKey ? 8 : 10, 'center');
+      drawText(letter, kx + keyW / 2, ky + 24, hov ? '#fff' : '#aaa', isDelKey ? 10 : 13, 'center');
       if (mouseClick && hov) {
         if (isDelKey) {
           codeInput = codeInput.slice(0, -1);
@@ -5264,7 +5264,7 @@ function drawMenu() {
     drawCreditsKeyboard(codeY + 40);
 
     // Close button
-    const closeBtnY2 = isTouchDevice ? codeY + 135 : 400;
+    const closeBtnY2 = isTouchDevice ? codeY + 165 : 400;
     const closeBtnX = W/2 - 46, closeBtnW = 92, closeBtnH = 28;
     const hoverClose = mouseX >= closeBtnX && mouseX <= closeBtnX + closeBtnW && mouseY >= closeBtnY2 && mouseY <= closeBtnY2 + closeBtnH;
     drawRect(closeBtnX, closeBtnY2, closeBtnW, closeBtnH, hoverClose ? '#e94560' : 'rgba(233,69,96,0.4)');
@@ -5339,7 +5339,7 @@ function drawMenu() {
     }
 
     // Check for FREESTYLE code
-    if (codeInput === 'FREESTYLE') {
+    if (codeInput === 'FREE') {
       showCredits = false;
       codeInput = '';
       startFreestyleVideo();
@@ -6730,7 +6730,7 @@ function drawHub() {
     drawCreditsKeyboard(codeY + 40);
 
     // Close button
-    const closeBtnY2 = isTouchDevice ? codeY + 135 : 400;
+    const closeBtnY2 = isTouchDevice ? codeY + 165 : 400;
     const closeBtnX = W/2 - 46, closeBtnW = 92, closeBtnH = 28;
     const hoverClose = mouseX >= closeBtnX && mouseX <= closeBtnX + closeBtnW && mouseY >= closeBtnY2 && mouseY <= closeBtnY2 + closeBtnH;
     drawRect(closeBtnX, closeBtnY2, closeBtnW, closeBtnH, hoverClose ? '#e94560' : 'rgba(233,69,96,0.4)');
@@ -6804,7 +6804,7 @@ function drawHub() {
     }
 
     // Check for FREESTYLE code
-    if (codeInput === 'FREESTYLE') {
+    if (codeInput === 'FREE') {
       showCredits = false;
       codeInput = '';
       startFreestyleVideo();
