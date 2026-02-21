@@ -94,18 +94,18 @@ const inMobileWrapper = (window.self !== window.top);
 // Virtual button definitions
 const touchButtons = {
   // Left side: movement + ultra on top
-  left:    { x: 4,   y: H - 120, w: 110, h: 98,  key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 118, y: H - 120, w: 110, h: 98,  key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
-  ultra:   { x: 4,   y: H - 228, w: 224, h: 96,  key: 'KeyQ', label: 'ULTRA', color: '#ffd700', justPress: true },
+  left:    { x: 4,   y: H - 126, w: 120, h: 106, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 128, y: H - 126, w: 120, h: 106, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  ultra:   { x: 4,   y: H - 240, w: 244, h: 96,  key: 'KeyQ', label: 'ULTRA', color: '#ffd700', justPress: true },
   // Right side: jump on top, dodge + ATK at bottom
   jump:    { x: W - 270, y: H - 248, w: 264, h: 98, key: 'KeyW', label: 'JUMP', color: '#4caf50', justPress: false },
   dodge:   { x: W - 270, y: H - 140, w: 128, h: 116, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
   attack:  { x: W - 138, y: H - 140, w: 132, h: 116, key: 'KeyZ', label: 'ATK', color: '#e94560', justPress: true },
-  // Helpers — bottom center between left and right controls
-  helper1: { x: 270, y: H - 80, w: 55, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
-  helper2: { x: 330, y: H - 80, w: 55, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
-  helper3: { x: 390, y: H - 80, w: 55, h: 46, key: 'Digit3', label: '3', color: '#4caf50', justPress: true },
-  helper4: { x: 450, y: H - 80, w: 55, h: 46, key: 'Digit4', label: '4', color: '#4caf50', justPress: true },
+  // Helpers — centered between left and right controls
+  helper1: { x: 322, y: H - 80, w: 55, h: 46, key: 'Digit1', label: '1', color: '#4caf50', justPress: true },
+  helper2: { x: 382, y: H - 80, w: 55, h: 46, key: 'Digit2', label: '2', color: '#4caf50', justPress: true },
+  helper3: { x: 442, y: H - 80, w: 55, h: 46, key: 'Digit3', label: '3', color: '#4caf50', justPress: true },
+  helper4: { x: 502, y: H - 80, w: 55, h: 46, key: 'Digit4', label: '4', color: '#4caf50', justPress: true },
   // Consumables — right of helpers, slightly separated
   // Utility
   tab:     { x: W - 95, y: 36, w: 38, h: 28, key: 'Tab', label: 'TAB', color: '#555', justPress: true },
