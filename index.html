@@ -1192,7 +1192,7 @@ let gachaSpinning = false;
 let gachaSpinTimer = 0;
 let gachaResult = null;
 let gachaResultTimer = 0;
-const GACHA_COST = 40;
+const GACHA_COST = 30;
 
 const gachaJokes = [
   '"Aho, ma che te credevi? T\'hanno fregato!"',
@@ -1674,7 +1674,7 @@ function drawRect(x, y, w, h, color) {
 function drawText(text, x, y, color, size, align) {
   ctx.fillStyle = color || '#fff';
   let s = size || 16;
-  if (isTouchDevice && mobileMenuStates.has(state) && s < 16) s = Math.round(s * 1.15);
+  if (isTouchDevice && mobileMenuStates.has(state) && s < 16) s = Math.round(s * 1.10);
   ctx.font = s + 'px monospace';
   ctx.textAlign = align || 'left';
   ctx.fillText(text, x, y);
@@ -3755,7 +3755,7 @@ function createBoss(levelIdx) {
   const b = {
     x: 700, y: 430, w: 44, h: 60,
     vx: 0, vy: 0,
-    hp: lvl.bossHp * DIFF_HP[difficulty], maxHp: lvl.bossHp * DIFF_HP[difficulty],
+    hp: lvl.bossHp * DIFF_HP[difficulty] * (difficulty === 'easy' ? 1.1 : 1), maxHp: lvl.bossHp * DIFF_HP[difficulty] * (difficulty === 'easy' ? 1.1 : 1),
     speed: 2.2 + levelIdx * 0.3,
     facing: -1,
     attackTimer: 0,
@@ -3815,7 +3815,7 @@ function updateBossAI() {
 
   // Interrogation special: Ultra slows boss
   const savedBossSpeed = boss.speed;
-  if (player.ultraActive && weapons[0].special === 'interrogation') boss.speed *= 0.6;
+  if (player.ultraActive && weapons[0].special === 'interrogation') boss.speed *= 0.75;
 
   boss.hitFlash = Math.max(0, boss.hitFlash - 1);
   boss.attackTimer = Math.max(0, boss.attackTimer - 1);
@@ -3876,7 +3876,7 @@ function updateBossAI() {
       reginaActive = true;
       regina = {
         x: W + 50, y: 430, w: 32, h: 50,
-        hp: 120 * DIFF_HP[difficulty], maxHp: 120 * DIFF_HP[difficulty],
+        hp: 144 * DIFF_HP[difficulty], maxHp: 144 * DIFF_HP[difficulty],
         hitFlash: 0, stunTimer: 0, dead: false,
         throwTimer: 0, entering: true,
         poise: 30, maxPoise: 30, poiseRecovery: 0.45, staggerTimer: 0, lastHitTimer: 999,
@@ -3917,7 +3917,7 @@ function updateBossAI() {
       mariusoActive = true;
       mariuso = {
         x: W + 60, y: 430, w: 50, h: 60,
-        hp: 200 * DIFF_HP[difficulty], maxHp: 200 * DIFF_HP[difficulty],
+        hp: 240 * DIFF_HP[difficulty], maxHp: 240 * DIFF_HP[difficulty],
         hitFlash: 0, stunTimer: 0, dead: false,
         attackTimer: 0, isBoss: false, entering: true,
         poise: 50, maxPoise: 50, poiseRecovery: 0.45, staggerTimer: 0, lastHitTimer: 999,
@@ -4803,7 +4803,7 @@ function updateGoons() {
     const origSpeed = g.speed;
     if (g.hazardSlow) g.speed *= 0.7;
     if (g.slowTimer > 0) { g.slowTimer--; g.speed *= 0.7; }
-    if (player.ultraActive && weapons[0].special === 'interrogation') g.speed *= 0.6;
+    if (player.ultraActive && weapons[0].special === 'interrogation') g.speed *= 0.75;
     if (g.stunTimer > 0) { g.stunTimer--; g.speed = origSpeed; return; }
 
     // Poise break cooldown timer
@@ -10970,391 +10970,756 @@ function drawBgViaPlava() {
 
 // Down Under Pub - interior
 function drawBgDownUnder() {
-  // Dark pub interior
-  ctx.fillStyle = '#1b1b2b';
+  // Wall gradient — warm dark pub tones
+  const wallGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  wallGrad.addColorStop(0, '#1a1520');
+  wallGrad.addColorStop(0.5, '#201a28');
+  wallGrad.addColorStop(1, '#1e1825');
+  ctx.fillStyle = wallGrad;
   ctx.fillRect(0, 0, W, GROUND_Y);
-  // Brick wall (reduced density for performance)
-  ctx.globalAlpha = 0.15;
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 10; col++) {
-      const offset = row % 2 === 0 ? 0 : 50;
-      drawRect(col * 100 + offset, row * 42 + 30, 92, 36, '#8d6e63');
+
+  // Exposed brick wall — muted, subtle
+  ctx.globalAlpha = 0.07;
+  for (let row = 0; row < 9; row++) {
+    const offset = row % 2 === 0 ? 0 : 46;
+    for (let col = 0; col < 11; col++) {
+      drawRect(col * 92 + offset, row * 38 + 28, 86, 32, '#8d6e63');
+      drawRect(col * 92 + offset, row * 38 + 28, 86, 1, '#9e7e6e');
     }
   }
   ctx.globalAlpha = 1;
-  // Bar counter
-  drawRect(0, GROUND_Y - 90, W, 10, '#4e342e');
-  drawRect(0, GROUND_Y - 80, W, 80, '#3e2723');
-  // Beer taps
+
+  // Wainscoting — dark wood lower wall
+  const wainY = GROUND_Y - 200;
+  drawRect(0, wainY, W, 2, '#3e2a1e');
+  const wainGrad = ctx.createLinearGradient(0, wainY, 0, GROUND_Y - 90);
+  wainGrad.addColorStop(0, '#2a1e16');
+  wainGrad.addColorStop(1, '#241a12');
+  ctx.fillStyle = wainGrad;
+  ctx.fillRect(0, wainY + 2, W, GROUND_Y - 92 - wainY);
+  // Panel detail
+  ctx.globalAlpha = 0.04;
+  for (let p = 0; p < 8; p++) {
+    drawRect(15 + p * 115, wainY + 10, 90, GROUND_Y - 110 - wainY, '#5d4037');
+  }
+  ctx.globalAlpha = 1;
+
+  // Bar counter — polished wood with edge highlight
+  const barGrad = ctx.createLinearGradient(0, GROUND_Y - 90, 0, GROUND_Y);
+  barGrad.addColorStop(0, '#4e342e');
+  barGrad.addColorStop(0.08, '#5d4037');
+  barGrad.addColorStop(1, '#3e2723');
+  ctx.fillStyle = barGrad;
+  ctx.fillRect(0, GROUND_Y - 90, W, 90);
+  drawRect(0, GROUND_Y - 90, W, 2, '#6d4c41');
+  drawRect(0, GROUND_Y - 88, W, 1, '#7d5c51');
+  // Brass bar rail
+  drawRect(0, GROUND_Y - 20, W, 2, '#c8a050');
+  ctx.globalAlpha = 0.3;
+  drawRect(0, GROUND_Y - 19, W, 1, '#e8c070');
+  ctx.globalAlpha = 1;
+
+  // Beer taps — polished brass
+  for (let i = 0; i < 4; i++) {
+    const tx = 120 + i * 200;
+    drawRect(tx, GROUND_Y - 125, 3, 30, '#8d6e63');
+    drawRect(tx - 1, GROUND_Y - 128, 5, 5, '#c8a050');
+    drawRect(tx - 3, GROUND_Y - 133, 9, 6, '#d4aa58');
+    drawRect(tx - 2, GROUND_Y - 134, 7, 1, '#e8c070');
+  }
+
+  // Bottle shelf — backlit
+  drawRect(0, GROUND_Y - 168, W, 5, '#4e342e');
+  drawRect(0, GROUND_Y - 169, W, 1, '#6d4c41');
+  // Shelf backlight glow
+  ctx.globalAlpha = 0.06;
+  drawRect(0, GROUND_Y - 200, W, 35, '#ffcc80');
+  ctx.globalAlpha = 1;
+  // Bottles — muted tones
+  const bottles = [
+    { x: 25, c: '#2e7d32' }, { x: 90, c: '#4e342e' }, { x: 155, c: '#1565c0' },
+    { x: 220, c: '#bf360c' }, { x: 285, c: '#2e7d32' }, { x: 355, c: '#6a1b9a' },
+    { x: 420, c: '#bf360c' }, { x: 490, c: '#e6a020' }, { x: 555, c: '#2e7d32' },
+    { x: 625, c: '#1565c0' }, { x: 690, c: '#bf360c' }, { x: 760, c: '#6a1b9a' },
+    { x: 830, c: '#e6a020' }
+  ];
+  bottles.forEach(b => {
+    drawRect(b.x, GROUND_Y - 196, 8, 28, b.c);
+    drawRect(b.x - 1, GROUND_Y - 198, 10, 3, b.c);
+    drawRect(b.x + 1, GROUND_Y - 193, 3, 4, shadeColor(b.c, 25)); // label highlight
+  });
+
+  // Neon sign — soft glow, not overpowering
+  const glow = 0.4 + Math.sin(gameTime * 0.03) * 0.15;
+  ctx.globalAlpha = glow * 0.12;
+  drawRect(W/2 - 110, 55, 220, 55, '#00acc1');
+  ctx.globalAlpha = glow * 0.8;
+  drawText('DOWN UNDER', W/2, 78, '#00acc1', 20, 'center');
+  ctx.globalAlpha = glow * 0.35;
+  drawText('DOWN UNDER', W/2, 79, '#80deea', 20, 'center');
+  ctx.globalAlpha = glow * 0.7;
+  drawText('PUB', W/2, 100, '#e53935', 15, 'center');
+  ctx.globalAlpha = glow * 0.3;
+  drawText('PUB', W/2, 101, '#ef9a9a', 15, 'center');
+  ctx.globalAlpha = 1;
+
+  // Dartboard — cleaner
+  const dx = 780, dy = 160;
+  ctx.fillStyle = '#2a2a2a';
+  ctx.beginPath(); ctx.arc(dx, dy, 32, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8e0d0';
+  ctx.beginPath(); ctx.arc(dx, dy, 28, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1b5e20';
+  ctx.beginPath(); ctx.arc(dx, dy, 22, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e8e0d0';
+  ctx.beginPath(); ctx.arc(dx, dy, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c62828';
+  ctx.beginPath(); ctx.arc(dx, dy, 9, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1b5e20';
+  ctx.beginPath(); ctx.arc(dx, dy, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c62828';
+  ctx.beginPath(); ctx.arc(dx, dy, 1.5, 0, Math.PI * 2); ctx.fill();
+
+  // Hanging pendant lights — warm pools of light
+  [150, 380, 600, 820].forEach((lx, li) => {
+    drawRect(lx, 0, 1, 40, '#444');
+    // Lamp shade
+    drawRect(lx - 8, 38, 16, 10, '#5d4037');
+    drawRect(lx - 6, 40, 12, 6, '#6d4c41');
+    // Warm glow pool
+    ctx.globalAlpha = 0.10 + Math.sin(gameTime * 0.02 + li * 1.2) * 0.04;
+    ctx.fillStyle = '#ffe0a0';
+    ctx.beginPath(); ctx.arc(lx, 52, 22, 0, Math.PI * 2); ctx.fill();
+    // Light cone on wall
+    ctx.globalAlpha = 0.04;
+    ctx.beginPath();
+    ctx.moveTo(lx - 4, 48);
+    ctx.lineTo(lx - 50, GROUND_Y - 200);
+    ctx.lineTo(lx + 50, GROUND_Y - 200);
+    ctx.lineTo(lx + 4, 48);
+    ctx.closePath();
+    ctx.fillStyle = '#ffe0a0';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Band posters — muted, framed
+  drawRect(28, 128, 54, 68, '#1a1a2a');
+  drawRect(29, 129, 52, 66, '#1a237e');
+  drawText('LIVE', 55, 155, '#c62828', 8, 'center');
+  drawText('MUSIC', 55, 168, '#ccc', 7, 'center');
+  drawRect(838, 138, 48, 58, '#1a1a2a');
+  drawRect(839, 139, 46, 56, '#6a1b1b');
+  drawText('PUB', 862, 160, '#ddd', 7, 'center');
+  drawText('QUIZ', 862, 174, '#e6a020', 7, 'center');
+
+  // Pool table — behind counter, slightly visible
+  const ptX = 300, ptY = GROUND_Y - 145;
+  drawRect(ptX, ptY, 100, 55, '#1b5e20');
+  drawRect(ptX - 2, ptY - 2, 104, 3, '#4e342e');
+  drawRect(ptX - 2, ptY + 53, 104, 3, '#4e342e');
+  drawRect(ptX - 2, ptY, 3, 55, '#4e342e');
+  drawRect(ptX + 99, ptY, 3, 55, '#4e342e');
+  // Felt texture
+  ctx.globalAlpha = 0.06;
+  drawRect(ptX + 2, ptY + 2, 96, 51, '#2e7d32');
+  ctx.globalAlpha = 1;
+  // Balls
+  ctx.fillStyle = '#f5f5f5'; ctx.beginPath(); ctx.arc(330, ptY + 25, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c62828'; ctx.beginPath(); ctx.arc(350, ptY + 20, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e6a020'; ctx.beginPath(); ctx.arc(365, ptY + 30, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1565c0'; ctx.beginPath(); ctx.arc(380, ptY + 22, 3, 0, Math.PI * 2); ctx.fill();
+
+  // Stools — cleaner with seat highlight
   for (let i = 0; i < 5; i++) {
-    drawRect(80 + i * 180, GROUND_Y - 120, 8, 35, '#ffd54f');
-    drawRect(75 + i * 180, GROUND_Y - 125, 18, 8, '#ffc107');
-  }
-  // Bottles on shelf
-  drawRect(0, GROUND_Y - 160, W, 6, '#5d4037');
-  const bottleColors = ['#4caf50','#f44336','#2196f3','#ff9800','#4caf50','#9c27b0','#f44336','#ffeb3b','#4caf50','#2196f3','#ff9800','#9c27b0'];
-  bottleColors.forEach((c, i) => {
-    drawRect(30 + i * 72, GROUND_Y - 190, 10, 30, c);
-    drawRect(28 + i * 72, GROUND_Y - 192, 14, 4, c);
-  });
-  // Neon signs
-  const glow = 0.5 + Math.sin(gameTime * 0.03) * 0.3;
-  ctx.globalAlpha = glow;
-  drawText('DOWN UNDER', W/2, 80, '#00e5ff', 22, 'center');
-  drawText('PUB', W/2, 105, '#ff1744', 18, 'center');
-  ctx.globalAlpha = 1;
-  // Dartboard
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(780, 160, 30, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#d32f2f';
-  ctx.beginPath();
-  ctx.arc(780, 160, 20, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(780, 160, 10, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#d32f2f';
-  ctx.beginPath();
-  ctx.arc(780, 160, 4, 0, Math.PI * 2);
-  ctx.fill();
-  // Hanging pendant lights
-  [150, 350, 550, 750].forEach(lx => {
-    drawRect(lx, 0, 1, 45, '#555');
-    ctx.globalAlpha = 0.15 + Math.sin(gameTime * 0.025 + lx * 0.1) * 0.08;
-    ctx.fillStyle = '#ffcc80';
-    ctx.beginPath(); ctx.arc(lx, 50, 18, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    drawRect(lx - 6, 44, 12, 8, '#ff8f00');
-  });
-
-  // Band posters on wall
-  drawRect(30, 130, 50, 65, '#1a237e');
-  drawText('LIVE', 55, 155, '#f44336', 8, 'center');
-  drawText('MUSIC', 55, 168, '#fff', 7, 'center');
-  drawRect(840, 140, 45, 55, '#b71c1c');
-  drawText('PUB', 862, 160, '#fff', 7, 'center');
-  drawText('QUIZ', 862, 175, '#ffd700', 7, 'center');
-
-  // Pool table (background, behind counter)
-  drawRect(300, GROUND_Y - 140, 100, 55, '#1b5e20');
-  drawRect(296, GROUND_Y - 144, 108, 4, '#5d4037');
-  drawRect(296, GROUND_Y - 89, 108, 4, '#5d4037');
-  drawRect(296, GROUND_Y - 140, 4, 55, '#5d4037');
-  drawRect(400, GROUND_Y - 140, 4, 55, '#5d4037');
-  // Pool balls
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(330, GROUND_Y - 115, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#f44336'; ctx.beginPath(); ctx.arc(350, GROUND_Y - 120, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(365, GROUND_Y - 110, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#1565c0'; ctx.beginPath(); ctx.arc(380, GROUND_Y - 118, 3, 0, Math.PI * 2); ctx.fill();
-
-  // Stools
-  for (let i = 0; i < 6; i++) {
-    drawRect(60 + i * 140, GROUND_Y - 10, 30, 10, '#5d4037');
-    drawRect(72 + i * 140, GROUND_Y, 6, 20, '#795548');
+    const sx = 80 + i * 165;
+    drawRect(sx + 10, GROUND_Y, 5, 16, '#5d4037');
+    drawRect(sx, GROUND_Y - 10, 25, 10, '#4e342e');
+    drawRect(sx, GROUND_Y - 10, 25, 1, '#6d4c41');
   }
 
-  // Spilled drink stain (subtle)
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = '#795548';
-  ctx.beginPath(); ctx.arc(420, GROUND_Y + 20, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // Wooden floor
+  // Wooden floor — planks with grain
   for (let i = 0; i < 12; i++) {
-    ctx.globalAlpha = 0.1;
-    drawRect(i * 80, GROUND_Y + 3, 76, H - GROUND_Y, '#8d6e63');
+    ctx.globalAlpha = 0.06 + (i % 3) * 0.02;
+    drawRect(i * 78, GROUND_Y + 3, 74, H - GROUND_Y, '#6d4c41');
+    ctx.globalAlpha = 0.03;
+    drawRect(i * 78, GROUND_Y + 3, 74, 1, '#8d6e63');
     ctx.globalAlpha = 1;
   }
+
+  // Spilled drink stain
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = '#6d4c41';
+  ctx.beginPath(); ctx.arc(420, GROUND_Y + 18, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Subtle vignette
+  ctx.globalAlpha = 0.2;
+  drawRect(0, 0, 30, H, '#000');
+  drawRect(W - 30, 0, 30, H, '#000');
+  ctx.globalAlpha = 0.1;
+  drawRect(0, 0, W, 15, '#000');
+  ctx.globalAlpha = 1;
 }
 
 // Piazza Bainsizza - open piazza with fountain
 function drawBgPiazzaBainsizza() {
+  // Sky gradient — blue-grey Roman evening
   const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  sky.addColorStop(0, '#1a2030');
-  sky.addColorStop(1, '#263248');
+  sky.addColorStop(0, '#0e1520');
+  sky.addColorStop(0.35, '#182030');
+  sky.addColorStop(0.7, '#1e2a3e');
+  sky.addColorStop(1, '#283848');
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, W, GROUND_Y);
 
-  // Stars
-  for (let i = 0; i < 20; i++) {
-    const sx = (i * 97) % W;
-    const sy = (i * 41) % 120 + 10;
-    ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.02 + i) * 0.2;
+  // Stars — gentle twinkle
+  for (let i = 0; i < 18; i++) {
+    const sx = (i * 97 + 12) % W;
+    const sy = (i * 41 + 5) % 110 + 8;
+    ctx.globalAlpha = 0.15 + Math.sin(gameTime * 0.015 + i * 1.8) * 0.12;
     drawRect(sx, sy, 2, 2, '#fff');
   }
   ctx.globalAlpha = 1;
 
-  // Surrounding buildings - typical Roman
-  const bColors = ['#c9a96e','#bfa47a','#d4a76a','#c9a96e'];
-  [{ x: -10, w: 200 },{ x: 200, w: 150 },{ x: 600, w: 180 },{ x: 790, w: 150 }].forEach((b, i) => {
-    const bh = 180 + (i * 30);
-    drawRect(b.x, GROUND_Y - bh, b.w, bh, bColors[i]);
-    for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) {
-      drawRect(b.x + 15 + c * 50, GROUND_Y - bh + 20 + r * 45, 22, 30, '#2a2a3e');
+  // Moon — soft crescent with glow
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#e0e0e0';
+  ctx.beginPath(); ctx.arc(780, 42, 30, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = '#d8d8e0';
+  ctx.beginPath(); ctx.arc(780, 42, 16, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1e2a3e';
+  ctx.beginPath(); ctx.arc(785, 38, 14, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Surrounding buildings — muted ochre Roman palazzi with gradient
+  const buildings = [
+    { x: -15, w: 205, h: 185, color: '#8a7a5a', trim: '#7a6a4a' },
+    { x: 200, w: 155, h: 210, color: '#80704e', trim: '#706042' },
+    { x: 600, w: 185, h: 225, color: '#8a7a5a', trim: '#7a6a4a' },
+    { x: 795, w: 145, h: 195, color: '#80704e', trim: '#706042' }
+  ];
+  buildings.forEach((b, bi) => {
+    const bGrad = ctx.createLinearGradient(0, GROUND_Y - b.h, 0, GROUND_Y);
+    bGrad.addColorStop(0, b.color);
+    bGrad.addColorStop(1, shadeColor(b.color, -15));
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(b.x, GROUND_Y - b.h, b.w, b.h);
+    // Cornice
+    drawRect(b.x, GROUND_Y - b.h, b.w, 3, b.trim);
+    drawRect(b.x, GROUND_Y - b.h, b.w, 1, shadeColor(b.trim, 15));
+    // Stucco texture
+    ctx.globalAlpha = 0.03;
+    for (let ty = 0; ty < 2; ty++) for (let tx = 0; tx < Math.floor(b.w / 50); tx++) {
+      drawRect(b.x + tx * 50 + 5, GROUND_Y - b.h + 12 + ty * 85, 42, 75,
+        (tx + ty + bi) % 2 === 0 ? shadeColor(b.color, 10) : shadeColor(b.color, -8));
+    }
+    ctx.globalAlpha = 1;
+    // Windows — shuttered, some with warm light
+    for (let r = 0; r < Math.min(3, Math.floor(b.h / 60)); r++) {
+      for (let c = 0; c < Math.min(2, Math.floor(b.w / 70)); c++) {
+        const wx = b.x + 18 + c * 65;
+        const wy = GROUND_Y - b.h + 22 + r * 55;
+        drawRect(wx, wy, 22, 30, '#141420');
+        // Shutters
+        drawRect(wx - 3, wy, 3, 30, '#506050');
+        drawRect(wx + 22, wy, 3, 30, '#506050');
+        drawRect(wx - 3, wy, 3, 1, '#607060');
+        drawRect(wx + 22, wy, 3, 1, '#607060');
+        // Sill
+        drawRect(wx - 1, wy + 30, 24, 2, b.trim);
+        // Warm light
+        if ((r + c + bi) % 3 !== 0) {
+          ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.01 + bi + r * 2) * 0.05;
+          drawRect(wx + 2, wy + 2, 18, 26, '#ffe8b0');
+          ctx.globalAlpha = 1;
+        }
+      }
     }
   });
 
-  // Fountain in center background
-  drawRect(390, GROUND_Y - 60, 120, 60, '#78909c');
-  drawRect(380, GROUND_Y - 30, 140, 8, '#90a4ae');
-  drawRect(430, GROUND_Y - 100, 40, 45, '#90a4ae');
-  // Water
-  ctx.globalAlpha = 0.4;
-  const waterY = Math.sin(gameTime * 0.05) * 2;
-  drawRect(395, GROUND_Y - 25 + waterY, 110, 20, '#42a5f5');
+  // Fountain — polished stone with water
+  const fnX = 390, fnW = 120;
+  // Basin
+  const basinGrad = ctx.createLinearGradient(fnX, GROUND_Y - 60, fnX, GROUND_Y);
+  basinGrad.addColorStop(0, '#78909c');
+  basinGrad.addColorStop(1, '#607d8b');
+  ctx.fillStyle = basinGrad;
+  ctx.fillRect(fnX, GROUND_Y - 60, fnW, 60);
+  drawRect(fnX - 5, GROUND_Y - 30, fnW + 10, 6, '#90a4ae');
+  drawRect(fnX - 5, GROUND_Y - 30, fnW + 10, 1, '#a0b0be');
+  // Pillar
+  drawRect(fnX + 40, GROUND_Y - 100, 40, 45, '#8a9aa8');
+  drawRect(fnX + 42, GROUND_Y - 98, 36, 41, '#90a4ae');
+  // Top cap
+  drawRect(fnX + 35, GROUND_Y - 105, 50, 6, '#a0b0be');
+  // Water surface
+  ctx.globalAlpha = 0.3;
+  const waterY = Math.sin(gameTime * 0.04) * 1.5;
+  drawRect(fnX + 5, GROUND_Y - 24 + waterY, fnW - 10, 18, '#42a5f5');
+  ctx.globalAlpha = 0.15;
+  drawRect(fnX + 15, GROUND_Y - 22 + waterY, fnW - 30, 8, '#90caf9');
   ctx.globalAlpha = 1;
-  // Water spout
-  if (gameTime % 10 < 7) {
-    drawRect(448, GROUND_Y - 110, 4, 12, '#64b5f6');
-  }
+  // Water spout — animated drip
+  const spoutAlpha = 0.3 + Math.sin(gameTime * 0.08) * 0.15;
+  ctx.globalAlpha = spoutAlpha;
+  drawRect(fnX + 58, GROUND_Y - 108, 3, 10 + Math.sin(gameTime * 0.06) * 3, '#64b5f6');
+  ctx.globalAlpha = 1;
 
-  // Trees
-  [120, 350, 560, 780].forEach(tx => {
-    drawRect(tx + 8, GROUND_Y - 50, 8, 50, '#5d4037');
+  // Trees — layered foliage
+  [120, 560, 780].forEach((tx, ti) => {
+    // Trunk
+    drawRect(tx + 6, GROUND_Y - 55, 8, 55, '#4e342e');
+    drawRect(tx + 8, GROUND_Y - 50, 4, 50, '#5d4037');
+    // Foliage layers
+    ctx.fillStyle = '#1b5e20';
+    ctx.beginPath(); ctx.arc(tx + 10, GROUND_Y - 68, 22, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#2e7d32';
-    ctx.beginPath();
-    ctx.arc(tx + 12, GROUND_Y - 65, 25, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(tx + 6, GROUND_Y - 58, 16, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#388e3c';
-    ctx.beginPath();
-    ctx.arc(tx + 8, GROUND_Y - 55, 18, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // Street lamps with warm glow
-  [60, 280, 620, 850].forEach(lx => {
-    drawRect(lx, GROUND_Y - 90, 4, 90, '#37474f');
-    drawRect(lx - 6, GROUND_Y - 94, 16, 5, '#455a64');
-    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.03 + lx * 0.05) * 0.1;
-    ctx.fillStyle = '#ffe0b2';
-    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 98, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tx + 16, GROUND_Y - 62, 14, 0, Math.PI * 2); ctx.fill();
+    // Subtle leaf highlight
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#66bb6a';
+    ctx.beginPath(); ctx.arc(tx + 12, GROUND_Y - 72, 8, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
   });
 
-  // Benches
+  // Street lamps — ornate Roman style with warm glow
+  [60, 280, 620, 850].forEach((lx, li) => {
+    drawRect(lx, GROUND_Y - 95, 4, 95, '#3a4a50');
+    drawRect(lx - 1, GROUND_Y - 2, 6, 4, '#455a64');
+    drawRect(lx - 6, GROUND_Y - 99, 16, 5, '#4a5a64');
+    drawRect(lx - 4, GROUND_Y - 100, 12, 2, '#5a6a74');
+    // Lantern housing
+    drawRect(lx - 4, GROUND_Y - 110, 12, 12, '#4a5a64');
+    drawRect(lx - 2, GROUND_Y - 108, 8, 8, '#5a6a74');
+    // Warm glow
+    ctx.globalAlpha = 0.14 + Math.sin(gameTime * 0.025 + li * 1.1) * 0.06;
+    ctx.fillStyle = '#ffe0a0';
+    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 104, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Benches — polished wood
   [200, 680].forEach(bx => {
-    drawRect(bx, GROUND_Y - 20, 50, 6, '#5d4037'); // seat
-    drawRect(bx + 2, GROUND_Y - 14, 4, 14, '#4e342e'); // leg
-    drawRect(bx + 44, GROUND_Y - 14, 4, 14, '#4e342e'); // leg
-    drawRect(bx, GROUND_Y - 32, 50, 4, '#5d4037'); // backrest
-    drawRect(bx, GROUND_Y - 32, 2, 16, '#4e342e'); // back support
-    drawRect(bx + 48, GROUND_Y - 32, 2, 16, '#4e342e');
+    drawRect(bx, GROUND_Y - 20, 50, 5, '#5d4037');
+    drawRect(bx, GROUND_Y - 20, 50, 1, '#6d4c41');
+    drawRect(bx + 3, GROUND_Y - 15, 4, 15, '#4e342e');
+    drawRect(bx + 43, GROUND_Y - 15, 4, 15, '#4e342e');
+    drawRect(bx, GROUND_Y - 30, 50, 3, '#5d4037');
+    drawRect(bx, GROUND_Y - 30, 50, 1, '#6d4c41');
+    drawRect(bx + 1, GROUND_Y - 30, 2, 13, '#4e342e');
+    drawRect(bx + 47, GROUND_Y - 30, 2, 13, '#4e342e');
   });
 
-  // Pigeons (small pixel birds, subtle movement)
-  [{ x: 150, d: 0 }, { x: 170, d: 1.5 }, { x: 500, d: 3 }, { x: 520, d: 4.5 }].forEach(p => {
-    const bob = Math.sin(gameTime * 0.04 + p.d) * 1.5;
-    const px = p.x + Math.sin(gameTime * 0.01 + p.d) * 3;
-    drawRect(px, GROUND_Y - 6 + bob, 8, 5, '#78909c'); // body
-    drawRect(px + 6, GROUND_Y - 9 + bob, 4, 4, '#90a4ae'); // head
-    drawRect(px + 9, GROUND_Y - 8 + bob, 3, 1, '#ff8f00'); // beak
+  // Pigeons — subtle, animated
+  [{ x: 150, d: 0 }, { x: 168, d: 1.5 }, { x: 500, d: 3 }, { x: 516, d: 4.5 }].forEach(p => {
+    const bob = Math.sin(gameTime * 0.04 + p.d) * 1.2;
+    const px = p.x + Math.sin(gameTime * 0.01 + p.d) * 2.5;
+    drawRect(px, GROUND_Y - 6 + bob, 7, 4, '#6a7a84');
+    drawRect(px + 5, GROUND_Y - 9 + bob, 4, 4, '#7a8a94');
+    drawRect(px + 8, GROUND_Y - 8 + bob, 2, 1, '#e6a020');
+    // Wing flutter
+    if (Math.sin(gameTime * 0.08 + p.d) > 0.5) {
+      drawRect(px + 1, GROUND_Y - 8 + bob, 5, 2, '#7a8a94');
+    }
   });
 
-  // Moon
-  ctx.globalAlpha = 0.6;
-  ctx.fillStyle = '#e0e0e0';
-  ctx.beginPath(); ctx.arc(780, 40, 18, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#263248';
-  ctx.beginPath(); ctx.arc(786, 36, 16, 0, Math.PI * 2); ctx.fill(); // crescent shadow
+  // Sampietrini cobblestones — staggered pattern
+  for (let row = 0; row < 3; row++) {
+    const offset = row % 2 === 0 ? 0 : 12;
+    for (let i = 0; i < 38; i++) {
+      ctx.globalAlpha = 0.06 + (((i + row) * 7) % 5) * 0.012;
+      drawRect(i * 25 + offset, GROUND_Y + 4 + row * 13, 21, 10, '#546e7a');
+    }
+  }
   ctx.globalAlpha = 1;
 
-  // Cobblestone piazza
-  for (let i = 0; i < 40; i++) {
-    ctx.globalAlpha = 0.12;
-    const cx = (i * 47) % W;
-    const cy = GROUND_Y + 5 + (i * 13) % 40;
-    drawRect(cx, cy, 20, 10, '#607d8b');
-    ctx.globalAlpha = 1;
-  }
+  // Subtle vignette
+  ctx.globalAlpha = 0.15;
+  drawRect(0, 0, 25, H, '#000');
+  drawRect(W - 25, 0, 25, H, '#000');
+  ctx.globalAlpha = 0.08;
+  drawRect(0, 0, W, 12, '#000');
+  ctx.globalAlpha = 1;
 }
 
-// Pizzarium - pizzeria exterior/interior
+// Pizzarium - pizzeria interior
 function drawBgPizzeria() {
-  ctx.fillStyle = '#3e2723';
+  // Wall gradient — warm terracotta interior
+  const wallGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  wallGrad.addColorStop(0, '#2e1e16');
+  wallGrad.addColorStop(0.4, '#3a2820');
+  wallGrad.addColorStop(1, '#342418');
+  ctx.fillStyle = wallGrad;
   ctx.fillRect(0, 0, W, GROUND_Y);
 
-  // Pizzeria building
-  drawRect(0, 50, W, GROUND_Y - 50, '#5d4037');
-  // Awning - Italian flag colors
-  drawRect(0, 50, W, 15, '#009246');
-  drawRect(0, 65, W, 15, '#fff');
-  drawRect(0, 80, W, 15, '#ce2b37');
-
-  // Sign
-  drawRect(300, 100, 300, 40, '#b71c1c');
-  drawText('PIZZARIUM', W/2, 126, '#ffd54f', 18, 'center');
-
-  // Pizza oven in background
-  drawRect(620, GROUND_Y - 150, 140, 150, '#4e342e');
-  ctx.fillStyle = '#ff6f00';
-  ctx.beginPath();
-  ctx.arc(690, GROUND_Y - 100, 50, Math.PI, 0);
-  ctx.fill();
-  // Fire glow inside oven
-  ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.1) * 0.3;
-  ctx.fillStyle = '#ff3d00';
-  ctx.beginPath();
-  ctx.arc(690, GROUND_Y - 90, 35, Math.PI, 0);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // Counter with pizzas
-  drawRect(50, GROUND_Y - 60, 500, 12, '#795548');
-  drawRect(50, GROUND_Y - 48, 500, 48, '#5d4037');
-  // Pizza display (simplified — rects instead of arcs)
-  for (let i = 0; i < 4; i++) {
-    drawRect(100 + i * 120, GROUND_Y - 88, 40, 40, '#ffd54f');
-    drawRect(108 + i * 120, GROUND_Y - 80, 6, 6, '#f44336');
-    drawRect(120 + i * 120, GROUND_Y - 76, 6, 6, '#f44336');
-    drawRect(114 + i * 120, GROUND_Y - 68, 6, 6, '#f44336');
-  }
-
-  // Checkered floor (reduced)
-  ctx.globalAlpha = 0.15;
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 10; c++) {
-      drawRect(c * 100, GROUND_Y + r * 40, 50, 40, (r + c) % 2 === 0 ? '#fff' : '#d32f2f');
+  // Stucco texture — very subtle
+  ctx.globalAlpha = 0.03;
+  for (let row = 0; row < 6; row++) {
+    for (let col = 0; col < 12; col++) {
+      drawRect(col * 80 + (row % 2) * 40, row * 55 + 50, 72, 48,
+        (row + col) % 3 === 0 ? '#5d4037' : '#4e342e');
     }
   }
   ctx.globalAlpha = 1;
 
-  // Menu board
-  drawRect(30, 120, 120, 160, '#212121');
-  drawText('MENU', 90, 145, '#fff', 12, 'center');
-  drawText('Margherita  5E', 90, 165, '#ffd54f', 8, 'center');
-  drawText('Diavola     7E', 90, 180, '#ffd54f', 8, 'center');
-  drawText('Capricciosa 8E', 90, 195, '#ffd54f', 8, 'center');
-  drawText('Pugni  GRATIS', 90, 215, '#f44336', 8, 'center');
+  // Awning — Italian flag, softer colors with shadow
+  const awningY = 48;
+  drawRect(0, awningY, W, 13, '#1b7a3a');
+  drawRect(0, awningY + 13, W, 13, '#e8e0d0');
+  drawRect(0, awningY + 26, W, 13, '#b5282e');
+  // Awning bottom shadow
+  ctx.globalAlpha = 0.15;
+  drawRect(0, awningY + 39, W, 8, '#000');
+  ctx.globalAlpha = 1;
+  // Scalloped edge
+  for (let i = 0; i < 30; i++) {
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = '#8a1e22';
+    ctx.beginPath(); ctx.arc(15 + i * 30, awningY + 40, 5, 0, Math.PI); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
 
-  // Hanging garlic braids
-  [200, 350, 500].forEach(gx => {
-    drawRect(gx, 94, 2, 18, '#8d6e63');
+  // Sign — weathered wood with gold lettering
+  const signX = W/2 - 140, signY = 96;
+  drawRect(signX, signY, 280, 36, '#3e2220');
+  drawRect(signX, signY, 280, 2, '#5d3a2e');
+  drawRect(signX, signY + 34, 280, 2, '#2a1610');
+  drawText('PIZZARIUM', W/2, signY + 24, '#e6b850', 17, 'center');
+  ctx.globalAlpha = 0.3;
+  drawText('PIZZARIUM', W/2, signY + 25, '#c8963a', 17, 'center');
+  ctx.globalAlpha = 1;
+
+  // Pizza oven — brick arch with warm glow
+  const ovX = 640, ovY = GROUND_Y - 155;
+  // Brick surround
+  const ovenGrad = ctx.createLinearGradient(ovX, ovY, ovX, GROUND_Y);
+  ovenGrad.addColorStop(0, '#5d3a2e');
+  ovenGrad.addColorStop(1, '#4e2e22');
+  ctx.fillStyle = ovenGrad;
+  ctx.fillRect(ovX, ovY, 130, 155);
+  drawRect(ovX, ovY, 130, 3, '#6d4a3e');
+  // Brick detail on oven
+  ctx.globalAlpha = 0.08;
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 3; c++) {
+      drawRect(ovX + 5 + c * 42 + (r % 2) * 20, ovY + 4 + r * 34, 36, 28, '#8d6e63');
+    }
+  }
+  ctx.globalAlpha = 1;
+  // Arch opening
+  ctx.fillStyle = '#1a0e08';
+  ctx.beginPath();
+  ctx.arc(ovX + 65, GROUND_Y - 100, 45, Math.PI, 0);
+  ctx.fillRect(ovX + 20, GROUND_Y - 100, 90, 50);
+  ctx.fill();
+  // Fire inside — warm, animated
+  const fireGlow = 0.35 + Math.sin(gameTime * 0.08) * 0.15;
+  ctx.globalAlpha = fireGlow;
+  ctx.fillStyle = '#e65100';
+  ctx.beginPath(); ctx.arc(ovX + 65, GROUND_Y - 85, 30, Math.PI, 0); ctx.fill();
+  ctx.globalAlpha = fireGlow * 0.6;
+  ctx.fillStyle = '#ff8f00';
+  ctx.beginPath(); ctx.arc(ovX + 65, GROUND_Y - 80, 20, Math.PI, 0); ctx.fill();
+  ctx.globalAlpha = 1;
+  // Warm light spill from oven onto floor
+  ctx.globalAlpha = 0.06 + Math.sin(gameTime * 0.06) * 0.02;
+  drawRect(ovX + 10, GROUND_Y - 50, 110, 50, '#ff8f00');
+  ctx.globalAlpha = 1;
+
+  // Counter — polished glass display case
+  const cntX = 40, cntW = 520;
+  const cntGrad = ctx.createLinearGradient(0, GROUND_Y - 65, 0, GROUND_Y);
+  cntGrad.addColorStop(0, '#5d4037');
+  cntGrad.addColorStop(0.1, '#6d4c41');
+  cntGrad.addColorStop(1, '#4e342e');
+  ctx.fillStyle = cntGrad;
+  ctx.fillRect(cntX, GROUND_Y - 65, cntW, 65);
+  drawRect(cntX, GROUND_Y - 65, cntW, 2, '#7d5c51');
+  drawRect(cntX, GROUND_Y - 63, cntW, 1, '#8d6e63');
+  // Glass front (subtle reflection)
+  ctx.globalAlpha = 0.04;
+  drawRect(cntX + 2, GROUND_Y - 55, cntW - 4, 40, '#fff');
+  ctx.globalAlpha = 1;
+
+  // Pizza display — round pizzas on counter
+  for (let i = 0; i < 4; i++) {
+    const px = 100 + i * 120, py = GROUND_Y - 88;
+    // Pizza base
+    ctx.fillStyle = '#e6b850';
+    ctx.beginPath(); ctx.arc(px + 18, py + 18, 18, 0, Math.PI * 2); ctx.fill();
+    // Sauce
+    ctx.fillStyle = '#c62828';
+    ctx.beginPath(); ctx.arc(px + 18, py + 18, 14, 0, Math.PI * 2); ctx.fill();
+    // Cheese
+    ctx.fillStyle = '#f9e4a0';
+    ctx.beginPath(); ctx.arc(px + 18, py + 18, 12, 0, Math.PI * 2); ctx.fill();
+    // Toppings
+    ctx.fillStyle = '#c62828';
+    ctx.beginPath(); ctx.arc(px + 12, py + 14, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + 24, py + 16, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + 18, py + 24, 3, 0, Math.PI * 2); ctx.fill();
+    // Basil
+    if (i % 2 === 0) {
+      drawRect(px + 15, py + 12, 5, 3, '#2e7d32');
+    }
+  }
+
+  // Checkered floor — subtle, muted
+  ctx.globalAlpha = 0.06;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 20; c++) {
+      if ((r + c) % 2 === 0) {
+        drawRect(c * 48, GROUND_Y + r * 38, 48, 38, '#e8e0d0');
+      } else {
+        drawRect(c * 48, GROUND_Y + r * 38, 48, 38, '#8d3a2a');
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Menu board — framed chalkboard
+  drawRect(26, 140, 128, 145, '#3e2723');
+  drawRect(28, 142, 124, 141, '#1a1a1a');
+  drawRect(28, 142, 124, 2, '#333');
+  drawText('MENU', 90, 162, '#e8e0d0', 11, 'center');
+  drawRect(52, 167, 76, 1, '#444');
+  drawText('Margherita  5E', 90, 182, '#e6b850', 8, 'center');
+  drawText('Diavola     7E', 90, 197, '#e6b850', 8, 'center');
+  drawText('Capricciosa 8E', 90, 212, '#e6b850', 8, 'center');
+  drawRect(52, 222, 76, 1, '#333');
+  drawText('Pugni  GRATIS', 90, 238, '#c62828', 8, 'center');
+
+  // Hanging garlic braids — with rope detail
+  [210, 360, 510].forEach(gx => {
+    drawRect(gx, awningY + 40, 1, 16, '#6d4c41');
     for (let g = 0; g < 3; g++) {
-      ctx.fillStyle = '#f5f5dc';
-      ctx.beginPath(); ctx.arc(gx + 1, 115 + g * 10, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f5f0d0';
+      ctx.beginPath(); ctx.arc(gx + 1, awningY + 58 + g * 10, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e8e0c0';
+      ctx.beginPath(); ctx.arc(gx + 1, awningY + 58 + g * 10, 2, 0, Math.PI * 2); ctx.fill();
     }
   });
 
-  // Steam from oven (animated particles rising)
+  // Steam from oven — soft wisps
   for (let s = 0; s < 4; s++) {
-    const sx = 675 + Math.sin(gameTime * 0.03 + s * 1.5) * 20;
-    const sy = GROUND_Y - 155 - (gameTime * 0.5 + s * 30) % 60;
-    ctx.globalAlpha = 0.08 + (1 - ((gameTime * 0.5 + s * 30) % 60) / 60) * 0.1;
+    const sx = ovX + 55 + Math.sin(gameTime * 0.025 + s * 1.5) * 15;
+    const progress = ((gameTime * 0.4 + s * 25) % 50) / 50;
+    const sy = ovY - 5 - progress * 50;
+    ctx.globalAlpha = (1 - progress) * 0.08;
     ctx.fillStyle = '#bdbdbd';
-    ctx.beginPath(); ctx.arc(sx, sy, 8 + s * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx, sy, 6 + progress * 6, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // String lights along awning — warm white
+  for (let i = 0; i < 18; i++) {
+    const lx = 25 + i * 50;
+    const bob = Math.sin(gameTime * 0.02 + i * 0.8) * 0.8;
+    ctx.globalAlpha = 0.35 + Math.sin(gameTime * 0.03 + i * 0.5) * 0.1;
+    ctx.fillStyle = '#ffe0a0';
+    ctx.beginPath(); ctx.arc(lx, awningY + 42 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 1;
   }
 
-  // Hanging pepper lights (red string lights along awning)
-  for (let i = 0; i < 15; i++) {
-    const lx = 30 + i * 60;
-    const bob = Math.sin(gameTime * 0.02 + i * 0.8) * 1;
-    ctx.fillStyle = i % 3 === 0 ? '#f44336' : i % 3 === 1 ? '#4caf50' : '#fff';
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath(); ctx.arc(lx, 96 + bob, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
+  // Subtle vignette
+  ctx.globalAlpha = 0.2;
+  drawRect(0, 0, 25, H, '#000');
+  drawRect(W - 25, 0, 25, H, '#000');
+  ctx.globalAlpha = 1;
 }
 
 // Piazza Mazzini - the famous piazza with central garden
 function drawBgPiazzaMazzini() {
-  // Dark ominous sky for final boss
+  // Dark ominous sky — deep indigo with storm clouds
   const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  sky.addColorStop(0, '#0a0a15');
-  sky.addColorStop(0.5, '#111128');
+  sky.addColorStop(0, '#080810');
+  sky.addColorStop(0.3, '#0e0e20');
+  sky.addColorStop(0.6, '#141428');
   sky.addColorStop(1, '#1a1a30');
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, W, GROUND_Y);
 
-  // Lightning flashes
-  if (Math.random() < 0.005) {
+  // Storm clouds — dark, brooding shapes
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 5; i++) {
+    const cx = 80 + i * 190 + Math.sin(gameTime * 0.003 + i) * 10;
+    const cy = 30 + (i % 3) * 20;
+    ctx.fillStyle = '#3a3a50';
+    ctx.beginPath(); ctx.arc(cx, cy, 45 + i * 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 30, cy + 8, 35, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx - 25, cy + 5, 30, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Lightning flashes — rare
+  if (Math.random() < 0.004) {
     screenFlash = 3;
     flashColor = '#b0bec5';
   }
 
-  // Surrounding elegant buildings - Piazza Mazzini has grand architecture
+  // Grand palazzi — elegant Mazzini architecture with gradients
   const palazzi = [
-    { x: -20, w: 220, h: 300, color: '#4a4a58' },
-    { x: 210, w: 180, h: 280, color: '#3d3d4d' },
-    { x: 520, w: 200, h: 310, color: '#4a4a58' },
-    { x: 730, w: 200, h: 290, color: '#3d3d4d' }
+    { x: -20, w: 220, h: 305, color: '#3e3e4e', trim: '#4e4e5e' },
+    { x: 210, w: 180, h: 285, color: '#353545', trim: '#454555' },
+    { x: 520, w: 200, h: 315, color: '#3e3e4e', trim: '#4e4e5e' },
+    { x: 730, w: 200, h: 295, color: '#353545', trim: '#454555' }
   ];
-  palazzi.forEach(p => {
-    drawRect(p.x, GROUND_Y - p.h, p.w, p.h, p.color);
-    // Windows (simplified — no arches for performance)
+  palazzi.forEach((p, pi) => {
+    const bGrad = ctx.createLinearGradient(0, GROUND_Y - p.h, 0, GROUND_Y);
+    bGrad.addColorStop(0, p.color);
+    bGrad.addColorStop(1, shadeColor(p.color, -10));
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(p.x, GROUND_Y - p.h, p.w, p.h);
+    // Cornice / moulding
+    drawRect(p.x, GROUND_Y - p.h, p.w, 4, p.trim);
+    drawRect(p.x, GROUND_Y - p.h, p.w, 1, shadeColor(p.trim, 12));
+    // Horizontal string course
+    drawRect(p.x, GROUND_Y - p.h + Math.floor(p.h * 0.35), p.w, 2, shadeColor(p.color, 8));
+    // Stucco texture
+    ctx.globalAlpha = 0.02;
+    for (let ty = 0; ty < 3; ty++) for (let tx = 0; tx < Math.floor(p.w / 55); tx++) {
+      drawRect(p.x + tx * 55 + 5, GROUND_Y - p.h + 10 + ty * 90, 48, 80,
+        (tx + ty + pi) % 2 === 0 ? shadeColor(p.color, 8) : shadeColor(p.color, -6));
+    }
+    ctx.globalAlpha = 1;
+    // Windows — tall, elegant, some with eerie blue-white light
     for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
-      const wx = p.x + 20 + c * 80;
-      const wy = GROUND_Y - p.h + 30 + r * 80;
-      drawRect(wx, wy, 30, 38, '#111');
-      ctx.globalAlpha = 0.2;
-      drawRect(wx + 2, wy + 5, 26, 30, '#b0bec5');
-      ctx.globalAlpha = 1;
+      const wx = p.x + 22 + c * 78;
+      const wy = GROUND_Y - p.h + 25 + r * 85;
+      // Window arch top
+      drawRect(wx, wy, 28, 40, '#0a0a14');
+      drawRect(wx + 4, wy - 3, 20, 5, '#0a0a14');
+      // Sill
+      drawRect(wx - 1, wy + 40, 30, 2, p.trim);
+      // Eerie light — cold tones
+      if ((r + c + pi) % 3 !== 2) {
+        ctx.globalAlpha = 0.12 + Math.sin(gameTime * 0.008 + pi + r * 3) * 0.04;
+        drawRect(wx + 2, wy + 3, 24, 35, '#b0bec5');
+        ctx.globalAlpha = 1;
+      }
     }
   });
 
-  // Central garden area (Piazza Mazzini's garden)
-  drawRect(350, GROUND_Y - 35, 200, 35, '#1b5e20');
-  ctx.globalAlpha = 0.4;
-  drawRect(360, GROUND_Y - 30, 180, 25, '#2e7d32');
+  // Central garden — dark, moody hedges
+  const gardenGrad = ctx.createLinearGradient(350, GROUND_Y - 38, 350, GROUND_Y);
+  gardenGrad.addColorStop(0, '#153a15');
+  gardenGrad.addColorStop(1, '#0e280e');
+  ctx.fillStyle = gardenGrad;
+  ctx.fillRect(350, GROUND_Y - 38, 200, 38);
+  drawRect(350, GROUND_Y - 38, 200, 2, '#1e4e1e');
+  // Hedge row detail
+  ctx.globalAlpha = 0.08;
+  drawRect(358, GROUND_Y - 32, 184, 22, '#2e7d32');
   ctx.globalAlpha = 1;
-  // Trees in garden
-  [380, 430, 480, 530].forEach(tx => {
-    drawRect(tx + 3, GROUND_Y - 55, 6, 25, '#3e2723');
-    ctx.fillStyle = '#1b5e20';
-    ctx.beginPath();
-    ctx.arc(tx + 6, GROUND_Y - 60, 18, 0, Math.PI * 2);
-    ctx.fill();
+  // Trees — dark silhouettes
+  [380, 430, 480, 530].forEach((tx, ti) => {
+    drawRect(tx + 2, GROUND_Y - 58, 6, 25, '#2a1e16');
+    drawRect(tx + 4, GROUND_Y - 55, 3, 22, '#342618');
+    ctx.fillStyle = '#12401a';
+    ctx.beginPath(); ctx.arc(tx + 5, GROUND_Y - 62, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#1a5020';
+    ctx.beginPath(); ctx.arc(tx + 9, GROUND_Y - 58, 12, 0, Math.PI * 2); ctx.fill();
   });
 
-  // Street lamps - eerie glow
-  [100, 400, 700].forEach(lx => {
-    drawRect(lx, GROUND_Y - 120, 4, 120, '#424242');
-    drawRect(lx - 8, GROUND_Y - 125, 20, 6, '#424242');
-    ctx.globalAlpha = 0.25 + Math.sin(gameTime * 0.04 + lx) * 0.15;
-    ctx.fillStyle = '#ffcc80';
+  // Statue — monument with more detail
+  const stX = 440;
+  // Pedestal base
+  drawRect(stX - 18, GROUND_Y - 30, 56, 10, '#546e7a');
+  drawRect(stX - 16, GROUND_Y - 32, 52, 3, '#607d8b');
+  // Pedestal pillar
+  const pedGrad = ctx.createLinearGradient(stX, GROUND_Y - 82, stX + 20, GROUND_Y - 30);
+  pedGrad.addColorStop(0, '#607d8b');
+  pedGrad.addColorStop(1, '#4a6070');
+  ctx.fillStyle = pedGrad;
+  ctx.fillRect(stX, GROUND_Y - 82, 20, 52);
+  drawRect(stX - 5, GROUND_Y - 86, 30, 5, '#6a8a98');
+  drawRect(stX - 5, GROUND_Y - 87, 30, 1, '#7a9aa8');
+  // Figure — dark silhouette with highlights
+  drawRect(stX + 2, GROUND_Y - 118, 16, 34, '#3a5060');
+  drawRect(stX + 5, GROUND_Y - 120, 10, 4, '#3a5060'); // shoulders
+  drawRect(stX - 2, GROUND_Y - 108, 8, 18, '#3a5060'); // arm left
+  drawRect(stX + 14, GROUND_Y - 103, 8, 14, '#3a5060'); // arm right
+  drawRect(stX + 6, GROUND_Y - 126, 8, 9, '#4a6070'); // head
+  // Plaque on pedestal
+  drawRect(stX + 2, GROUND_Y - 65, 16, 8, '#4a5a60');
+  ctx.globalAlpha = 0.3;
+  drawRect(stX + 4, GROUND_Y - 64, 12, 5, '#6a7a80');
+  ctx.globalAlpha = 1;
+
+  // Street lamps — eerie amber glow with flicker
+  [100, 400, 700].forEach((lx, li) => {
+    drawRect(lx, GROUND_Y - 125, 4, 125, '#3a3a42');
+    drawRect(lx - 1, GROUND_Y - 2, 6, 4, '#444');
+    drawRect(lx - 8, GROUND_Y - 130, 20, 6, '#444a4e');
+    drawRect(lx - 6, GROUND_Y - 131, 16, 2, '#555');
+    // Lantern
+    drawRect(lx - 5, GROUND_Y - 142, 14, 13, '#444a4e');
+    drawRect(lx - 3, GROUND_Y - 140, 10, 9, '#505860');
+    // Eerie flickering glow
+    const flicker = 0.18 + Math.sin(gameTime * 0.04 + li * 2.1) * 0.1 + Math.sin(gameTime * 0.11 + li) * 0.05;
+    ctx.globalAlpha = flicker;
+    ctx.fillStyle = '#ffe0a0';
+    ctx.beginPath(); ctx.arc(lx + 2, GROUND_Y - 136, 18, 0, Math.PI * 2); ctx.fill();
+    // Light pool on ground
+    ctx.globalAlpha = flicker * 0.3;
     ctx.beginPath();
-    ctx.arc(lx + 2, GROUND_Y - 130, 20, 0, Math.PI * 2);
+    ctx.ellipse(lx + 2, GROUND_Y + 5, 30, 5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe0a0';
     ctx.fill();
     ctx.globalAlpha = 1;
   });
 
-  // Statue in center (monument)
-  drawRect(440, GROUND_Y - 80, 20, 50, '#546e7a'); // pedestal pillar
-  drawRect(430, GROUND_Y - 85, 40, 8, '#607d8b'); // pedestal top
-  drawRect(425, GROUND_Y - 30, 50, 10, '#607d8b'); // pedestal base
-  // Figure silhouette
-  drawRect(442, GROUND_Y - 115, 16, 32, '#455a64');
-  drawRect(438, GROUND_Y - 105, 8, 18, '#455a64'); // arm
-  drawRect(454, GROUND_Y - 100, 8, 14, '#455a64'); // arm
-  drawRect(446, GROUND_Y - 122, 10, 10, '#546e7a'); // head
+  // Rain — soft diagonal streaks
+  for (let i = 0; i < 20; i++) {
+    const rx = (i * 97 + gameTime * 2.5) % W;
+    const ry = (i * 53 + gameTime * 5) % GROUND_Y;
+    ctx.globalAlpha = 0.08;
+    drawRect(rx, ry, 1, 12, '#6a7a9a');
+    ctx.globalAlpha = 1;
+  }
 
-  // Rain effect (lightweight — rects instead of strokes)
-  for (let i = 0; i < 18; i++) {
-    const rx = (i * 97 + gameTime * 3) % W;
-    const ry = (i * 53 + gameTime * 6) % GROUND_Y;
-    ctx.globalAlpha = 0.12;
-    drawRect(rx, ry, 1, 10, '#7986cb');
+  // Puddle reflections — oval, with slight shimmer
+  [120, 320, 580, 780].forEach((px, pi) => {
+    ctx.globalAlpha = 0.04 + Math.sin(gameTime * 0.02 + pi) * 0.01;
+    ctx.fillStyle = '#6a7a9a';
+    ctx.beginPath();
+    ctx.ellipse(px, GROUND_Y + 14, 20, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // Sampietrini cobblestones
+  for (let row = 0; row < 3; row++) {
+    const offset = row % 2 === 0 ? 0 : 12;
+    for (let i = 0; i < 38; i++) {
+      ctx.globalAlpha = 0.05 + (((i + row) * 7) % 5) * 0.01;
+      drawRect(i * 25 + offset, GROUND_Y + 4 + row * 13, 21, 10, '#4a5a64');
+    }
   }
   ctx.globalAlpha = 1;
 
-  // Puddle reflections (flat rects on ground, drawn behind everything)
-  [150, 350, 600, 800].forEach(px => {
-    ctx.globalAlpha = 0.06;
-    drawRect(px - 22, GROUND_Y + 12, 44, 6, '#7986cb');
-    ctx.globalAlpha = 1;
-  });
-
-  // Fog at ground level (denser)
-  for (let i = 0; i < 10; i++) {
-    ctx.globalAlpha = 0.06 + Math.sin(gameTime * 0.02 + i) * 0.03;
-    const fx = (i * 110 + gameTime * 0.3) % (W + 100) - 50;
-    const fw = 80 + (i % 3) * 40;
-    drawRect(fx, GROUND_Y - 15, fw, 25, '#b0bec5');
-    ctx.globalAlpha = 1;
+  // Ground-level fog — slow drifting wisps
+  for (let i = 0; i < 8; i++) {
+    ctx.globalAlpha = 0.04 + Math.sin(gameTime * 0.015 + i * 0.8) * 0.02;
+    const fx = (i * 130 + gameTime * 0.2) % (W + 120) - 60;
+    const fw = 70 + (i % 3) * 35;
+    drawRect(fx, GROUND_Y - 12, fw, 20, '#8a9aaa');
   }
+  ctx.globalAlpha = 1;
+
+  // Subtle vignette — heavier for ominous mood
+  ctx.globalAlpha = 0.25;
+  drawRect(0, 0, 35, H, '#000');
+  drawRect(W - 35, 0, 35, H, '#000');
+  ctx.globalAlpha = 0.12;
+  drawRect(0, 0, W, 15, '#000');
+  ctx.globalAlpha = 0.1;
+  drawRect(0, H - 20, W, 20, '#000');
+  ctx.globalAlpha = 1;
 }
 
 function shadeColor(color, amt) {
@@ -11605,7 +11970,7 @@ function updateLevel() {
       if (!g.dead && !sharkEntity.hitEnemies.has(i) &&
           Math.abs(g.x - sharkEntity.x) < 35 && Math.abs(g.y - sharkEntity.y) < 40) {
         sharkEntity.hitEnemies.add(i);
-        const dmg = 8 + Math.random() * 6;
+        const dmg = 12 + Math.random() * 8;
         g.hp -= dmg;
         g.hitFlash = 8;
         spawnDamageNumber(g.x, g.y - (g.h || 50), Math.floor(dmg), '#90caf9');
@@ -11617,7 +11982,7 @@ function updateLevel() {
     if (boss && !boss.dead && bossIntro && bossIntroTimer <= 0 &&
         !sharkEntity.hitEnemies.has('boss') && Math.abs(boss.x - sharkEntity.x) < 45) {
       sharkEntity.hitEnemies.add('boss');
-      const dmg = 10 + Math.random() * 8;
+      const dmg = 15 + Math.random() * 10;
       boss.hp -= dmg;
       boss.hitFlash = 8;
       spawnDamageNumber(boss.x, boss.y - boss.h, Math.floor(dmg), '#90caf9');
