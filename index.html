@@ -8970,9 +8970,12 @@ function drawVideoPoker(panelY) {
       const drawBx = cardStartX + totalCardsW / 2 - 95;
       const drawBw = 190;
       const drawHover = mouseX > drawBx && mouseX < drawBx + drawBw && mouseY > drawBtnY && mouseY < drawBtnY + 38;
+      const pulse = 0.85 + Math.sin(gameTime * 0.12) * 0.15;
+      ctx.globalAlpha = pulse;
       drawRect(drawBx, drawBtnY, drawBw, 38, drawHover ? '#e65100' : '#bf360c');
       drawRect(drawBx, drawBtnY, drawBw, 2, '#ff6e40');
-      drawText('PESCA [ENTER]', drawBx + drawBw/2, drawBtnY + 25, '#fff', 13, 'center');
+      ctx.globalAlpha = 1;
+      drawText('PESCA [ENTER]', drawBx + drawBw/2, drawBtnY + 25, '#fff', 14, 'center');
 
       drawText('Clicca o premi 1-5 per tenere', drawBx + drawBw/2, drawBtnY + 52, '#666', 9, 'center');
 
