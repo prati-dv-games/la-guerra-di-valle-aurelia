@@ -5652,37 +5652,35 @@ function drawTutorial() {
   const showTutHud = tutorialStep >= 3; // show from attack step onward
 
   if (showTutHud) {
-    // Ultra bar - bottom left
-    const ubX = 14, ubY = H - 60, ubW = 140, ubH = 10;
-    drawRect(ubX - 4, ubY - 16, ubW + 8, 30, 'rgba(0,0,0,0.7)');
-    drawText('ULTRA [Q]', ubX, ubY - 4, '#ff8f00', 9);
-    drawRect(ubX, ubY, ubW, ubH, '#333');
+    // Ultra bar — same position and style as level HUD
+    const ubX = 8, ubY = 84, ubW = 195, ubH = 14;
+    drawRect(ubX, ubY, ubW, ubH, 'rgba(0,0,0,0.7)');
     const ultraR = player.ultraCharge / player.ultraMaxCharge;
     if (player.ultraAvailable) {
       const pulse = Math.sin(gameTime * 0.15) * 0.3 + 0.7;
       ctx.globalAlpha = pulse;
-      drawRect(ubX, ubY, ubW, ubH, '#ffd700');
-      drawText('PRONTO!', ubX + ubW + 6, ubY + 9, '#ffd700', 9);
+      drawRect(ubX + 1, ubY + 1, ubW - 2, ubH - 2, '#ffd700');
+      drawText('Q  PRONTO!', ubX + ubW / 2, ubY + 11, '#1a1a2e', 10, 'center');
       ctx.globalAlpha = 1;
     } else {
-      drawRect(ubX, ubY, ubW * ultraR, ubH, '#ff8f00');
-      drawText(Math.floor(ultraR * 100) + '%', ubX + ubW + 6, ubY + 9, '#ff8f00', 8);
+      drawRect(ubX + 1, ubY + 1, (ubW - 2) * ultraR, ubH - 2, '#ff8f00');
+      drawText('Q', ubX + 6, ubY + 11, '#ff8f00', 9);
     }
 
     // Pulsing highlight arrow during ultra step
     if (isUltraStep && !tutorialChecks.ultra) {
       const arrowPulse = Math.sin(gameTime * 0.1) * 8;
-      const aX = ubX + ubW / 2, aY = ubY - 22 + arrowPulse;
+      const aX = ubX + ubW / 2, aY = ubY + ubH + 8 + arrowPulse;
       ctx.fillStyle = '#ffd700';
       ctx.globalAlpha = 0.8;
       ctx.beginPath();
-      ctx.moveTo(aX - 8, aY - 10);
-      ctx.lineTo(aX + 8, aY - 10);
+      ctx.moveTo(aX - 8, aY + 10);
+      ctx.lineTo(aX + 8, aY + 10);
       ctx.lineTo(aX, aY);
       ctx.closePath();
       ctx.fill();
       ctx.globalAlpha = 1;
-      drawText('COLPISCI PER CARICARE!', aX, aY - 16, '#ffd700', 10, 'center');
+      drawText('COLPISCI PER CARICARE!', aX, aY + 18, '#ffd700', 10, 'center');
     }
   }
 
