@@ -2568,7 +2568,7 @@ let coinPickups = [];
 function spawnCoinPickup(x, y, value) {
   // Chain bonus multiplier based on player's combo chain count
   const chainMult = Math.min(2.0, 1.0 + player.comboChainCount * 0.5);
-  const finalValue = Math.floor(value * chainMult);
+  const finalValue = Math.round(value * chainMult * 0.95);
   // Scatter into multiple physical coins
   const numCoins = Math.min(8, Math.max(1, Math.floor(finalValue / 4)));
   const perCoin = Math.floor(finalValue / numCoins);
@@ -3119,7 +3119,7 @@ function launchComboHit(stepIndex) {
   const upgDmg = player.upgrades.some(u => u.effect === 'dmg15') ? 1.15 : 1;
   const ultraMult = player.ultraActive ? 1.5 : 1;
   const amaroMult = drinkBuff ? 1.1 : 1;
-  let dmg = weap.damage * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * ultraMult * amaroMult;
+  let dmg = weap.damage * 0.95 * dmgMult * (isCrit ? 2 : 1) * dcMult * staminaMult * upgDmg * ultraMult * amaroMult;
   const poiseMult = player.upgrades.some(u => u.effect === 'poise25') ? 1.25 : 1;
   const effectivePoise = Math.round(weap.poise * poiseMult);
 
@@ -9271,7 +9271,7 @@ function calculateLevelGrade() {
 function generateUpgradeChoices() {
   // Grade-based rewards: more choices for better grades
   const grade = lastLevelGrade;
-  const gradeBonus = { S: 80, A: 50, B: 25, C: 10, D: 0 };
+  const gradeBonus = { S: 75, A: 45, B: 25, C: 10, D: 0 };
   const bonus = gradeBonus[grade] || 0;
   if (bonus > 0) {
     coins += bonus;
