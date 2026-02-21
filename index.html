@@ -9482,8 +9482,7 @@ function startLevel(idx) {
   currentLevel = idx;
   hubVisitInited = false; // reset hub visit flag so secrets reset next visit
   isReplayLevel = bossDefeated[idx]; // track if this was already beaten
-  if (difficulty === 'medium') lives = 3; // medium: 3 lives per boss
-  // hard: lives carry over; easy: infinite (lives never decremented)
+  // medium + hard: lives carry over; easy: infinite (lives never decremented)
   state = 'dialogue';
   resetPlayer();
   player.x = 100;
@@ -10258,7 +10257,6 @@ function updateLevel() {
   if (boss && boss.hp <= 0 && !boss.dead) {
     boss.dead = true;
     bossDefeated[currentLevel] = true;
-    if (difficulty === 'medium') lives = 3; // medium: lives reset per boss
     // Boss coin drops (physical pickups) — first clear gives big bonus
     const bossCoins = isReplayLevel ? 15 + currentLevel * 10 : 50 + currentLevel * 35;
     spawnCoinPickup(boss.x, boss.y - 30, bossCoins);
