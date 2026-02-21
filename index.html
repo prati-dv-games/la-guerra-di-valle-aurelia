@@ -94,8 +94,8 @@ const inMobileWrapper = (window.self !== window.top);
 // Virtual button definitions
 const touchButtons = {
   // Left side: movement + Q (ultra) on top
-  left:    { x: 4,   y: H - 106, w: 96, h: 84, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
-  right:   { x: 104, y: H - 106, w: 96, h: 84, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
+  left:    { x: 4,   y: H - 120, w: 110, h: 98, key: 'KeyA', label: '\u25C0', color: '#888', justPress: false },
+  right:   { x: 118, y: H - 120, w: 110, h: 98, key: 'KeyD', label: '\u25B6', color: '#888', justPress: false },
   ultra:   { x: 16,  y: H - 194, w: 110, h: 74, key: 'KeyQ', label: 'Q', color: '#ffd700', justPress: true },
   // Right side: X and W on top, ATK at bottom
   dodge:   { x: W - 206, y: H - 194, w: 100, h: 74, key: 'KeyX', label: 'X', color: '#2196f3', justPress: true },
@@ -5504,7 +5504,7 @@ const tutorialSteps = [
   { text: 'Ora fai un COMBO completo! Premi Z piu\' volte di fila veloce!', hint: 'Completa tutto il combo (3 colpi) sul manichino!', check: 'combo' },
   { text: 'Premi X per schivare! Breve invincibilita\'.', hint: 'Schiva!', check: 'dodge' },
   { text: 'Colpire carica la barra ULTRA! Continua a colpire fino a riempirla!', hint: 'Riempi la barra dorata colpendo il manichino!', check: 'ultra' },
-  { text: 'Prova i consumabili! Premi 5, 6 o 7 per usarli in battaglia.', hint: 'Premi 5, 6 o 7 per usare un consumabile!', check: 'consumable' },
+  { text: isTouchDevice ? 'I consumabili si usano con i tasti 5-6-7 in battaglia.' : 'Prova i consumabili! Premi 5, 6 o 7 per usarli in battaglia.', hint: isTouchDevice ? 'Premi OK per continuare!' : 'Premi 5, 6 o 7 per usare un consumabile!', check: 'consumable' },
   { text: 'TAB = schermata aiuto completa. Helper: tasti 1-4.', hint: 'Premi TAB per aprire l\'aiuto!' },
   { text: 'Sei pronto, Conte. La gang di Valle Aurelia ti aspetta!', hint: '[ENTER] per iniziare!' }
 ];
@@ -5536,7 +5536,7 @@ function updateTutorial() {
       // Ultra bar is full
       tutorialChecks.ultra = true;
     }
-    if (check === 'consumable' && (keysJustPressed['Digit5'] || keysJustPressed['Digit6'] || keysJustPressed['Digit7'])) {
+    if (check === 'consumable' && (keysJustPressed['Digit5'] || keysJustPressed['Digit6'] || keysJustPressed['Digit7'] || (isTouchDevice && (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'])))) {
       tutorialChecks.consumable = true;
     }
   }
@@ -5607,7 +5607,7 @@ function updateTutorial() {
 
 function drawTutorial() {
   // Camera zoom — 1.5x on mobile, 1.3x on desktop
-  const tutZoom = isTouchDevice ? 1.5 : 1.3;
+  const tutZoom = isTouchDevice ? 1.4 : 1.3;
   ctx.save();
   const tutCamX = Math.max(W / (2 * tutZoom), Math.min(W - W / (2 * tutZoom), player.x));
   const tutCamY = Math.max(H / (2 * tutZoom), Math.min(H - H / (2 * tutZoom), player.y - 40));
@@ -5741,8 +5741,8 @@ function drawTutorial() {
     }
   }
 
-  // Consumable slots display during tutorial
-  if (isConsumableStep && player.consumables.length > 0) {
+  // Consumable slots display during tutorial (desktop only — mobile skips with OK)
+  if (isConsumableStep && player.consumables.length > 0 && !isTouchDevice) {
     const csX = W - 210, csY = H - 60;
     drawRect(csX - 4, csY - 16, 210, 30, 'rgba(0,0,0,0.7)');
     drawText('CONSUMABILI', csX, csY - 4, '#a1887f', 9);
@@ -9679,7 +9679,7 @@ function drawLevel() {
   }
 
   // Camera zoom — 1.5x on mobile, 1.3x on desktop
-  const levelZoom = isTouchDevice ? 1.5 : 1.3;
+  const levelZoom = isTouchDevice ? 1.4 : 1.3;
   ctx.save();
   const camX = Math.max(W / (2 * levelZoom), Math.min(W - W / (2 * levelZoom), player.x));
   const camY = Math.max(H / (2 * levelZoom), Math.min(H - H / (2 * levelZoom), player.y - 40));
@@ -10375,7 +10375,7 @@ function drawSabi() {
   ctx.fillRect(0, 0, W, H);
 
   // Zoom — camera follows Cicca
-  const sabiZoom = isTouchDevice ? 1.5 : 1.3;
+  const sabiZoom = isTouchDevice ? 1.4 : 1.3;
   {
     ctx.save();
     const camX = Math.max(W / (2 * sabiZoom), Math.min(W - W / (2 * sabiZoom), sabiCicca.x));
@@ -10628,9 +10628,11 @@ function drawSabi() {
 let victoryTimer = 0; // guard timer to prevent instant restart
 let victorySongStarted = false;
 let freestyleFadeTimer = 0; // countdown for smooth crossfade to freestyle
+let freestyleNeedsTap = false; // mobile autoplay blocked — waiting for user gesture
 
 function stopVictorySong() {
   victorySongStarted = false;
+  freestyleNeedsTap = false;
   freestyleVideo.pause();
   freestyleVideo.currentTime = 0;
 }
@@ -10643,8 +10645,14 @@ function drawVictory() {
     freestyleFadeTimer--;
     if (freestyleFadeTimer === 0) {
       freestyleVideo.currentTime = 0;
-      freestyleVideo.play().catch(() => {});
+      freestyleVideo.play().then(() => { freestyleNeedsTap = false; }).catch(() => { freestyleNeedsTap = true; });
     }
+  }
+
+  // Mobile autoplay blocked — tap anywhere to start freestyle
+  if (freestyleNeedsTap && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'])) {
+    freestyleVideo.currentTime = 0;
+    freestyleVideo.play().then(() => { freestyleNeedsTap = false; }).catch(() => {});
   }
 
   const grad = ctx.createLinearGradient(0, 0, 0, H);
@@ -10693,6 +10701,14 @@ function drawVictory() {
   drawText('Grazie per aver giocato!', W/2, creditsY + 84, '#ffcc80', 13, 'center');
 
   drawText('Coins raccolti: ' + coins, W/2, creditsY + 104, '#ffd700', 12, 'center');
+
+  // Tap-to-play prompt for mobile (autoplay blocked)
+  if (freestyleNeedsTap) {
+    const tapPulse = 0.5 + Math.sin(gameTime * 0.08) * 0.5;
+    ctx.globalAlpha = tapPulse;
+    drawText('TOCCA PER LA MUSICA', W/2, creditsY + 120, '#ffd700', 14, 'center');
+    ctx.globalAlpha = fadeIn;
+  }
 
   ctx.globalAlpha = 1;
 
