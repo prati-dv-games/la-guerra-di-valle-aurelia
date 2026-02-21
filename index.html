@@ -5972,8 +5972,15 @@ function drawWeaponSelect() {
     drawStatBar(statX, statY + 84, 'CRITICO', sw.crit, 30, barMaxW, '#ffeb3b');
     drawStatBar(statX, statY + 112, 'COMBO', sw.comboHits, 5, barMaxW, '#e040fb');
 
-    // Description
-    drawText(sw.desc, cx + cardW/2, cy + cardH - 20, selected ? '#ccc' : '#555', 8, 'center');
+    // Description (two lines, fits card width)
+    const weaponDescs = [
+      ['Veloce, combo da 4 colpi', 'Critico scala col combo'],
+      ['Sanguina ad ogni colpo', 'Ultra: potenzia il sanguinamento'],
+      ['Pesante, lungo raggio', 'Colpo doppio ad ogni attacco'],
+      ['Fionda a distanza', '3o colpo perfora (solo Ultra)']
+    ];
+    drawText(weaponDescs[i][0], cx + cardW/2, cy + cardH - 34, selected ? '#fff' : '#666', 10, 'center');
+    drawText(weaponDescs[i][1], cx + cardW/2, cy + cardH - 18, selected ? '#aaa' : '#444', 9, 'center');
     ctx.globalAlpha = 1;
   }
 
@@ -6074,14 +6081,14 @@ function drawHelperSelect() {
 
     // Main effect description
     const helperDescs = [
-      ['Stordisce i nemici vicini', 'Utile per uscire da situazioni difficili'],
-      ['Coltellata diretta al boss', 'Danno pesante, colpisce il boss'],
-      ['Cura +35 HP', 'Fonte di cura in battaglia'],
-      ['Velocita\' x2 per 8 secondi', 'Muoviti e colpisci piu\' veloce']
+      ['Stordisce i nemici', 'Blocca chi ti attacca'],
+      ['Coltellata al boss', 'Danno pesante diretto'],
+      ['Cura +35 HP', 'Fonte di cura'],
+      ['Velocita\' x2, 8 sec', 'Colpisci piu\' veloce']
     ];
-    drawText(helperDescs[i][0], cx + cardW/2, cy + 138, '#fff', 11, 'center');
-    drawText(helperDescs[i][1], cx + cardW/2, cy + 156, '#999', 9, 'center');
-    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 178, h.color, 9, 'center');
+    drawText(helperDescs[i][0], cx + cardW/2, cy + 138, selected ? '#fff' : '#666', 12, 'center');
+    drawText(helperDescs[i][1], cx + cardW/2, cy + 162, selected ? '#aaa' : '#444', 11, 'center');
+    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 186, h.color, 10, 'center');
 
     ctx.globalAlpha = 1;
   }
