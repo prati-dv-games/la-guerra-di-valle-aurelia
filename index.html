@@ -1251,15 +1251,15 @@ const CARD_RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 const SUIT_SYMBOLS = { hearts: '\u2665', diamonds: '\u2666', clubs: '\u2663', spades: '\u2660' };
 const SUIT_COLORS = { hearts: '#e94560', diamonds: '#e94560', clubs: '#333', spades: '#333' };
 
-// Poker payouts (Jacks or Better) — ~90% EV with optimal play
+// Poker payouts (Jacks or Better) — ~105% EV with optimal play
 const POKER_PAYOUTS = {
   'Royal Flush': 250,
   'Straight Flush': 50,
-  'Four of a Kind': 25,
-  'Full House': 8,
-  'Flush': 5,
-  'Straight': 4,
-  'Three of a Kind': 3,
+  'Four of a Kind': 30,
+  'Full House': 10,
+  'Flush': 7,
+  'Straight': 5,
+  'Three of a Kind': 4,
   'Two Pair': 2,
   'Jacks or Better': 1,
   'Nothing': 0
@@ -1275,9 +1275,9 @@ const SLOT_SYMBOLS = [
   { name: 'Casa', symbol: '\u2302', color: '#2196f3' },
   { name: 'Niente', symbol: '-', color: '#666' }
 ];
-// Slot payouts — EV = (111 + 18*11) / 343 = 309/343 = ~0.901
-const SLOT_PAYOUTS_3 = [38, 25, 18, 14, 10, 6, 0]; // 3-of-a-kind multipliers
-const SLOT_PAYOUTS_2 = [5, 3, 2, 1, 0, 0, 0]; // pair multipliers (best symbols only)
+// Slot payouts — EV = (126 + 18*13) / 343 = 360/343 = ~1.05
+const SLOT_PAYOUTS_3 = [42, 28, 20, 16, 12, 8, 0]; // 3-of-a-kind multipliers
+const SLOT_PAYOUTS_2 = [6, 4, 2, 1, 0, 0, 0]; // pair multipliers (best symbols only)
 
 // Bet limits
 const POKER_BET_MIN = 5, POKER_BET_MAX = 100, POKER_BET_STEP = 5;
@@ -1287,27 +1287,27 @@ const SLOT_BET_MIN = 5, SLOT_BET_MAX = 50, SLOT_BET_STEP = 5;
 const helpers = [
   { name: 'Pirox', desc: 'STUN tutti 2s', cooldown: 720, color: '#e040fb', icon: 'P', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 65, desc: 'Stun +50%, area piu\' grande' },
-      { cost: 125, desc: 'Spacca poise: 3x danno poise' },
-      { cost: 250, desc: 'Raduno: nemici stunnati -30% poise' }
+      { cost: 65, desc: 'Stun +50%, area+' },
+      { cost: 125, desc: 'Poise nemici 3x' },
+      { cost: 250, desc: 'Stunnati: -30% poise' }
     ]},
   { name: 'Tommy', desc: 'Coltellata al boss', cooldown: 900, color: '#ff6e40', icon: 'T', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 65, desc: 'Danno +50%, attacca piu\' spesso' },
-      { cost: 125, desc: 'Combo assist: attacca staggerati' },
-      { cost: 250, desc: 'Grido: +30% danno per 4s ogni 30s' }
+      { cost: 65, desc: 'Danno +50%, freq+' },
+      { cost: 125, desc: 'Attacca staggerati' },
+      { cost: 250, desc: 'Grido: +30% danno 4s' }
     ]},
   { name: 'Cicca', desc: 'Cura +35 HP', cooldown: 540, color: '#ff8a65', icon: 'C', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
       { cost: 65, desc: 'Cura +50%' },
-      { cost: 125, desc: 'Buff attacco: +20% danno per 5s' },
-      { cost: 250, desc: 'Revive: auto-cura se muori (1x)' }
+      { cost: 125, desc: 'Buff: +20% danno 5s' },
+      { cost: 250, desc: 'Revive auto 1x' }
     ]},
   { name: 'Il Mostro', desc: 'Speed x2 8sec', cooldown: 720, color: '#76ff03', icon: 'M', tier: 0, unlocked: false, unlockCost: 40,
     tiers: [
-      { cost: 65, desc: 'Durata speed +50%' },
-      { cost: 125, desc: 'Speed +20% velocita\' attacco' },
-      { cost: 250, desc: 'Scia: lasci danno quando boost' }
+      { cost: 65, desc: 'Durata +50%' },
+      { cost: 125, desc: '+20% vel. attacco' },
+      { cost: 250, desc: 'Scia di danno' }
     ]},
 ];
 let helperReviveUsed = false; // Cicca tier 3 one-time per level
@@ -1345,7 +1345,7 @@ const levels = [
     boss: 'Gioacchino',
     bossColor: '#6d4c41',
     bossHp: 440,
-    subtitle: 'Il bastone e la sorella',
+    subtitle: 'Il bastone e i pezzi de carne',
     bgColor: '#1b2631',
     groundColor: '#2c3e50',
     goonCount: 4,
@@ -1354,7 +1354,7 @@ const levels = [
     bossLines: [
       '"Ao\' Conte, in gabbia c\'ho imparato a mena\'!"',
       '"REGINAAAA! Famme \'n pezzo de carneeee!"',
-      '"Te faccio vede\' come se gioca ar quartiere!"',
+      '"Te faccio vede\' come se gioca a Valle!"',
       '"So\' stato in gabbia 3 anni, nun me fai paura!"'
     ],
     defeatLines: [
@@ -1385,10 +1385,10 @@ const levels = [
   },
   {
     name: 'Pizzarium',
-    boss: 'Ciccio Ruver',
+    boss: 'Ciccio',
     bossColor: '#ff7043',
     bossHp: 620,
-    subtitle: 'Il pizzaiolo col mohawk',
+    subtitle: 'Il pizzaiolo dalle mani pesanti',
     bgColor: '#3e2723',
     groundColor: '#4e342e',
     goonCount: 5,
@@ -1397,7 +1397,7 @@ const levels = [
     bossLines: [
       '"A\' Conte! Te faccio na pizza speciale!"',
       '"Margherita in faccia, offering del giorno!"',
-      '"Col mohawk ce spacco, col forno pure!"'
+      '"Coi pugni ce spacco, col forno pure!"'
     ],
     defeatLines: [
       '"La pizza... fredda... come il mio cuore..."',
@@ -3893,7 +3893,7 @@ function updateBossAI() {
       '"Preparate Conte... PREPARATE!"',
       '"In gabbia sognavo sto momento! MO\' PAGHI!"',
       '"DALE DALE DALEEEE! BASTA!"',
-      '"HAI VISTO ER MOHAWK?! CE STA IL FUOCO!"',
+      '"HAI VISTO ER CAPELLO?! CE STA IL FUOCO!"',
       '"STO PER CONTO MIO NOW bro! This is MINE!"'
     ];
     triggerPhaseTransition(phase3Texts[currentLevel], '#f44336');
@@ -6358,6 +6358,19 @@ let backroomPhase = 0; // 0=dialogue, 1=choice, 2=response, 3=exit
 let backroomLine = 0;
 let backroomChoice = -1; // 0=Scarabeo, 1=TMAX
 let backroomCooldown = 0; // input cooldown to prevent accidental double-tap
+let startapparoPhase = 0;    // 0=not triggered, 1=dialogue, 2=choice, 3=response, 4=done
+let startapparoLine = 0;
+let startapparoChoice = -1;  // 0=invest, 1=reject
+let startapparoInvested = false;
+let startapparoVisited = false;
+let startapparoPendingReturn = false;
+let startapparoCooldown = 0;
+let startapparoPayoffPhase = 0; // 0=inactive, 1=line1, 2=line2, 3=done
+let startapparoPayoffCooldown = 0;
+let startapparoIntroDone = false;
+let startapparoFirstSeen = false;
+let startapparoBubbleTimer = 0;
+let startapparoBubbleLine = '';
 let hubVisitInited = false;
 
 function drawHub() {
@@ -6368,7 +6381,15 @@ function drawHub() {
     wallTaps = 0; graffitiRevealed = false; graffitiAlpha = 0;
     drinkWobble = 0;
     // lampHit, drinkTaken, hubCatPetted, and hasSunglasses persist across visits
+    // Trigger IPO payoff after next level
+    if (startapparoPendingReturn && lastLevelWon && startapparoPayoffPhase === 0) {
+      startapparoPayoffPhase = 1;
+      startapparoPayoffCooldown = 15;
+    }
   }
+
+  const startapparoActive = (startapparoPhase > 0 && startapparoPhase < 4) || (startapparoPayoffPhase > 0 && startapparoPayoffPhase < 3);
+  const startapparoIntroShowing = bossDefeated[1] && !startapparoVisited && startapparoPhase === 0 && !startapparoIntroDone;
 
   // Night sky
   const grad = ctx.createLinearGradient(0, 0, 0, H);
@@ -6395,17 +6416,48 @@ function drawHub() {
   drawRect(-10, 140, 160, 270, '#363d4d');
   drawRect(-10, 140, 160, 3, '#4a5265');
   for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) {
-    const nwx = 10 + c * 55, nwy = 170 + r * 60;
-    drawRect(nwx, nwy, 24, 35, '#181c28');
+    const nwx = 10 + c * 55, nwy = 155 + r * 50;
+    drawRect(nwx, nwy, 24, 32, '#181c28');
     ctx.globalAlpha = 0.12;
-    drawRect(nwx + 1, nwy + 1, 22, 33, '#c8d0e0');
+    drawRect(nwx + 1, nwy + 1, 22, 30, '#c8d0e0');
     ctx.globalAlpha = 1;
     // Shutters (muted teal-green, works with blue wall)
-    drawRect(nwx - 4, nwy, 4, 35, '#3d5c4a');
-    drawRect(nwx + 24, nwy, 4, 35, '#3d5c4a');
+    drawRect(nwx - 4, nwy, 4, 32, '#3d5c4a');
+    drawRect(nwx + 24, nwy, 4, 32, '#3d5c4a');
     // Sill
-    drawRect(nwx - 2, nwy + 35, 28, 3, '#4a5265');
+    drawRect(nwx - 2, nwy + 32, 28, 3, '#4a5265');
   }
+  // Armeria door on left palazzo
+  const armDoorX = 28, armDoorY = 332, armDoorW = 40, armDoorH = 78;
+  drawRect(armDoorX, armDoorY, armDoorW, armDoorH, '#181c28');
+  drawRect(armDoorX + 2, armDoorY + 2, armDoorW - 4, armDoorH - 2, '#10131c');
+  // Subtle warm glow from inside
+  ctx.globalAlpha = 0.15 + Math.sin(gameTime * 0.04) * 0.06;
+  ctx.fillStyle = '#8d6e63';
+  ctx.beginPath();
+  ctx.arc(armDoorX + armDoorW/2, armDoorY + 18, 16, Math.PI, 0);
+  ctx.fill();
+  ctx.globalAlpha = 0.08;
+  ctx.fillRect(armDoorX + 4, armDoorY + 25, armDoorW - 8, armDoorH - 28);
+  ctx.globalAlpha = 1;
+  // Door frame (matches building trim)
+  drawRect(armDoorX, armDoorY, armDoorW, 2, '#4a5265');
+  drawRect(armDoorX, armDoorY, 2, armDoorH, '#3d4555');
+  drawRect(armDoorX + armDoorW - 2, armDoorY, 2, armDoorH, '#3d4555');
+  // "ARMERIA" sign above door
+  drawRect(armDoorX - 4, armDoorY - 16, armDoorW + 8, 14, 'rgba(0,0,0,0.6)');
+  const armPulse = 0.6 + Math.sin(gameTime * 0.08) * 0.25;
+  ctx.globalAlpha = armPulse;
+  drawText('[S] ARMERIA', armDoorX + armDoorW/2, armDoorY - 5, '#8d9eb5', 8, 'center');
+  ctx.globalAlpha = 1;
+  // Hover highlight
+  const armDoorHover = mouseX > armDoorX && mouseX < armDoorX + armDoorW && mouseY > armDoorY && mouseY < armDoorY + armDoorH;
+  if (armDoorHover) {
+    ctx.globalAlpha = 0.15;
+    drawRect(armDoorX, armDoorY, armDoorW, armDoorH, '#8d9eb5');
+    ctx.globalAlpha = 1;
+  }
+
   // Right palazzo — dusty rose-clay, bridges to Bingo's purple
   drawRect(740, 160, 180, 250, '#4a3840');
   drawRect(740, 160, 180, 3, '#5e4850');
@@ -6419,6 +6471,83 @@ function drawHub() {
     drawRect(nwx + 24, nwy, 4, 35, '#5a4048');
     drawRect(nwx - 2, nwy + 35, 28, 3, '#5e4850');
   }
+
+  // === BINGO DEGLI UBALDI building (drawn before Vanni so it appears behind) ===
+  const bingoX = 700, bingoY = 130, bingoW = 195, bingoH = 280;
+  // Main building structure (dark purple/maroon)
+  drawRect(bingoX, bingoY, bingoW, bingoH, '#2a1a3a');
+  drawRect(bingoX, bingoY, bingoW, 4, '#4a2a5a');
+  // Roof trim
+  drawRect(bingoX - 4, bingoY - 4, bingoW + 8, 8, '#3d2050');
+  drawRect(bingoX - 4, bingoY - 4, bingoW + 8, 2, '#7b1fa2');
+
+  // Neon sign: "BINGO UBALDI" with pulsing glow
+  const neonP = 0.6 + Math.sin(gameTime * 0.06) * 0.4;
+  const signX = bingoX + bingoW/2, signY = bingoY + 28;
+  // Sign backing
+  drawRect(bingoX + 15, bingoY + 10, bingoW - 30, 32, '#111');
+  drawRect(bingoX + 15, bingoY + 10, bingoW - 30, 2, '#7b1fa2');
+  // Neon glow
+  ctx.globalAlpha = neonP * 0.2;
+  drawRect(bingoX + 10, bingoY + 6, bingoW - 20, 40, '#ce93d8');
+  ctx.globalAlpha = 1;
+  drawText('BINGO', signX, signY, '#e1bee7', 14, 'center');
+  ctx.globalAlpha = neonP;
+  drawText('UBALDI', signX, signY + 14, '#ce93d8', 11, 'center');
+  ctx.globalAlpha = 1;
+
+  // Windows (2 rows, dark interior with purple-ish glow)
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
+    const wx = bingoX + 18 + c * 95;
+    const wy = bingoY + 55 + r * 70;
+    drawRect(wx, wy, 55, 50, '#0d0a1a');
+    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.025 + c + r * 2) * 0.1;
+    drawRect(wx + 2, wy + 2, 51, 46, '#4a148c');
+    ctx.globalAlpha = 1;
+    // Window frame
+    drawRect(wx, wy, 55, 2, '#3d2050');
+    drawRect(wx + 26, wy, 2, 50, '#3d2050');
+  }
+
+  // Door — clickable entrance with warm purple light
+  const doorX = bingoX + bingoW/2 - 30, doorY = bingoY + 200, doorW = 60, doorH = bingoH - 200;
+  drawRect(doorX, doorY, doorW, doorH, '#1a0a2a');
+  drawRect(doorX + 3, doorY + 3, doorW - 6, doorH - 3, '#120820');
+  // Warm light from inside
+  ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.04) * 0.1;
+  ctx.fillStyle = '#9c27b0';
+  ctx.beginPath();
+  ctx.arc(doorX + doorW/2, doorY + 30, 30, Math.PI, 0);
+  ctx.fill();
+  ctx.globalAlpha = 0.15;
+  ctx.fillRect(doorX + 5, doorY + 40, doorW - 10, doorH - 45);
+  ctx.globalAlpha = 1;
+  // Door frame
+  drawRect(doorX, doorY, doorW, 3, '#7b1fa2');
+  drawRect(doorX, doorY, 3, doorH, '#4a2a5a');
+  drawRect(doorX + doorW - 3, doorY, 3, doorH, '#4a2a5a');
+
+  // "ENTRA" sign above door
+  drawRect(doorX - 5, doorY - 18, doorW + 10, 16, 'rgba(0,0,0,0.7)');
+  const entraPulse = 0.7 + Math.sin(gameTime * 0.08) * 0.3;
+  ctx.globalAlpha = entraPulse;
+  drawText('[B] ENTRA', doorX + doorW/2, doorY - 6, '#e1bee7', 10, 'center');
+  ctx.globalAlpha = 1;
+
+  // Click on door to enter casino
+  const doorHover = mouseX > doorX && mouseX < doorX + doorW && mouseY > doorY && mouseY < doorY + doorH;
+  if (doorHover) {
+    // Hover highlight on door
+    ctx.globalAlpha = 0.15;
+    drawRect(doorX, doorY, doorW, doorH, '#ce93d8');
+    ctx.globalAlpha = 1;
+  }
+
+  // Small decorative neon strips on building sides
+  ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.07) * 0.15;
+  drawRect(bingoX, bingoY + 48, 2, bingoH - 48, '#7b1fa2');
+  drawRect(bingoX + bingoW - 2, bingoY + 48, 2, bingoH - 48, '#7b1fa2');
+  ctx.globalAlpha = 1;
 
   // BAR VANNI - main building (warm sienna-amber — complement of indigo sky)
   const facadeGrad = ctx.createLinearGradient(150, 100, 150, 410);
@@ -6575,14 +6704,14 @@ function drawHub() {
   ctx.stroke();
   ctx.lineWidth = 1;
 
-  // Backroom door click — Michele Lo Sbirro
-  const vanniDoorHover = !hubConfirm && !(bossDefeated[0] && !micheleVisited && !micheleArgueFirstSeen) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
+  // Backroom door click — Michele Lo Sbirro (only after beating LaFed)
+  const vanniDoorHover = bossDefeated[0] && !hubConfirm && !startapparoIntroShowing && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
   if (vanniDoorHover) {
     ctx.globalAlpha = 0.15;
     drawRect(385, 280, 70, 130, '#ffcc80');
     ctx.globalAlpha = 1;
   }
-  if (!showCredits && !hubConfirm && vanniDoorHover && mouseClick) {
+  if (!showCredits && !hubConfirm && !startapparoActive && vanniDoorHover && mouseClick) {
     if (micheleVisited) {
       showQuickText("Michele e' andato a jiu jitsu... o cosi dice", '#78909c');
     } else {
@@ -6665,7 +6794,7 @@ function drawHub() {
   }
 
   // === Secret 3: Secret Graffiti on left wall ===
-  if (!showCredits && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
+  if (!showCredits && !startapparoIntroShowing && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
     wallTaps++;
     if (wallTaps >= 5) {
       graffitiRevealed = true;
@@ -6720,19 +6849,15 @@ function drawHub() {
   drawRect(232, 385, 6, 18, '#5d4037');
   drawRect(230, 383, 10, 3, '#5d4037');
   drawRect(230, 372, 10, 12, '#5d4037');
-  // Coffee cup on table (small espresso cup)
-  drawRect(199, 370, 7, 5, '#f5f5f5');
-  drawRect(200, 371, 5, 3, '#e0e0e0');
-  drawRect(196, 372, 3, 2, '#e0e0e0'); // handle
-  // Saucer
-  drawRect(197, 375, 10, 1, '#e0e0e0');
-  // Steam
-  ctx.globalAlpha = 0.06 + Math.sin(gameTime * 0.06) * 0.03;
-  ctx.beginPath();
-  ctx.arc(203, 367 - Math.sin(gameTime * 0.04) * 2, 3, 0, Math.PI * 2);
-  ctx.fillStyle = '#ccc';
-  ctx.fill();
-  ctx.globalAlpha = 1;
+  // Amaro glass on table (amber colored)
+  if (!drinkTaken) {
+    drawRect(202, 369, 8, 7, 'rgba(255,143,0,0.5)');
+    drawRect(203, 370, 6, 5, '#ff8f00');
+    drawRect(202, 369, 8, 1, '#ffc107');
+  }
+  // Ashtray
+  drawRect(218, 371, 10, 3, '#757575');
+  drawRect(219, 372, 8, 1, '#9e9e9e');
 
   // Table 2 — same bistro style
   ctx.globalAlpha = 0.15;
@@ -6758,27 +6883,30 @@ function drawHub() {
   drawRect(647, 390, 6, 16, '#5d4037');
   drawRect(645, 388, 10, 3, '#5d4037');
   drawRect(645, 377, 10, 12, '#5d4037');
-  // Amaro glass on table (amber colored)
-  if (!drinkTaken) {
-    drawRect(614, 374, 8, 7, 'rgba(255,143,0,0.5)');
-    drawRect(615, 375, 6, 5, '#ff8f00');
-    drawRect(614, 374, 8, 1, '#ffc107');
-  }
-  // Ashtray
-  drawRect(630, 376, 10, 3, '#757575');
-  drawRect(631, 377, 8, 1, '#9e9e9e');
+  // Coffee cup on table (small espresso cup)
+  drawRect(611, 374, 7, 5, '#f5f5f5');
+  drawRect(612, 375, 5, 3, '#e0e0e0');
+  drawRect(608, 376, 3, 2, '#e0e0e0'); // handle
+  // Saucer
+  drawRect(609, 379, 10, 1, '#e0e0e0');
+  // Steam
+  ctx.globalAlpha = 0.06 + Math.sin(gameTime * 0.06) * 0.03;
+  ctx.beginPath();
+  ctx.arc(615, 371 - Math.sin(gameTime * 0.04) * 2, 3, 0, Math.PI * 2);
+  ctx.fillStyle = '#ccc';
+  ctx.fill();
+  ctx.globalAlpha = 1;
 
   // === Secret 4: Bartender Drink ===
-  if (!showCredits && !drinkTaken && mouseClick && mouseX > 560 && mouseX < 660 && mouseY > 365 && mouseY < 395) {
+  if (!showCredits && !startapparoIntroShowing && !drinkTaken && mouseClick && mouseX > 180 && mouseX < 240 && mouseY > 360 && mouseY < 390) {
     drinkTaken = true;
     drinkWobble = 180;
     drinkBuff = 1;
     playSFX('coin');
-    spawnParticles(622, 380, '#795548', 8, 3);
+    spawnParticles(210, 375, '#795548', 8, 3);
     showQuickText('*gulp* ...CHE BOTTA!! +10% DMG', '#ff8f00');
     mouseClick = false;
   }
-  if (drinkWobble > 0) drinkWobble--;
 
   // Street lamp (near Vanni) — ornate Roman style
   // Pole
@@ -6814,7 +6942,7 @@ function drawHub() {
   ctx.fill();
   ctx.globalAlpha = 1;
   // Secret 1: Punch the lamp (once per run)
-  if (!showCredits && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
+  if (!showCredits && !startapparoIntroShowing && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
     lampHit = true;
     lampFlicker = 60;
     const lampCoins = 5 + Math.floor(Math.random() * 11);
@@ -6825,31 +6953,6 @@ function drawHub() {
     showQuickText('CLANG! +' + lampCoins + ' coins!', '#ffd700');
     mouseClick = false;
   }
-
-  // Street lamp 2 — matching ornate style
-  drawRect(720, 230, 4, 180, '#4a4a4a');
-  drawRect(719, 404, 6, 6, '#555');
-  drawRect(716, 408, 12, 3, '#4a4a4a');
-  drawRect(712, 216, 20, 4, '#4a4a4a');
-  drawRect(714, 206, 16, 14, '#555');
-  drawRect(716, 208, 12, 10, '#666');
-  drawRect(713, 205, 18, 2, '#4a4a4a');
-  drawRect(713, 220, 18, 2, '#4a4a4a');
-  const lamp2Pulse = 0.25 + Math.sin(gameTime * 0.03 + 2) * 0.1;
-  const grad2 = ctx.createRadialGradient(722, 212, 0, 722, 212, 40);
-  grad2.addColorStop(0, 'rgba(255,200,120,' + (lamp2Pulse * 0.35).toFixed(2) + ')');
-  grad2.addColorStop(0.5, 'rgba(255,180,90,' + (lamp2Pulse * 0.1).toFixed(2) + ')');
-  grad2.addColorStop(1, 'rgba(255,160,60,0)');
-  ctx.fillStyle = grad2;
-  ctx.beginPath();
-  ctx.arc(722, 212, 40, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = lamp2Pulse;
-  ctx.fillStyle = '#ffe0a0';
-  ctx.beginPath();
-  ctx.arc(722, 212, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
 
   // Cobblestone ground — sampietrini pattern
   const groundGrad = ctx.createLinearGradient(0, 410, 0, 550);
@@ -6984,7 +7087,7 @@ function drawHub() {
   ctx.lineWidth = 1;
   ctx.lineCap = 'butt';
   // Click to pet (once per visit)
-  if (!showCredits && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
+  if (!showCredits && !startapparoIntroShowing && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
     hubCatPetted = true;
     hubCatSitting = 120;
     spawnParticles(hubCatX, catY - 12, '#ff69b4', 8, 3);
@@ -6994,82 +7097,134 @@ function drawHub() {
     mouseClick = false;
   }
 
-  // === BINGO DEGLI UBALDI building (right of Bar Vanni) ===
-  const bingoX = 700, bingoY = 130, bingoW = 195, bingoH = 280;
-  // Main building structure (dark purple/maroon)
-  drawRect(bingoX, bingoY, bingoW, bingoH, '#2a1a3a');
-  drawRect(bingoX, bingoY, bingoW, 4, '#4a2a5a');
-  // Roof trim
-  drawRect(bingoX - 4, bingoY - 4, bingoW + 8, 8, '#3d2050');
-  drawRect(bingoX - 4, bingoY - 4, bingoW + 8, 2, '#7b1fa2');
+  // === Lo Startapparo — appears after beating Gioacchino (boss 2) ===
+  if (bossDefeated[1] && !startapparoVisited && startapparoPhase === 0) {
+    // Draw Startapparo standing near the right outdoor table area
+    const stX = 640, stY = 352;
+    const stBob = Math.sin(gameTime * 0.04) * 1;
+    drawPixelChar(stX, stY + stBob, 36, 56, '#1a237e', '#ffe0b2', (x, y, w, h) => {
+      // Slicked-back hair with gel shine
+      drawRect(x + 4, y - 3, w - 8, 5, '#1a1209');
+      drawRect(x + 6, y - 5, w - 10, 4, '#1a1209');
+      drawRect(x + w/2, y - 6, w/2 - 6, 3, '#1a1209');
+      drawRect(x + w/2 + 1, y - 5, 4, 1, '#3a2a18'); // gel highlight
+      // Blazer lapels with lighter edge
+      drawRect(x, y + 16, 4, 20, '#1a237e');
+      drawRect(x + w - 4, y + 16, 4, 20, '#1a237e');
+      drawRect(x + 4, y + 16, 1, 18, '#283593');
+      drawRect(x + w - 5, y + 16, 1, 18, '#283593');
+      // T-shirt (V-neck visible)
+      drawRect(x + 6, y + 18, w - 12, 10, '#e8e8e8');
+      drawRect(x + w/2 - 2, y + 16, 2, 4, '#e8e8e8');
+      drawRect(x + w/2, y + 16, 2, 4, '#e8e8e8');
+      // Blazer collar
+      drawRect(x + 3, y + 14, 5, 3, '#1a237e');
+      drawRect(x + w - 8, y + 14, 5, 3, '#1a237e');
+      drawRect(x + 3, y + 14, 5, 1, '#283593');
+      drawRect(x + w - 8, y + 14, 5, 1, '#283593');
+      // Pocket square (teal)
+      drawRect(x + 6, y + 19, 3, 3, '#26c6da');
+      drawRect(x + 6, y + 18, 2, 2, '#4dd0e1');
+      // Belt
+      drawRect(x + 3, y + 36, w - 6, 2, '#333');
+      drawRect(x + w/2 - 1, y + 36, 3, 2, '#9e9e9e');
+      // Slim pants
+      drawRect(x + 6, y + h - 14, 7, 14, '#2c2c2c');
+      drawRect(x + w - 13, y + h - 14, 7, 14, '#2c2c2c');
+      // Loafers with sole
+      drawRect(x + 5, y + h - 3, 9, 3, '#6d4c41');
+      drawRect(x + 5, y + h - 3, 9, 1, '#8d6e63');
+      drawRect(x + w - 14, y + h - 3, 9, 3, '#6d4c41');
+      drawRect(x + w - 14, y + h - 3, 9, 1, '#8d6e63');
+      // Left arm + hand
+      drawRect(x - 3, y + 18, 4, 12, '#1a237e');
+      drawRect(x - 3, y + 30, 4, 3, '#ffe0b2');
+      // Right arm + hand holding phone
+      drawRect(x + w - 1, y + 18, 4, 9, '#1a237e');
+      drawRect(x + w - 1, y + 27, 4, 3, '#ffe0b2');
+      // Phone
+      const phoneBob = Math.sin(gameTime * 0.06) * 0.5;
+      drawRect(x + w, y + 24 + phoneBob, 5, 9, '#222');
+      drawRect(x + w + 1, y + 25 + phoneBob, 3, 6, '#4fc3f7');
+      drawRect(x + w + 1, y + 25 + phoneBob, 2, 2, '#81d4fa');
+      // Smug smirk
+      drawRect(x + 10, y + 13, 8, 1, '#c8a078');
+      drawRect(x + 15, y + 12, 3, 1, '#c8a078');
+      // Eyebrows (left raised)
+      drawRect(x + 7, y + 5, 6, 1, '#1a1209');
+      drawRect(x + w - 13, y + 6, 6, 1, '#1a1209');
+    });
 
-  // Neon sign: "BINGO UBALDI" with pulsing glow
-  const neonP = 0.6 + Math.sin(gameTime * 0.06) * 0.4;
-  const signX = bingoX + bingoW/2, signY = bingoY + 28;
-  // Sign backing
-  drawRect(bingoX + 15, bingoY + 10, bingoW - 30, 32, '#111');
-  drawRect(bingoX + 15, bingoY + 10, bingoW - 30, 2, '#7b1fa2');
-  // Neon glow
-  ctx.globalAlpha = neonP * 0.2;
-  drawRect(bingoX + 10, bingoY + 6, bingoW - 20, 40, '#ce93d8');
-  ctx.globalAlpha = 1;
-  drawText('BINGO', signX, signY, '#e1bee7', 14, 'center');
-  ctx.globalAlpha = neonP;
-  drawText('UBALDI', signX, signY + 14, '#ce93d8', 11, 'center');
-  ctx.globalAlpha = 1;
+    if (!startapparoIntroDone) {
+      // Intro dialogue box — player must click to dismiss
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      const dlgX = W/2 - 250, dlgY = H/2 - 50, dlgW = 500, dlgH = 100;
+      drawRect(dlgX + 3, dlgY + 3, dlgW, dlgH, 'rgba(0,0,0,0.3)');
+      drawRect(dlgX, dlgY, dlgW, dlgH, 'rgba(20,20,40,0.95)');
+      drawRect(dlgX, dlgY, dlgW, 3, '#4fc3f7');
+      ctx.strokeStyle = '#263238';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(dlgX, dlgY, dlgW, dlgH);
+      ctx.lineWidth = 1;
+      drawText('Un tizio in giacca parla ad alta voce al telefono...', W/2, dlgY + 42, '#4fc3f7', 16, 'center');
+      const blinkAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+      ctx.globalAlpha = blinkAlpha;
+      drawText('[Click / Enter]', W/2, dlgY + 78, '#888', 11, 'center');
+      ctx.globalAlpha = 1;
+      if (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space']) {
+        startapparoIntroDone = true;
+        const STARTAPPARO_BUBBLES = [
+          '"Si si Palella, il Conte e\' perfetto per il seed round..."',
+          '"Help-mez spacca! I monopattini sono il futuro!"',
+          '"No no, blockchain-adjacent, non blockchain... e\' diverso!"',
+          '"Palella fidati, exit strategy in 6 mesi massimo!"',
+          '"Lo so che l\'ultimo progetto e\' fallito... ma questo e\' diverso!"',
+          '"Franceschino? Si, viene pure lui a Ibiza dopo la IPO..."'
+        ];
+        startapparoBubbleLine = STARTAPPARO_BUBBLES[Math.floor(Math.random() * STARTAPPARO_BUBBLES.length)];
+        startapparoBubbleTimer = 180;
+        hubInputCooldown = 15;
+        mouseClick = false;
+      }
+    } else {
+      // Periodic speech bubbles (talking to Palella on phone)
+      if (startapparoBubbleTimer <= 0 && gameTime % 180 === 0) {
+        const STARTAPPARO_BUBBLES = [
+          '"Si si Palella, il Conte e\' perfetto per il seed round..."',
+          '"Help-mez spacca! I monopattini sono il futuro!"',
+          '"No no, blockchain-adjacent, non blockchain... e\' diverso!"',
+          '"Palella fidati, exit strategy in 6 mesi massimo!"',
+          '"Lo so che l\'ultimo progetto e\' fallito... ma questo e\' diverso!"',
+          '"Franceschino? Si, viene pure lui a Ibiza dopo la IPO..."'
+        ];
+        startapparoBubbleLine = STARTAPPARO_BUBBLES[Math.floor(Math.random() * STARTAPPARO_BUBBLES.length)];
+        startapparoBubbleTimer = 150;
+      }
+      if (startapparoBubbleTimer > 0) {
+        startapparoBubbleTimer--;
+        drawCasinoBubble(stX + 18, stY - 8, startapparoBubbleLine, 200, '#4fc3f7');
+      } else if (!startapparoFirstSeen) {
+        startapparoFirstSeen = true;
+      }
+    }
 
-  // Windows (2 rows, dark interior with purple-ish glow)
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
-    const wx = bingoX + 18 + c * 95;
-    const wy = bingoY + 55 + r * 70;
-    drawRect(wx, wy, 55, 50, '#0d0a1a');
-    ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.025 + c + r * 2) * 0.1;
-    drawRect(wx + 2, wy + 2, 51, 46, '#4a148c');
-    ctx.globalAlpha = 1;
-    // Window frame
-    drawRect(wx, wy, 55, 2, '#3d2050');
-    drawRect(wx + 26, wy, 2, 50, '#3d2050');
+    // Click on Startapparo to start encounter
+    const stHover = mouseX > stX - 5 && mouseX < stX + 46 && mouseY > stY - 10 && mouseY < stY + 60;
+    if (stHover && startapparoIntroDone) {
+      ctx.globalAlpha = 0.15;
+      drawRect(stX - 5, stY - 10, 51, 70, '#4fc3f7');
+      ctx.globalAlpha = 1;
+    }
+    if (!showCredits && !hubConfirm && !startapparoActive && startapparoIntroDone && stHover && mouseClick) {
+      startapparoPhase = 1;
+      startapparoLine = 0;
+      startapparoCooldown = 15;
+      startapparoBubbleTimer = 0;
+      startapparoBubbleLine = '';
+      mouseClick = false;
+    }
   }
-
-  // Door — clickable entrance with warm purple light
-  const doorX = bingoX + bingoW/2 - 30, doorY = bingoY + 200, doorW = 60, doorH = bingoH - 200;
-  drawRect(doorX, doorY, doorW, doorH, '#1a0a2a');
-  drawRect(doorX + 3, doorY + 3, doorW - 6, doorH - 3, '#120820');
-  // Warm light from inside
-  ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.04) * 0.1;
-  ctx.fillStyle = '#9c27b0';
-  ctx.beginPath();
-  ctx.arc(doorX + doorW/2, doorY + 30, 30, Math.PI, 0);
-  ctx.fill();
-  ctx.globalAlpha = 0.15;
-  ctx.fillRect(doorX + 5, doorY + 40, doorW - 10, doorH - 45);
-  ctx.globalAlpha = 1;
-  // Door frame
-  drawRect(doorX, doorY, doorW, 3, '#7b1fa2');
-  drawRect(doorX, doorY, 3, doorH, '#4a2a5a');
-  drawRect(doorX + doorW - 3, doorY, 3, doorH, '#4a2a5a');
-
-  // "ENTRA" sign above door
-  drawRect(doorX - 5, doorY - 18, doorW + 10, 16, 'rgba(0,0,0,0.7)');
-  const entraPulse = 0.7 + Math.sin(gameTime * 0.08) * 0.3;
-  ctx.globalAlpha = entraPulse;
-  drawText('[B] ENTRA', doorX + doorW/2, doorY - 6, '#e1bee7', 10, 'center');
-  ctx.globalAlpha = 1;
-
-  // Click on door to enter casino
-  const doorHover = mouseX > doorX && mouseX < doorX + doorW && mouseY > doorY && mouseY < doorY + doorH;
-  if (doorHover) {
-    // Hover highlight on door
-    ctx.globalAlpha = 0.15;
-    drawRect(doorX, doorY, doorW, doorH, '#ce93d8');
-    ctx.globalAlpha = 1;
-  }
-
-  // Small decorative neon strips on building sides
-  ctx.globalAlpha = 0.3 + Math.sin(gameTime * 0.07) * 0.15;
-  drawRect(bingoX, bingoY + 48, 2, bingoH - 48, '#7b1fa2');
-  drawRect(bingoX + bingoW - 2, bingoY + 48, 2, bingoH - 48, '#7b1fa2');
-  ctx.globalAlpha = 1;
 
   // === TOP BAR ===
   drawRect(0, 0, W, 50, 'rgba(0,0,0,0.75)');
@@ -7092,7 +7247,7 @@ function drawHub() {
   drawRect(shopBx, shopBy, 150, 32, shopHover ? '#d84315' : '#bf360c');
   drawRect(shopBx, shopBy, 150, 2, '#ff6e40');
   drawText('ARMERIA [S]', shopBx + 75, shopBy + 22, '#fff', 13, 'center');
-  if (!showCredits && !hubConfirm && ((shopHover && mouseClick) || keys['KeyS'])) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && ((shopHover && mouseClick) || (armDoorHover && mouseClick) || keys['KeyS'])) {
     state = 'shop';
     shopTab = 0;
     mouseClick = false;
@@ -7106,7 +7261,7 @@ function drawHub() {
   drawText('BINGO UBALDI [B]', casinoBx + 98, casinoBy + 22, '#fff', 13, 'center');
   // Door hitbox (matches the bingo building door drawn earlier)
   const bingoDoorClick = mouseX > 700 + 195/2 - 30 && mouseX < 700 + 195/2 + 30 && mouseY > 330 && mouseY < 410;
-  if (!showCredits && !hubConfirm && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
     state = 'casino';
     casinoTab = 0;
     pokerPhase = 'idle';
@@ -7132,7 +7287,7 @@ function drawHub() {
   drawRect(movesBx, movesBy, 155, 32, movesHover ? '#1565c0' : '#0d47a1');
   drawRect(movesBx, movesBy, 155, 2, '#42a5f5');
   drawText('AIUTO [TAB]', movesBx + 78, movesBy + 22, '#fff', 13, 'center');
-  if (!showCredits && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
+  if (!showCredits && !startapparoActive && !startapparoIntroShowing && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
     toggleMovesScreen();
     mouseClick = false;
   }
@@ -7146,16 +7301,16 @@ function drawHub() {
   if (hubInputCooldown > 0) hubInputCooldown--;
 
   // Keyboard navigation
-  if (!showCredits && !hubConfirm && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
     hubSelection = Math.max(0, hubSelection - 1);
     playSFX('hit');
   }
-  if (!showCredits && !hubConfirm && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
     hubSelection = Math.min(levels.length - 1, hubSelection + 1);
     playSFX('hit');
   }
   // Number keys to jump to level
-  if (!showCredits && !hubConfirm) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing) {
   for (let n = 0; n < levels.length; n++) {
     if (keysJustPressed['Digit' + (n+1)]) {
       hubSelection = n;
@@ -7164,7 +7319,7 @@ function drawHub() {
   }
   }
   // Enter to open confirmation (not start level directly)
-  if (!showCredits && !hubConfirm && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !startapparoIntroShowing && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
     const selLocked = hubSelection > 0 && !bossDefeated[hubSelection - 1];
     if (!selLocked) {
       hubConfirm = true;
@@ -7219,7 +7374,7 @@ function drawHub() {
     }
 
     // Click opens confirmation, not instant start
-    if (!hubConfirm && isHover && mouseClick && !locked) {
+    if (!hubConfirm && !startapparoActive && !startapparoIntroShowing && isHover && mouseClick && !locked) {
       hubSelection = i;
       hubConfirm = true;
       hubInputCooldown = 12;
@@ -7277,7 +7432,7 @@ function drawHub() {
   const hoverCred = mouseX >= credBtnX && mouseX <= credBtnX + credBtnW && mouseY >= credBtnY && mouseY <= credBtnY + credBtnH;
   drawRect(credBtnX, credBtnY, credBtnW, credBtnH, hoverCred ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
   drawText('Crediti', credBtnX + 33, credBtnY + 14, hoverCred ? '#aaa' : '#555', 10, 'center');
-  if (mouseClick && hoverCred) {
+  if (!startapparoActive && !startapparoIntroShowing && mouseClick && hoverCred) {
     showCredits = true;
     codeInput = '';
     mouseClick = false;
@@ -7405,6 +7560,304 @@ function drawHub() {
 
     mouseClick = false;
     return; // Block hub interaction while credits open
+  }
+
+  // === LO STARTAPPARO encounter ===
+  if (startapparoPhase > 0 && startapparoPhase < 4) {
+    if (startapparoCooldown > 0) startapparoCooldown--;
+
+    // Dark overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw Lo Startapparo (slim build, slicked hair, blazer over t-shirt, holding phone)
+    const spX = W/2 - 28, spY = 295;
+    const spBob = Math.sin(gameTime * 0.04) * 1.5;
+    const spSc = 1.25;
+    ctx.save();
+    ctx.translate(spX + 28, spY + 42 + spBob);
+    ctx.scale(spSc, spSc);
+    ctx.translate(-(spX + 28), -(spY + 42 + spBob));
+    drawPixelChar(spX, spY + spBob, 56, 85, '#1a237e', '#ffe0b2', (x, y, w, h) => {
+      // Slicked-back hair (dark, swept right) with gel shine
+      drawRect(x + 5, y - 5, w - 10, 7, '#1a1209');
+      drawRect(x + 7, y - 7, w - 12, 5, '#1a1209');
+      drawRect(x + w/2, y - 8, w/2 - 7, 4, '#1a1209');
+      drawRect(x + w/2 + 2, y - 7, 6, 2, '#3a2a18'); // gel highlight
+      // Blazer (navy) — lapels with lighter edge
+      drawRect(x, y + 24, 6, 30, '#1a237e');
+      drawRect(x + w - 6, y + 24, 6, 30, '#1a237e');
+      drawRect(x + 6, y + 24, 2, 28, '#283593'); // left lapel edge
+      drawRect(x + w - 8, y + 24, 2, 28, '#283593'); // right lapel edge
+      // T-shirt visible underneath (light grey V-neck)
+      drawRect(x + 10, y + 27, w - 20, 15, '#e8e8e8');
+      drawRect(x + w/2 - 4, y + 24, 3, 8, '#e8e8e8'); // V-neck left
+      drawRect(x + w/2 + 1, y + 24, 3, 8, '#e8e8e8'); // V-neck right
+      drawRect(x + w/2 - 1, y + 24, 2, 4, '#ffe0b2'); // skin in V
+      // Blazer collar — folded look
+      drawRect(x + 5, y + 22, 8, 4, '#1a237e');
+      drawRect(x + w - 13, y + 22, 8, 4, '#1a237e');
+      drawRect(x + 5, y + 22, 8, 1, '#283593');
+      drawRect(x + w - 13, y + 22, 8, 1, '#283593');
+      // Pocket square (startup bro essential — teal)
+      drawRect(x + 8, y + 28, 5, 4, '#26c6da');
+      drawRect(x + 9, y + 27, 3, 2, '#4dd0e1');
+      // Blazer center line
+      drawRect(x + w/2 - 1, y + 42, 2, 12, '#0d1b5e');
+      // Belt
+      drawRect(x + 4, y + 54, w - 8, 3, '#333');
+      drawRect(x + w/2 - 2, y + 54, 4, 3, '#9e9e9e'); // buckle
+      // Slim pants (charcoal)
+      drawRect(x + 10, y + h - 20, 10, 20, '#2c2c2c');
+      drawRect(x + w - 20, y + h - 20, 10, 20, '#2c2c2c');
+      drawRect(x + w/2 - 1, y + 57, 2, 8, '#222'); // crease
+      // Loafers (tan leather with dark sole)
+      drawRect(x + 9, y + h - 5, 12, 5, '#6d4c41');
+      drawRect(x + w - 21, y + h - 5, 12, 5, '#6d4c41');
+      drawRect(x + 9, y + h - 5, 12, 2, '#8d6e63'); // lighter top
+      drawRect(x + w - 21, y + h - 5, 12, 2, '#8d6e63');
+      // Left arm (blazer) + hand
+      drawRect(x - 5, y + 28, 6, 18, '#1a237e');
+      drawRect(x - 5, y + 46, 6, 4, '#ffe0b2'); // hand
+      // Right arm (blazer, holding phone) + hand
+      drawRect(x + w - 1, y + 28, 6, 14, '#1a237e');
+      drawRect(x + w - 1, y + 42, 6, 4, '#ffe0b2'); // hand
+      // Phone in right hand
+      const phoneBob = Math.sin(gameTime * 0.06) * 0.8;
+      drawRect(x + w + 1, y + 38 + phoneBob, 7, 13, '#222');
+      drawRect(x + w + 2, y + 39 + phoneBob, 5, 11, '#111');
+      drawRect(x + w + 2, y + 40 + phoneBob, 5, 8, '#4fc3f7'); // screen
+      drawRect(x + w + 3, y + 41 + phoneBob, 3, 2, '#81d4fa'); // screen glare
+      // Smug smirk (slight upturn on right)
+      drawRect(x + 14, y + 18, 12, 2, '#c8a078');
+      drawRect(x + 23, y + 17, 4, 2, '#c8a078');
+      // Eyebrow raise (left higher = smug)
+      drawRect(x + 9, y + 6, 9, 2, '#1a1209');
+      drawRect(x + w - 18, y + 7, 9, 2, '#1a1209');
+    });
+
+    // Name label
+    ctx.globalAlpha = 0.8;
+    drawText('LO STARTAPPARO', spX + 28, spY + spBob - 14, '#4fc3f7', 12, 'center');
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Dialogue lines
+    const startapparoIntroLines = [
+      "Ehi, Conte! Fermati un attimo!",
+      "Mi chiamo Lo Startapparo. Vengo da Milano... in Brera, ma vabe'.",
+      "Ho una vision, bro. Si chiama Help-mez.",
+      "Monopattini elettrici con blockchain-adjacent technology!",
+      "Scalabilita' verticale, disruption della mobilita', exit strategy in 6 mesi!",
+      "Mi servono solo 40 coins per il seed round. Che dici, investi?"
+    ];
+    const startapparoAcceptLines = [
+      "SEI UN VISIONARIO, Conte! Un vero angel investor!",
+      "Vado a festeggiare a Ibiza con Franceschino e il mio boss Palella! Ti aggiorno sulla IPO!"
+    ];
+    const startapparoRejectLines = [
+      "Peccato... ti sei perso il treno del futuro.",
+      "Vabe', vado a Ibiza con Franceschino e il mio boss Palella lo stesso. Ciao!"
+    ];
+
+    // Dialogue box
+    drawRect(60, 430, W - 120, 80, 'rgba(0,0,0,0.85)');
+    drawRect(60, 430, W - 120, 2, '#4fc3f7');
+
+    if (startapparoPhase === 1) {
+      // Click-through intro lines
+      const line = startapparoIntroLines[startapparoLine] || startapparoIntroLines[startapparoIntroLines.length - 1];
+      drawText('"' + line + '"', W/2, 470, '#e0e0e0', 14, 'center');
+      ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+      drawText('[Click / Enter]', W/2, 498, '#4fc3f7', 10, 'center');
+      ctx.globalAlpha = 1;
+
+      if (startapparoCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+        startapparoLine++;
+        startapparoCooldown = 10;
+        playSFX('hit');
+        if (startapparoLine >= startapparoIntroLines.length) {
+          startapparoPhase = 2;
+          startapparoChoice = -1;
+          startapparoCooldown = 15;
+        }
+        mouseClick = false;
+      }
+    } else if (startapparoPhase === 2) {
+      // Choice: Invest 40 or No Grazie
+      drawText('"Allora, ci stai?"', W/2, 455, '#e0e0e0', 14, 'center');
+
+      const btnW = 160, btnH = 36;
+      const btn1X = W/2 - btnW - 20, btn2X = W/2 + 20, btnY = 468;
+      const canAfford = coins >= 40;
+
+      // Keyboard selection
+      if (startapparoCooldown <= 0) {
+        if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) { startapparoChoice = 0; playSFX('hit'); }
+        if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) { startapparoChoice = 1; playSFX('hit'); }
+      }
+
+      const hover1 = mouseX > btn1X && mouseX < btn1X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+      const hover2 = mouseX > btn2X && mouseX < btn2X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+      if (hover1) startapparoChoice = 0;
+      if (hover2) startapparoChoice = 1;
+
+      // INVESTI 40 button (greyed out if can't afford)
+      if (canAfford) {
+        drawRect(btn1X, btnY, btnW, btnH, startapparoChoice === 0 ? '#1b5e20' : '#1a2e1a');
+        drawRect(btn1X, btnY, btnW, 2, startapparoChoice === 0 ? '#66bb6a' : '#2e7d32');
+        drawText('INVESTI 40', btn1X + btnW/2, btnY + 24, startapparoChoice === 0 ? '#66bb6a' : '#4caf50', 14, 'center');
+      } else {
+        drawRect(btn1X, btnY, btnW, btnH, '#2a2a2a');
+        drawRect(btn1X, btnY, btnW, 2, '#555');
+        drawText('INVESTI 40', btn1X + btnW/2, btnY + 24, '#666', 14, 'center');
+        ctx.globalAlpha = 0.6;
+        drawText('(non hai abbastanza coins)', btn1X + btnW/2, btnY + btnH + 12, '#ff5252', 9, 'center');
+        ctx.globalAlpha = 1;
+        // Can't select invest if not enough coins
+        if (startapparoChoice === 0) startapparoChoice = -1;
+      }
+
+      drawRect(btn2X, btnY, btnW, btnH, startapparoChoice === 1 ? '#4e342e' : '#2c1e14');
+      drawRect(btn2X, btnY, btnW, 2, startapparoChoice === 1 ? '#ff8f00' : '#5d4037');
+      drawText('NO GRAZIE', btn2X + btnW/2, btnY + 24, startapparoChoice === 1 ? '#ff8f00' : '#8d6e63', 14, 'center');
+
+      if (startapparoCooldown <= 0 && startapparoChoice >= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+        startapparoPhase = 3;
+        startapparoLine = 0;
+        startapparoCooldown = 15;
+        if (startapparoChoice === 0) {
+          coins -= 40;
+          startapparoInvested = true;
+          playSFX('hit');
+          spawnParticles(W/2, 300, '#ffd700', 10, 4);
+        }
+        mouseClick = false;
+      }
+    } else if (startapparoPhase === 3) {
+      // Response lines based on choice
+      const lines = startapparoChoice === 0 ? startapparoAcceptLines : startapparoRejectLines;
+      const line = lines[startapparoLine] || lines[lines.length - 1];
+      drawText('"' + line + '"', W/2, 470, startapparoChoice === 0 ? '#66bb6a' : '#ff8f00', 14, 'center');
+      ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+      drawText('[Click / Enter]', W/2, 498, '#4fc3f7', 10, 'center');
+      ctx.globalAlpha = 1;
+
+      if (startapparoCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+        startapparoLine++;
+        startapparoCooldown = 10;
+        playSFX('hit');
+        if (startapparoLine >= lines.length) {
+          startapparoVisited = true;
+          if (startapparoInvested) startapparoPendingReturn = true;
+          startapparoPhase = 4;
+          hubInputCooldown = 15;
+        }
+        mouseClick = false;
+      }
+    }
+
+    mouseClick = false;
+    return;
+  }
+
+  // === STARTAPPARO IPO PAYOFF ===
+  if (startapparoPayoffPhase > 0 && startapparoPayoffPhase < 3) {
+    if (startapparoPayoffCooldown > 0) startapparoPayoffCooldown--;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw Startapparo again (same character)
+    const spX = W/2 - 28, spY = 295;
+    const spBob = Math.sin(gameTime * 0.04) * 1.5;
+    const spSc = 1.25;
+    ctx.save();
+    ctx.translate(spX + 28, spY + 42 + spBob);
+    ctx.scale(spSc, spSc);
+    ctx.translate(-(spX + 28), -(spY + 42 + spBob));
+    drawPixelChar(spX, spY + spBob, 56, 85, '#1a237e', '#ffe0b2', (x, y, w, h) => {
+      drawRect(x + 5, y - 5, w - 10, 7, '#1a1209');
+      drawRect(x + 7, y - 7, w - 12, 5, '#1a1209');
+      drawRect(x + w/2, y - 8, w/2 - 7, 4, '#1a1209');
+      drawRect(x + w/2 + 2, y - 7, 6, 2, '#3a2a18');
+      drawRect(x, y + 24, 6, 30, '#1a237e');
+      drawRect(x + w - 6, y + 24, 6, 30, '#1a237e');
+      drawRect(x + 6, y + 24, 2, 28, '#283593');
+      drawRect(x + w - 8, y + 24, 2, 28, '#283593');
+      drawRect(x + 10, y + 27, w - 20, 15, '#e8e8e8');
+      drawRect(x + w/2 - 4, y + 24, 3, 8, '#e8e8e8');
+      drawRect(x + w/2 + 1, y + 24, 3, 8, '#e8e8e8');
+      drawRect(x + w/2 - 1, y + 24, 2, 4, '#ffe0b2');
+      drawRect(x + 5, y + 22, 8, 4, '#1a237e');
+      drawRect(x + w - 13, y + 22, 8, 4, '#1a237e');
+      drawRect(x + 5, y + 22, 8, 1, '#283593');
+      drawRect(x + w - 13, y + 22, 8, 1, '#283593');
+      drawRect(x + 8, y + 28, 5, 4, '#26c6da');
+      drawRect(x + 9, y + 27, 3, 2, '#4dd0e1');
+      drawRect(x + w/2 - 1, y + 42, 2, 12, '#0d1b5e');
+      drawRect(x + 4, y + 54, w - 8, 3, '#333');
+      drawRect(x + w/2 - 2, y + 54, 4, 3, '#9e9e9e');
+      drawRect(x + 10, y + h - 20, 10, 20, '#2c2c2c');
+      drawRect(x + w - 20, y + h - 20, 10, 20, '#2c2c2c');
+      drawRect(x + w/2 - 1, y + 57, 2, 8, '#222');
+      drawRect(x + 9, y + h - 5, 12, 5, '#6d4c41');
+      drawRect(x + w - 21, y + h - 5, 12, 5, '#6d4c41');
+      drawRect(x + 9, y + h - 5, 12, 2, '#8d6e63');
+      drawRect(x + w - 21, y + h - 5, 12, 2, '#8d6e63');
+      drawRect(x - 5, y + 28, 6, 18, '#1a237e');
+      drawRect(x - 5, y + 46, 6, 4, '#ffe0b2');
+      drawRect(x + w - 1, y + 28, 6, 14, '#1a237e');
+      drawRect(x + w - 1, y + 42, 6, 4, '#ffe0b2');
+      const phoneBob = Math.sin(gameTime * 0.06) * 0.8;
+      drawRect(x + w + 1, y + 38 + phoneBob, 7, 13, '#222');
+      drawRect(x + w + 2, y + 39 + phoneBob, 5, 11, '#111');
+      drawRect(x + w + 2, y + 40 + phoneBob, 5, 8, '#4fc3f7');
+      drawRect(x + w + 3, y + 41 + phoneBob, 3, 2, '#81d4fa');
+      drawRect(x + 14, y + 18, 12, 2, '#c8a078');
+      drawRect(x + 23, y + 17, 4, 2, '#c8a078');
+      drawRect(x + 9, y + 6, 9, 2, '#1a1209');
+      drawRect(x + w - 18, y + 7, 9, 2, '#1a1209');
+    });
+
+    ctx.globalAlpha = 0.8;
+    drawText('LO STARTAPPARO', spX + 28, spY + spBob - 14, '#4fc3f7', 12, 'center');
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    const ipoLines = [
+      "Help-mez ha fatto l'IPO ed e' stato un successo!",
+      "Beh... qualcuno direbbe che e' stato un pump-and-dump... ma non si puo' accontentare tutti!"
+    ];
+
+    drawRect(60, 430, W - 120, 80, 'rgba(0,0,0,0.85)');
+    drawRect(60, 430, W - 120, 2, '#4fc3f7');
+    drawText('"' + ipoLines[startapparoPayoffPhase - 1] + '"', W/2, 470, '#66bb6a', 14, 'center');
+    ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+    drawText('[Click / Enter]', W/2, 498, '#4fc3f7', 10, 'center');
+    ctx.globalAlpha = 1;
+
+    if (startapparoPayoffCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+      startapparoPayoffPhase++;
+      startapparoPayoffCooldown = 10;
+      playSFX('hit');
+      if (startapparoPayoffPhase === 2) {
+        // Award coins on second line
+        coins += 100;
+        playSFX('coin');
+        spawnParticles(W/2, 300, '#ffd700', 20, 6);
+        showQuickText('+100 coins! Grazie Help-mez!', '#ffd700');
+      }
+      if (startapparoPayoffPhase >= 3) {
+        startapparoPendingReturn = false;
+        startapparoPayoffPhase = 0;
+        hubInputCooldown = 15;
+      }
+      mouseClick = false;
+    }
+
+    mouseClick = false;
+    return;
   }
 
   // Show cheat active indicator
@@ -9581,11 +10034,13 @@ function drawUpgradeScreen() {
 // START LEVEL
 // ==========================================
 let isReplayLevel = false; // true if replaying a beaten level
+let lastLevelWon = false;
 
 function startLevel(idx) {
   currentLevel = idx;
   hubVisitInited = false; // reset hub visit flag so secrets reset next visit
   isReplayLevel = bossDefeated[idx]; // track if this was already beaten
+  lastLevelWon = false;
   // medium + hard: lives carry over; easy: infinite (lives never decremented)
   state = 'dialogue';
   resetPlayer();
@@ -10361,6 +10816,7 @@ function updateLevel() {
   if (boss && boss.hp <= 0 && !boss.dead) {
     boss.dead = true;
     bossDefeated[currentLevel] = true;
+    lastLevelWon = true;
     if (difficulty === 'medium') lives = 3; // medium: lives replenish after beating a boss
     // Boss coin drops (physical pickups) — first clear gives big bonus
     const bossCoins = isReplayLevel ? 15 + currentLevel * 10 : 50 + currentLevel * 35;
@@ -11720,6 +12176,14 @@ function drawVictory() {
       micheleVisited = false;
       micheleArgueIntroDone = false;
       micheleArgueFirstSeen = false;
+      startapparoVisited = false;
+      startapparoInvested = false;
+      startapparoPendingReturn = false;
+      startapparoPhase = 0;
+      startapparoPayoffPhase = 0;
+      startapparoIntroDone = false;
+      startapparoFirstSeen = false;
+      startapparoBubbleTimer = 0;
       lampHit = false;
       hubCatPetted = false;
       drinkTaken = false;
@@ -11787,8 +12251,9 @@ function update() {
     case 'backroom': break;
   }
 
-  // Screen shake
+  // Screen shake / wobble
   if (screenShake > 0) screenShake--;
+  if (drinkWobble > 0) drinkWobble--;
   if (screenFlash > 0) screenFlash--;
 
 }

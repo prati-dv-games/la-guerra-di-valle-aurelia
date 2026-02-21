@@ -141,6 +141,7 @@ The hub hides interactive secrets -- click/tap to discover them:
 - Tap the left wall of Vanni's bar repeatedly
 - Try the drink at the outdoor table for a combat buff
 - Click the front door of Bar Vanni to find Michele Lo Sbirro's backroom -- choose wisely and you may receive the Manganello (police baton) weapon whose Ultra slows all enemies
+- After beating the second boss, Lo Startapparo pitches his startup "Help-mez" and asks you to invest -- choose wisely and you might profit
 
 ## How to Share
 
