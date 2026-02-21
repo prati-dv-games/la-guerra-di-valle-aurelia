@@ -378,6 +378,25 @@ function playSFX(type) {
       o.start(now); o.stop(now + 0.2);
       break;
     }
+    case 'victory_sweep': {
+      // Smooth ascending chime arpeggio that wraps up the arcade music
+      const notes = [NOTE.C4, NOTE.E4, NOTE.G4, NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6];
+      notes.forEach((f, i) => {
+        const { o, g } = createSFXNode('sine', sfxGain);
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.18 - i * 0.02, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.35);
+        o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.4);
+      });
+      // Soft pad underneath
+      const { o: pad, g: padG } = createSFXNode('sine', sfxGain);
+      pad.frequency.value = NOTE.C4;
+      padG.gain.setValueAtTime(0.12, now);
+      padG.gain.linearRampToValueAtTime(0.08, now + 0.5);
+      padG.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+      pad.start(now); pad.stop(now + 1.0);
+      break;
+    }
   }
 }
 
@@ -10595,13 +10614,6 @@ let victoryTimer = 0; // guard timer to prevent instant restart
 let victorySongStarted = false;
 let freestyleFadeTimer = 0; // countdown for smooth crossfade to freestyle
 
-function startVictorySong() {
-  if (victorySongStarted) return;
-  victorySongStarted = true;
-  // Don't stop 8-bit music yet — start a fade timer for smooth transition
-  freestyleFadeTimer = 30; // ~0.5s fade
-}
-
 function stopVictorySong() {
   victorySongStarted = false;
   freestyleVideo.pause();
@@ -10611,14 +10623,10 @@ function stopVictorySong() {
 function drawVictory() {
   victoryTimer++;
 
-  // Let 8-bit fanfare play for ~4 seconds, then crossfade to freestyle
-  if (victoryTimer === 240) startVictorySong();
-
-  // Smooth crossfade: fade out 8-bit music, then start freestyle
+  // Smooth crossfade: after sweep SFX finishes, start freestyle audio
   if (freestyleFadeTimer > 0) {
     freestyleFadeTimer--;
     if (freestyleFadeTimer === 0) {
-      stopMusic();
       freestyleVideo.currentTime = 0;
       freestyleVideo.play().catch(() => {});
     }
@@ -10739,7 +10747,7 @@ function update() {
       }
       break;
     case 'gameover': playTrack('gameover'); break;
-    case 'victory': if (!victorySongStarted) playTrack('victory'); break;
+    case 'victory': if (!victorySongStarted) { stopMusic(); playSFX('victory_sweep'); victorySongStarted = true; freestyleFadeTimer = 45; } break;
     case 'sabi': playTrack('sabi'); break;
     case 'casino': playTrack('casino'); break;
   }
