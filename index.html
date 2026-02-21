@@ -1185,7 +1185,7 @@ let pokerPhase = 'idle'; // 'idle' | 'hold' | 'result'
 let pokerDeck = [];
 let pokerHand = [null, null, null, null, null];
 let pokerHeld = [false, false, false, false, false];
-let pokerBet = 10;
+let pokerBet = 5;
 let pokerResult = '';
 let pokerWinAmount = 0;
 let pokerResultTimer = 0;
@@ -1198,7 +1198,7 @@ let slotPhase = 'idle'; // 'idle' | 'spinning' | 'result'
 let slotReels = [0, 0, 0];
 let slotTargetReels = [0, 0, 0];
 let slotSpinTimers = [0, 0, 0];
-let slotBet = 10;
+let slotBet = 5;
 let slotResult = '';
 let slotWinAmount = 0;
 let slotResultTimer = 0;
@@ -7653,8 +7653,11 @@ function drawCasino() {
       mouseClick = false;
     }
   }
-  if (keysJustPressed['Digit1']) casinoTab = 0;
-  if (keysJustPressed['Digit2']) casinoTab = 1;
+  // Tab keys — only when not in active game (avoid conflict with poker hold keys)
+  if (pokerPhase === 'idle' && slotPhase === 'idle') {
+    if (keysJustPressed['Digit1']) casinoTab = 0;
+    if (keysJustPressed['Digit2']) casinoTab = 1;
+  }
 
   const panelY = 86;
   if (!casinoDialogueActive) {
