@@ -984,22 +984,22 @@ let lastLevelGrade = '';
 let lastLevelBreakdown = null;
 
 const UPGRADE_POOL = [
-  // Statistiche
-  { name: '+15% Danno', cat: 'stat', desc: 'Tutti gli attacchi fanno 15% danno in piu\'', effect: 'dmg15', icon: '!' },
-  { name: '+20 HP Max', cat: 'stat', desc: 'Aumenta la vita massima di 20', effect: 'hp20', icon: '+' },
-  { name: '+20 Stamina Max', cat: 'stat', desc: 'Aumenta la stamina massima di 20', effect: 'st20', icon: 'S' },
-  { name: '+25% Regen Stamina', cat: 'stat', desc: 'La stamina si ricarica 25% piu\' veloce', effect: 'stregen', icon: 'R' },
-  { name: '+10% Velocita\'', cat: 'stat', desc: 'Ti muovi 10% piu\' veloce', effect: 'spd10', icon: '>' },
-  { name: '+15% Critico', cat: 'stat', desc: 'Tutte le armi +15% chance critico', effect: 'crit15', icon: 'C' },
-  { name: 'Pelle Dura', cat: 'stat', desc: 'Ricevi 15% danno in meno', effect: 'armor15', icon: 'D' },
-  { name: 'Colpo Pesante', cat: 'stat', desc: '+25% danno poise (stagger piu\' veloce)', effect: 'poise25', icon: 'P' },
-  { name: 'Scatto Aereo', cat: 'mossa', desc: 'Schiva in aria (X in volo)', effect: 'airdash', icon: 'A' },
-  { name: 'Combo Extra', cat: 'mossa', desc: '+1 colpo a tutte le combo', effect: 'comboext', icon: 'E' },
+  // Statistiche — each has a unique accent color
+  { name: '+15% Danno', cat: 'stat', desc: 'Tutti gli attacchi fanno 15% danno in piu\'', effect: 'dmg15', icon: '\u2694', color: '#f44336' },
+  { name: '+20 HP Max', cat: 'stat', desc: 'Aumenta la vita massima di 20', effect: 'hp20', icon: '\u2665', color: '#e91e63' },
+  { name: '+20 Stamina', cat: 'stat', desc: 'Aumenta la stamina massima di 20', effect: 'st20', icon: '\u2605', color: '#ffc107' },
+  { name: '+25% Regen Stamina', cat: 'stat', desc: 'La stamina si ricarica il 25% piu\' veloce', effect: 'stregen', icon: '\u21BB', color: '#8bc34a' },
+  { name: '+10% Velocita\'', cat: 'stat', desc: 'Ti muovi il 10% piu\' veloce', effect: 'spd10', icon: '\u00BB', color: '#00bcd4' },
+  { name: '+15% Critico', cat: 'stat', desc: 'Tutte le armi +15% chance critico', effect: 'crit15', icon: '\u25C6', color: '#ff9800' },
+  { name: 'Pelle Dura', cat: 'stat', desc: 'Ricevi 15% danno in meno', effect: 'armor15', icon: '\u25A0', color: '#607d8b' },
+  { name: 'Colpo Pesante', cat: 'stat', desc: '+25% danno poise, stagger piu\' veloce', effect: 'poise25', icon: '\u25B2', color: '#9c27b0' },
+  { name: 'Scatto Aereo', cat: 'mossa', desc: 'Schiva in aria (X in volo)', effect: 'airdash', icon: '\u2197', color: '#29b6f6' },
+  { name: 'Combo Extra', cat: 'mossa', desc: '+1 colpo a tutte le combo', effect: 'comboext', icon: '\u221E', color: '#e040fb' },
   // Potenziamenti Ultra — attivi solo durante modalita' Ultra (Q)
-  { name: 'Ultra Fuoco', cat: 'mod', desc: 'Ultra: ogni colpo brucia il nemico (3s)', effect: 'ultraFire', icon: 'F' },
-  { name: 'Ultra Ghiaccio', cat: 'mod', desc: 'Ultra: ogni colpo rallenta il nemico del 30% (3s)', effect: 'ultraIce', icon: 'I' },
-  { name: 'Ultra Fulmine', cat: 'mod', desc: 'Ultra: ogni colpo fulmina un nemico vicino', effect: 'ultraShock', icon: 'Z' },
-  { name: 'Ultra Vampiro', cat: 'mod', desc: 'Ultra: cura 8% del danno inflitto', effect: 'ultraVampire', icon: 'V' },
+  { name: 'Ultra Fuoco', cat: 'mod', desc: 'Ultra: ogni colpo brucia il nemico (3s)', effect: 'ultraFire', icon: '\u2666', color: '#ff5722' },
+  { name: 'Ultra Ghiaccio', cat: 'mod', desc: 'Ultra: ogni colpo rallenta il nemico del 30%', effect: 'ultraIce', icon: '\u2733', color: '#4fc3f7' },
+  { name: 'Ultra Fulmine', cat: 'mod', desc: 'Ultra: fulmina un nemico vicino ad ogni colpo', effect: 'ultraShock', icon: '\u2191', color: '#ffeb3b' },
+  { name: 'Ultra Vampiro', cat: 'mod', desc: 'Ultra: cura 8% danno inflitto, -10% ricarica Q', effect: 'ultraVampire', icon: '\u2020', color: '#b71c1c' },
 ];
 let levelTimer = 0;
 let comboCount = 0;
@@ -1144,8 +1144,9 @@ let weaponTier = 0;
 const WEAPON_UPGRADE_COSTS = [150, 300, 500];
 
 // Player stat upgrade tiers (0-3 each), purchased in shop tab 3
-let jumpTier = 0, dodgeTier = 0, speedTier = 0;
-const STAT_UPGRADE_COSTS = [150, 300, 550];
+let healthTier = 0, dodgeTier = 0, speedTier = 0;
+const STAT_UPGRADE_COSTS = [100, 250, 450];
+const HP_VALUES = [120, 140, 165, 195];
 const JUMP_FORCES = [-13.0, -14.2, -15.4, -16.5];
 const DODGE_COOLDOWNS = [48, 40, 33, 26];
 const SPEED_VALUES = [4.0, 4.4, 4.8, 5.3];
@@ -1158,7 +1159,7 @@ let gachaSpinning = false;
 let gachaSpinTimer = 0;
 let gachaResult = null;
 let gachaResultTimer = 0;
-const GACHA_COST = 120;
+const GACHA_COST = 60;
 
 const gachaJokes = [
   '"Aho, ma che te credevi? T\'hanno fregato!"',
@@ -3298,6 +3299,7 @@ function launchComboHit(stepIndex) {
       let chargeGain = 5; // base per hit
       if (isCrit) chargeGain = 8;
       if (didStagger) chargeGain = 15;
+      if (player.upgrades.some(u => u.effect === 'ultraVampire')) chargeGain *= 0.9;
       player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + chargeGain);
       if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
     }
@@ -5462,7 +5464,7 @@ const tutorialSteps = [
   { text: 'Premi X per schivare! Breve invincibilita\'.', hint: 'Schiva!', check: 'dodge' },
   { text: 'Colpire carica la barra ULTRA! Continua a colpire fino a riempirla!', hint: 'Riempi la barra dorata colpendo il manichino!', check: 'ultra' },
   { text: 'Prova i consumabili! Premi 5, 6 o 7 per usarli in battaglia.', hint: 'Premi 5, 6 o 7 per usare un consumabile!', check: 'consumable' },
-  { text: 'TAB = lista mosse completa. Helper: tasti 1-4.', hint: 'Premi TAB per vedere tutte le mosse!' },
+  { text: 'TAB = schermata aiuto completa. Helper: tasti 1-4.', hint: 'Premi TAB per aprire l\'aiuto!' },
   { text: 'Sei pronto, Conte. La gang di Valle Aurelia ti aspetta!', hint: '[ENTER] per iniziare!' }
 ];
 let tutorialChecks = { move: false, jump: false, attack: false, combo: false, dodge: false, ultra: false, consumable: false };
@@ -6027,15 +6029,15 @@ function drawHelperSelect() {
     drawText(h.name, cx + cardW/2, cy + 110, '#fff', 16, 'center');
 
     // Description
-    drawText(h.desc, cx + cardW/2, cy + 140, '#aaa', 10, 'center');
+    drawText(h.desc, cx + cardW/2, cy + 140, '#ddd', 10, 'center');
 
     // Tier info
-    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 170, '#888', 9, 'center');
+    drawText('Cooldown: ' + Math.floor(h.cooldown / 60) + 's', cx + cardW/2, cy + 170, '#bbb', 9, 'center');
 
     // Tier upgrades preview
-    drawText('Potenziamenti:', cx + cardW/2, cy + 200, '#666', 9, 'center');
+    drawText('Potenziamenti:', cx + cardW/2, cy + 200, '#999', 9, 'center');
     for (let t = 0; t < 3; t++) {
-      drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, cx + cardW/2, cy + 220 + t * 18, '#555', 8, 'center');
+      drawText('Lv.' + (t+1) + ': ' + h.tiers[t].desc, cx + cardW/2, cy + 220 + t * 18, '#aaa', 8, 'center');
     }
 
     ctx.globalAlpha = 1;
@@ -6136,7 +6138,7 @@ function drawMovesScreen() {
   ctx.fillStyle = '#0a0a19';
   ctx.fillRect(0, 0, W, H);
 
-  drawText('MOSSE', W/2, 28, '#ffd700', 22, 'center');
+  drawText('AIUTO', W/2, 28, '#ffd700', 22, 'center');
   drawText('TAB / ESC = chiudi', W/2, 46, '#555', 9, 'center');
 
   // Helper to draw a section box
@@ -6212,7 +6214,7 @@ function drawMovesScreen() {
   // Determine rarity
   let rarityLetter = 'C', rarityColor = '#9e9e9e', rarityName = 'Comune';
   if (rareWeapons.some(rw => rw.name === w.name)) { rarityLetter = 'R'; rarityColor = '#2196f3'; rarityName = 'Raro'; }
-  else if (legendaryWeapons.some(lw => lw.name === w.name)) { rarityLetter = 'L'; rarityColor = '#ffd700'; rarityName = 'Leggendario'; }
+  else if (legendaryWeapons.some(lw => lw.name === w.name) || w.special === 'sbombo') { rarityLetter = 'L'; rarityColor = '#ffd700'; rarityName = 'Leggendario'; }
 
   drawRect(20, 424, W - 40, 50, '#1a1a2e');
   drawRect(20, 424, W - 40, 2, w.color || '#888');
@@ -6226,7 +6228,7 @@ function drawMovesScreen() {
 
   // Separator line at very bottom
   drawRect(20, 480, W - 40, 1, '#333');
-  drawText('"Nun te scorda\' le mosse, Conte!"', W/2, 498, '#444', 9, 'center');
+  drawText('"Nun te scorda\' come se combatte, Conte!"', W/2, 498, '#444', 9, 'center');
 
   // Close button (tappable)
   const closeMBtnW = 100, closeMBtnH = 30;
@@ -6508,7 +6510,7 @@ function drawHub() {
   }
 
   // Casino button (top bar + door click)
-  const casinoBx = 345, casinoBy = 10;
+  const casinoBx = 510, casinoBy = 10;
   const casinoHover = mouseX > casinoBx && mouseX < casinoBx + 195 && mouseY > casinoBy && mouseY < casinoBy + 32;
   drawRect(casinoBx, casinoBy, 195, 32, casinoHover ? '#7b1fa2' : '#6a1b9a');
   drawRect(casinoBx, casinoBy, 195, 2, '#ce93d8');
@@ -6535,12 +6537,12 @@ function drawHub() {
     mouseClick = false;
   }
 
-  // Moves button
-  const movesBx = 550, movesBy = 10;
-  const movesHover = mouseX > movesBx && mouseX < movesBx + 160 && mouseY > movesBy && mouseY < movesBy + 32;
-  drawRect(movesBx, movesBy, 160, 32, movesHover ? '#1565c0' : '#0d47a1');
-  drawRect(movesBx, movesBy, 160, 2, '#42a5f5');
-  drawText('MOSSE [TAB]', movesBx + 80, movesBy + 22, '#fff', 13, 'center');
+  // Help button
+  const movesBx = 345, movesBy = 10;
+  const movesHover = mouseX > movesBx && mouseX < movesBx + 155 && mouseY > movesBy && mouseY < movesBy + 32;
+  drawRect(movesBx, movesBy, 155, 32, movesHover ? '#1565c0' : '#0d47a1');
+  drawRect(movesBx, movesBy, 155, 2, '#42a5f5');
+  drawText('AIUTO [TAB]', movesBx + 78, movesBy + 22, '#fff', 13, 'center');
   if (!showCredits && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
     toggleMovesScreen();
     mouseClick = false;
@@ -6857,7 +6859,7 @@ function drawShopWeapon(py) {
   // Rarity badge in shop
   let shopRarLetter = 'C', shopRarColor = '#9e9e9e';
   if (rareWeapons.some(rw => rw.name === w.name)) { shopRarLetter = 'R'; shopRarColor = '#2196f3'; }
-  else if (legendaryWeapons.some(lw => lw.name === w.name)) { shopRarLetter = 'L'; shopRarColor = '#ffd700'; }
+  else if (legendaryWeapons.some(lw => lw.name === w.name) || w.special === 'sbombo') { shopRarLetter = 'L'; shopRarColor = '#ffd700'; }
   drawRect(48, py + 6, 20, 20, shopRarColor);
   drawText(shopRarLetter, 58, py + 21, '#000', 12, 'center');
   drawText(w.name + ' — ' + tierNames[weaponTier], 76, py + 20, '#fff', 16);
@@ -7187,11 +7189,11 @@ function drawShopStats(py) {
   drawText('POTENZIA IL CONTE', W/2, py + 15, '#4caf50', 16, 'center');
 
   const stats = [
-    { name: 'SALTO', desc: 'Salto piu\' alto', tier: jumpTier, icon: 'W',
-      color: '#4caf50', tierDescs: ['Salto base', 'Salto +9%', 'Salto +18%', 'Salto +27%'] },
+    { name: 'SALUTE', desc: 'Vita massima aumentata', tier: healthTier, icon: '\u2665',
+      color: '#e91e63', tierDescs: ['HP base (120)', 'HP 140 (+17%)', 'HP 165 (+38%)', 'HP 195 (+63%)'] },
     { name: 'SCHIVATA', desc: 'Cooldown schivata ridotto', tier: dodgeTier, icon: 'X',
       color: '#2196f3', tierDescs: ['Cooldown base', 'Cooldown -17%', 'Cooldown -31%', 'Cooldown -46%'] },
-    { name: 'VELOCITA\'', desc: 'Movimento piu\' veloce', tier: speedTier, icon: '>',
+    { name: 'VELOCITA\'', desc: 'Movimento piu\' veloce', tier: speedTier, icon: '\u00BB',
       color: '#ff9800', tierDescs: ['Velocita\' base', 'Velocita\' +10%', 'Velocita\' +20%', 'Velocita\' +33%'] },
   ];
 
@@ -7242,7 +7244,7 @@ function drawShopStats(py) {
         drawText(cost + ' COINS', sx + boxW - 50, uy + 28, canBuy ? '#ffd700' : '#666', 10, 'center');
         if (hover && mouseClick && canBuy) {
           coins -= cost;
-          if (i === 0) { jumpTier++; }
+          if (i === 0) { healthTier++; const hpGain = HP_VALUES[healthTier] - HP_VALUES[healthTier - 1]; player.maxHp += hpGain; player.hp = Math.min(player.hp + hpGain, player.maxHp); }
           else if (i === 1) { dodgeTier++; }
           else { speedTier++; player.speed = SPEED_VALUES[speedTier]; }
           playSFX('coin');
@@ -8248,111 +8250,153 @@ function applyUpgrade(upgrade) {
 }
 
 function drawUpgradeScreen() {
-  ctx.fillStyle = '#0d0d1a';
+  // Background gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0d0d1a');
+  bgGrad.addColorStop(1, '#1a1a2e');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // Level grade display
+  // Category labels
+  const catLabels = { stat: 'STATISTICA', mossa: 'MOSSA', mod: 'ULTRA MOD' };
+
+  // Level grade display — compact top bar
   if (lastLevelBreakdown) {
     const b = lastLevelBreakdown;
-    drawText('VOTO', W/2 - 70, 35, '#aaa', 10, 'center');
-    drawText(b.grade, W/2 - 70, 65, b.gradeColor, 32, 'center');
-    drawText('Punteggio: ' + b.score, W/2 + 60, 30, '#ccc', 9, 'center');
-    drawText('Tempo: ' + b.elapsed + 's', W/2 + 60, 44, '#ccc', 9, 'center');
-    drawText('Danno subito: ' + b.dmgTaken, W/2 + 60, 58, '#ccc', 9, 'center');
-    drawText('Bonus tempo: x' + b.timeBonus.toFixed(1), W/2 + 60, 72, '#ccc', 9, 'center');
-    if (b.coinBonus > 0) drawText('+' + b.coinBonus + ' COINS bonus!', W/2 + 60, 86, '#ffd700', 9, 'center');
+    // Grade circle
+    ctx.beginPath();
+    ctx.arc(55, 36, 24, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fill();
+    ctx.strokeStyle = b.gradeColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    drawText(b.grade, 55, 44, b.gradeColor, 26, 'center');
+    // Stats next to grade
+    drawText('Punteggio: ' + b.score + '  |  Tempo: ' + b.elapsed + 's  |  Danno: ' + b.dmgTaken, 90, 28, '#999', 9);
+    drawText('Bonus tempo: x' + b.timeBonus.toFixed(1) + (b.coinBonus > 0 ? '  |  +' + b.coinBonus + ' COINS' : ''), 90, 44, b.coinBonus > 0 ? '#ffd700' : '#777', 9);
   }
 
-  drawText('SCEGLI UN POTENZIAMENTO', W/2, 100, '#ffd700', 22, 'center');
-  drawText('Scegli 1 su ' + upgradeChoices.length, W/2, 120, '#aaa', 12, 'center');
+  // Title
+  drawText('SCEGLI UN POTENZIAMENTO', W/2, 75, '#ffd700', 20, 'center');
 
   // Keyboard nav
   if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) upgradeSelection = Math.max(0, upgradeSelection - 1);
   if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) upgradeSelection = Math.min(upgradeChoices.length - 1, upgradeSelection + 1);
 
-  const catColors = { stat: '#4caf50', mossa: '#2196f3', mod: '#ff9800' };
-
-  // Dynamic layout: 3 choices = 240px spacing, 4 choices = 200px spacing
+  // Dynamic layout
   const nc = upgradeChoices.length;
-  const cw = nc <= 3 ? 210 : 190;
-  const spacing = nc <= 3 ? 240 : 210;
+  const cw = nc <= 3 ? 220 : 195;
+  const ch = 310;
+  const spacing = nc <= 3 ? 235 : 210;
   const startX = Math.floor((W - nc * spacing + (spacing - cw)) / 2);
+  const cardY = 92;
 
   for (let i = 0; i < upgradeChoices.length; i++) {
     const u = upgradeChoices[i];
     const cx = startX + i * spacing;
-    const cy = 140;
-    const ch = 260;
-    const isHover = mouseX > cx && mouseX < cx + cw && mouseY > cy && mouseY < cy + ch;
+    const isHover = mouseX > cx && mouseX < cx + cw && mouseY > cardY && mouseY < cardY + ch;
     const isSelected = i === upgradeSelection;
+    const accent = u.color || '#fff';
 
     if (isHover && (mouseX !== 0 || mouseY !== 0)) upgradeSelection = i;
 
-    const bgColor = isSelected ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)';
-    drawRect(cx, cy, cw, ch, bgColor);
-    drawRect(cx, cy, cw, 3, catColors[u.cat] || '#fff');
+    // Card background
+    ctx.globalAlpha = isSelected ? 1 : 0.55;
+    drawRect(cx, cardY, cw, ch, isSelected ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.3)');
+    // Top accent bar
+    drawRect(cx, cardY, cw, 3, accent);
 
+    // Selection border
     if (isSelected) {
       const pulse = 0.5 + Math.sin(gameTime * 0.08) * 0.5;
-      ctx.strokeStyle = catColors[u.cat] || '#fff';
-      ctx.lineWidth = 2 + pulse;
-      ctx.strokeRect(cx - 2, cy - 2, cw + 4, ch + 4);
+      drawRect(cx, cardY + ch - 3, cw, 3, accent);
+      drawRect(cx, cardY, 3, ch, accent);
+      drawRect(cx + cw - 3, cardY, 3, ch, accent);
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1 + pulse;
+      ctx.strokeRect(cx - 1, cardY - 1, cw + 2, ch + 2);
       ctx.lineWidth = 1;
     }
 
-    // Icon
-    drawRect(cx + cw/2 - 25, cy + 20, 50, 50, 'rgba(0,0,0,0.5)');
-    drawText(u.icon, cx + cw/2, cy + 55, catColors[u.cat], 28, 'center');
+    // Icon — circle background
+    const iconCx = cx + cw / 2, iconCy = cardY + 45;
+    ctx.beginPath();
+    ctx.arc(iconCx, iconCy, 26, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fill();
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    drawText(u.icon, iconCx, iconCy + 10, accent, 28, 'center');
 
-    // Category
-    drawText(u.cat.toUpperCase(), cx + cw/2, cy + 90, catColors[u.cat], 10, 'center');
+    // Category tag
+    drawText(catLabels[u.cat] || u.cat.toUpperCase(), cx + cw / 2, cardY + 84, accent, 8, 'center');
+
+    // Separator
+    drawRect(cx + 20, cardY + 92, cw - 40, 1, 'rgba(255,255,255,0.08)');
 
     // Name
-    drawText(u.name, cx + cw/2, cy + 115, '#fff', 14, 'center');
+    drawText(u.name, cx + cw / 2, cardY + 112, '#fff', 13, 'center');
 
-    // Description (word wrap manually for short box)
+    // Description — proper word wrap
+    const maxChars = Math.floor(cw / 6);
     const words = u.desc.split(' ');
-    let line = '', lineY = cy + 145;
+    let line = '', lineY = cardY + 138;
     words.forEach(w => {
       const test = line + w + ' ';
-      if (test.length > 22) {
-        drawText(line.trim(), cx + cw/2, lineY, '#aaa', 10, 'center');
+      if (test.length > maxChars && line.length > 0) {
+        drawText(line.trim(), cx + cw / 2, lineY, '#bbb', 9, 'center');
         lineY += 14;
         line = w + ' ';
       } else {
         line = test;
       }
     });
-    if (line.trim()) drawText(line.trim(), cx + cw/2, lineY, '#aaa', 10, 'center');
+    if (line.trim()) drawText(line.trim(), cx + cw / 2, lineY, '#bbb', 9, 'center');
 
-    // Click/tap to highlight (not apply)
-    if (isHover && mouseClick) {
-      upgradeSelection = i;
-    }
+    ctx.globalAlpha = 1;
+
+    // Click/tap to highlight
+    if (isHover && mouseClick) upgradeSelection = i;
   }
 
-  // Confirm button (visible on mobile, also works with keyboard)
-  const confirmW = 200, confirmH = 40;
-  const confirmX = W/2 - confirmW/2, confirmY = H - 58;
+  // Confirm button
+  const selUpgrade = upgradeChoices[upgradeSelection];
+  const selColor = selUpgrade?.color || '#ffd700';
+  const confirmW = 220, confirmH = 40;
+  const confirmX = W / 2 - confirmW / 2, confirmY = cardY + ch + 15;
   const confirmHover = mouseX >= confirmX && mouseX <= confirmX + confirmW && mouseY >= confirmY && mouseY <= confirmY + confirmH;
-  const selColor = catColors[upgradeChoices[upgradeSelection]?.cat] || '#ffd700';
-  drawRect(confirmX, confirmY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.1)');
+  const pulse = Math.sin(gameTime * 0.06) * 0.3 + 0.7;
+  ctx.globalAlpha = pulse;
+  drawRect(confirmX, confirmY, confirmW, confirmH, confirmHover ? selColor : 'rgba(255,255,255,0.08)');
   drawRect(confirmX, confirmY, confirmW, 2, selColor);
-  drawText('CONFERMA', W/2, confirmY + 27, confirmHover ? '#1a1a2e' : '#fff', 16, 'center');
+  drawText('CONFERMA', W / 2, confirmY + 27, confirmHover ? '#1a1a2e' : '#fff', 16, 'center');
+  ctx.globalAlpha = 1;
 
   // Enter/Space/click confirm button to apply
   const confirmTap = confirmHover && mouseClick;
   if (keysJustPressed['Enter'] || keysJustPressed['Space'] || keysJustPressed['KeyZ'] || confirmTap) {
-    if (upgradeChoices[upgradeSelection]) {
-      applyUpgrade(upgradeChoices[upgradeSelection]);
+    if (selUpgrade) {
+      applyUpgrade(selUpgrade);
       state = 'hub';
     }
   }
 
-  // Show owned upgrades
+  // Show owned upgrades as colored icons
   if (player.upgrades.length > 0) {
-    drawText('Ottenuti: ' + player.upgrades.map(u => u.name).join(', '), W/2, H - 30, '#666', 9, 'center');
+    const ownedX = W / 2 - player.upgrades.length * 14;
+    drawText('Ottenuti:', ownedX - 40, H - 22, '#555', 8);
+    for (let j = 0; j < player.upgrades.length; j++) {
+      const ou = player.upgrades[j];
+      drawText(ou.icon, ownedX + j * 28, H - 22, ou.color || '#888', 14);
+    }
   }
+
+  // Nav hint
+  drawText('\u2190 \u2192 naviga  |  ENTER conferma', W / 2, H - 6, '#333', 8, 'center');
 
   mouseClick = false;
 }
@@ -9188,7 +9232,8 @@ function updateLevel() {
 
   // Passive ultra charge trickle in combat
   if (!player.ultraActive && !player.ultraAvailable && goons.some(g => !g.dead)) {
-    player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 0.06);
+    const vampPenalty = player.upgrades.some(u => u.effect === 'ultraVampire') ? 0.9 : 1;
+    player.ultraCharge = Math.min(player.ultraMaxCharge, player.ultraCharge + 0.06 * vampPenalty);
     if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
   }
 
@@ -9302,7 +9347,7 @@ function updatePlayerInput() {
 
   // Jump (blocked during end-lag)
   if ((keys['ArrowUp'] || keys['KeyW']) && player.grounded && player.endLagTimer <= 0) {
-    player.vy = JUMP_FORCES[jumpTier];
+    player.vy = JUMP_FORCES[0];
     player.grounded = false;
   }
 
@@ -10021,7 +10066,7 @@ function drawGameOver() {
       if (keys['Enter'] || keys['Space'] || (restartHover && mouseClick)) {
         // Full reset
         coins = 0; weapons = [starterWeapons[0]]; weaponTier = 0;
-        jumpTier = 0; dodgeTier = 0; speedTier = 0;
+        healthTier = 0; dodgeTier = 0; speedTier = 0;
         player.maxHp = 120; player.maxStamina = 100; player.speed = 4.0;
         player.upgrades = []; player.consumables = []; player.consumableTimers = {};
         helpers.forEach(h => { h.tier = 0; h.unlocked = false; });
@@ -10632,7 +10677,7 @@ function drawVictory() {
       player.weapon = 0;
       weapons = [starterWeapons[0]];
       weaponTier = 0;
-      jumpTier = 0; dodgeTier = 0; speedTier = 0;
+      healthTier = 0; dodgeTier = 0; speedTier = 0;
       player.maxHp = 120;
       player.maxStamina = 100;
       player.speed = 4.0;
@@ -10664,7 +10709,7 @@ function update() {
   switch(state) {
     case 'menu': playTrack('menu'); break;
     case 'difficultySelect': case 'weaponSelect': case 'helperSelect': playTrack('menu'); break;
-    case 'tutorial': playTrack('hub'); break;
+    case 'tutorial': playTrack('menu'); break;
     case 'hub': case 'shop': case 'upgrade': playTrack('hub'); break;
     case 'moves': break; // keep whatever music was playing
     case 'dialogue':
