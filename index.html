@@ -1122,7 +1122,7 @@ const starterWeapons = [
   { name: 'Fionda',         damage: 12, range: 180, speed: 16, crit: 8,
     comboHits: 3, poise: 2, activeFrames: 6, comboWindow: 10, endLag: 20,
     special: 'pierce', desc: 'Ranged. 3o colpo perfora (Ultra).', ranged: true,
-    color: '#a1887f', icon: 'F', maxAmmo: 4, reloadFrames: 90 }
+    color: '#a1887f', icon: 'F', maxAmmo: 5, reloadFrames: 90 }
 ];
 
 // Rare weapons (from gacha)
@@ -3019,6 +3019,7 @@ function hurtPlayer(dmg) {
   if (player.invincible > 0 || isDodgeInvincible() || player.dead) return;
   dmg *= DIFF_DMG[difficulty];
   if (player.upgrades.some(u => u.effect === 'armor15')) dmg *= 0.85;
+  if (player.defenseBuff) dmg *= (1 - player.defenseBuff);
   player.hp -= dmg;
   player.invincible = 20;
   levelDamageTaken += dmg;
@@ -3123,7 +3124,7 @@ function launchComboHit(stepIndex) {
     critBonus = stepIndex === 1 ? 15 : stepIndex >= 2 ? 35 : 0;
   }
   const upgCrit = player.upgrades.some(u => u.effect === 'crit15') ? 15 : 0;
-  const isCrit = Math.random() * 100 < ((weap.crit || 0) + critBonus + upgCrit);
+  const isCrit = Math.random() * 100 < ((weap.crit || 0) + critBonus + upgCrit + (player.critBuff || 0));
   const dcMult = dodgeCounter > 0 ? 1.5 : 1;
   const staminaMult = staminaPenalty ? 0.3 : 1;
   const upgDmg = player.upgrades.some(u => u.effect === 'dmg15') ? 1.15 : 1;
@@ -5612,7 +5613,7 @@ function updateTutorial() {
   if (player.staminaRegenDelay > 0) {
     player.staminaRegenDelay--;
   } else if (player.stamina < player.maxStamina) {
-    player.stamina = Math.min(player.maxStamina, player.stamina + 0.8);
+    player.stamina = Math.min(player.maxStamina, player.stamina + 0.745);
   }
 
   // Reset dummy if killed
@@ -6305,6 +6306,10 @@ function drawMovesScreen() {
     bossDefeated = [false, false, false, false, false];
     lives = 3; firstTime = true;
     hubStoryShown = false; hubStoryLine = 0;
+    newspaperRead = false; newspaperPhase = 0;
+    seccoVisited = false; seccoIntroDone = false; seccoPhase = 0;
+    sharkUnlocked = false; sharkEntity = null;
+    player.defenseBuff = 0; player.critBuff = 0;
     state = 'menu';
     resetPlayer();
     mouseClick = false;
@@ -6357,6 +6362,17 @@ let hubVisitInited = false;
 let hubStoryShown = false;
 let hubStoryLine = 0;
 let hubStoryCooldown = 0;
+let newspaperRead = false;
+let newspaperPhase = 0;    // 0=not reading, 1=showing, 2=done
+let newspaperCooldown = 0;
+let seccoVisited = false;
+let seccoIntroDone = false;
+let seccoPhase = 0;      // 0=not triggered, 1=dialogue, 2=choice, 3=response, 4=done
+let seccoLine = 0;
+let seccoChoice = -1;    // 0=culo, 1=piedi
+let seccoCooldown = 0;
+let sharkUnlocked = false;
+let sharkEntity = null;  // { x, y, vx, facing, timer, hitEnemies }
 
 function drawHub() {
   // Reset per-visit secrets on hub entry
@@ -6375,7 +6391,9 @@ function drawHub() {
 
   const hubStoryActive = !hubStoryShown;
   const startapparoActive = (startapparoPhase > 0 && startapparoPhase < 4) || (startapparoPayoffPhase > 0 && startapparoPayoffPhase < 3);
-  const startapparoIntroShowing = bossDefeated[1] && !startapparoVisited && startapparoPhase === 0 && !startapparoIntroDone;
+  const startapparoIntroShowing = bossDefeated[2] && !startapparoVisited && startapparoPhase === 0 && !startapparoIntroDone;
+  const newspaperActive = newspaperPhase === 1;
+  const seccoIntroShowing = bossDefeated[1] && !seccoVisited && !seccoIntroDone;
 
   // Night sky
   const grad = ctx.createLinearGradient(0, 0, 0, H);
@@ -6691,13 +6709,13 @@ function drawHub() {
   ctx.lineWidth = 1;
 
   // Backroom door click — Michele Lo Sbirro (only after beating LaFed)
-  const vanniDoorHover = bossDefeated[0] && !hubConfirm && !hubStoryActive && !startapparoIntroShowing && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
+  const vanniDoorHover = bossDefeated[0] && !hubConfirm && !hubStoryActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
   if (vanniDoorHover) {
     ctx.globalAlpha = 0.15;
     drawRect(385, 280, 70, 130, '#ffcc80');
     ctx.globalAlpha = 1;
   }
-  if (!showCredits && !hubConfirm && !startapparoActive && vanniDoorHover && mouseClick) {
+  if (!showCredits && !hubConfirm && !startapparoActive && !newspaperActive && vanniDoorHover && mouseClick) {
     if (micheleVisited) {
       showQuickText("Michele e' andato a jiu jitsu... o cosi dice", '#78909c');
     } else {
@@ -6779,8 +6797,93 @@ function drawHub() {
     }
   }
 
+  // === Il Secco visiting hint — after Gioacchino (boss 2) beaten ===
+  if (seccoIntroShowing) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, W, H);
+    const dlgX = W/2 - 250, dlgY = H/2 - 50, dlgW = 500, dlgH = 100;
+    drawRect(dlgX + 3, dlgY + 3, dlgW, dlgH, 'rgba(0,0,0,0.3)');
+    drawRect(dlgX, dlgY, dlgW, dlgH, 'rgba(20,20,40,0.95)');
+    drawRect(dlgX, dlgY, dlgW, 3, '#ce93d8');
+    ctx.strokeStyle = '#4a148c';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(dlgX, dlgY, dlgW, dlgH);
+    ctx.lineWidth = 1;
+    drawText('Si dice che un famoso giocatore stia', W/2, dlgY + 34, '#ce93d8', 16, 'center');
+    drawText('visitando il Bingo degli Ubaldi...', W/2, dlgY + 54, '#ce93d8', 16, 'center');
+    const blinkAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+    ctx.globalAlpha = blinkAlpha;
+    drawText('[Click / Enter]', W/2, dlgY + 78, '#888', 11, 'center');
+    ctx.globalAlpha = 1;
+    if (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space']) {
+      seccoIntroDone = true;
+      hubInputCooldown = 15;
+      mouseClick = false;
+    }
+  }
+
+  // === Newspaper on wall (after 4th boss) ===
+  if (bossDefeated[3] && !newspaperRead) {
+    ctx.save();
+    const npX = 640, npY = 222;
+    ctx.translate(npX + 20, npY + 2);
+    ctx.rotate(0.04);
+    ctx.translate(-(npX + 20), -(npY + 2));
+    // Paper shadow
+    ctx.globalAlpha = 0.25;
+    drawRect(npX + 2, npY + 2, 40, 55, '#000');
+    ctx.globalAlpha = 1;
+    // Aged paper
+    const paperGrad = ctx.createLinearGradient(npX, npY, npX, npY + 55);
+    paperGrad.addColorStop(0, '#f5f0d0');
+    paperGrad.addColorStop(0.5, '#ede8c8');
+    paperGrad.addColorStop(1, '#e0d8b0');
+    ctx.fillStyle = paperGrad;
+    ctx.fillRect(npX, npY, 40, 55);
+    // Border
+    ctx.strokeStyle = '#b0a880';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(npX, npY, 40, 55);
+    // Header text
+    ctx.font = '4px monospace';
+    ctx.fillStyle = '#2a1a08';
+    ctx.textAlign = 'center';
+    ctx.fillText('IL GIORNALE', npX + 20, npY + 8);
+    // Separator line
+    drawRect(npX + 5, npY + 11, 30, 0.5, '#8a6a40');
+    // Faint headline text
+    ctx.globalAlpha = 0.5;
+    ctx.font = '3px monospace';
+    ctx.fillText('BITCOIN GIU\'', npX + 20, npY + 18);
+    ctx.fillText('DEL 123%', npX + 20, npY + 23);
+    // Body text lines (tiny)
+    ctx.globalAlpha = 0.3;
+    for (let i = 0; i < 5; i++) {
+      drawRect(npX + 5, npY + 28 + i * 4, 30, 1, '#555');
+    }
+    ctx.globalAlpha = 1;
+    // Pushpin at top center
+    drawRect(npX + 18, npY - 3, 5, 5, '#b71c1c');
+    drawRect(npX + 19, npY - 2, 3, 3, '#e53935');
+    drawRect(npX + 20, npY - 1, 1, 1, '#ffcdd2');
+    ctx.restore();
+    // Hover highlight
+    const npHover = mouseX > 630 && mouseX < 680 && mouseY > 215 && mouseY < 280;
+    if (npHover && !newspaperActive) {
+      ctx.globalAlpha = 0.2;
+      drawRect(630, 215, 50, 65, '#ffd700');
+      ctx.globalAlpha = 1;
+    }
+    // Click handler
+    if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && npHover && mouseClick) {
+      newspaperPhase = 1;
+      newspaperCooldown = 15;
+      mouseClick = false;
+    }
+  }
+
   // === Secret 3: Secret Graffiti on left wall ===
-  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && !graffitiRevealed && mouseClick && mouseX > 155 && mouseX < 200 && mouseY > 200 && mouseY < 350) {
     wallTaps++;
     if (wallTaps >= 5) {
       graffitiRevealed = true;
@@ -6884,7 +6987,7 @@ function drawHub() {
   ctx.globalAlpha = 1;
 
   // === Secret 4: Bartender Drink ===
-  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !drinkTaken && mouseClick && mouseX > 180 && mouseX < 240 && mouseY > 360 && mouseY < 390) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && !drinkTaken && mouseClick && mouseX > 180 && mouseX < 240 && mouseY > 360 && mouseY < 390) {
     drinkTaken = true;
     drinkWobble = 180;
     drinkBuff = 1;
@@ -6928,7 +7031,7 @@ function drawHub() {
   ctx.fill();
   ctx.globalAlpha = 1;
   // Secret 1: Punch the lamp (once per run)
-  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && !lampHit && mouseClick && mouseX > 100 && mouseX < 145 && mouseY > 180 && mouseY < 210) {
     lampHit = true;
     lampFlicker = 60;
     const lampCoins = 5 + Math.floor(Math.random() * 11);
@@ -7073,7 +7176,7 @@ function drawHub() {
   ctx.lineWidth = 1;
   ctx.lineCap = 'butt';
   // Click to pet (once per visit)
-  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
+  if (!showCredits && !hubStoryActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && !hubCatPetted && mouseClick && mouseX > hubCatX - 20 && mouseX < hubCatX + 20 && mouseY > catY - 24 && mouseY < catY + 6) {
     hubCatPetted = true;
     hubCatSitting = 120;
     spawnParticles(hubCatX, catY - 12, '#ff69b4', 8, 3);
@@ -7083,8 +7186,8 @@ function drawHub() {
     mouseClick = false;
   }
 
-  // === Lo Startapparo — appears after beating Gioacchino (boss 2) ===
-  if (bossDefeated[1] && !startapparoVisited && startapparoPhase === 0) {
+  // === Lo Startapparo — appears after beating Il Dale (boss 3) ===
+  if (bossDefeated[2] && !startapparoVisited && startapparoPhase === 0) {
     // Draw Startapparo standing near the right outdoor table area
     const stX = 640, stY = 352;
     const stBob = Math.sin(gameTime * 0.04) * 1;
@@ -7202,7 +7305,7 @@ function drawHub() {
       drawRect(stX - 5, stY - 10, 51, 70, '#4fc3f7');
       ctx.globalAlpha = 1;
     }
-    if (!showCredits && !hubConfirm && !startapparoActive && startapparoIntroDone && stHover && mouseClick) {
+    if (!showCredits && !hubConfirm && !startapparoActive && !newspaperActive && startapparoIntroDone && stHover && mouseClick) {
       startapparoPhase = 1;
       startapparoLine = 0;
       startapparoCooldown = 15;
@@ -7233,7 +7336,7 @@ function drawHub() {
   drawRect(shopBx, shopBy, 150, 32, shopHover ? '#d84315' : '#bf360c');
   drawRect(shopBx, shopBy, 150, 2, '#ff6e40');
   drawText('ARMERIA [S]', shopBx + 75, shopBy + 22, '#fff', 13, 'center');
-  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && ((shopHover && mouseClick) || (armDoorHover && mouseClick) || keys['KeyS'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && ((shopHover && mouseClick) || (armDoorHover && mouseClick) || keys['KeyS'])) {
     state = 'shop';
     shopTab = 0;
     mouseClick = false;
@@ -7247,7 +7350,7 @@ function drawHub() {
   drawText('BINGO UBALDI [B]', casinoBx + 98, casinoBy + 22, '#fff', 13, 'center');
   // Door hitbox (matches the bingo building door drawn earlier)
   const bingoDoorClick = mouseX > 700 + 195/2 - 30 && mouseX < 700 + 195/2 + 30 && mouseY > 330 && mouseY < 410;
-  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && ((casinoHover && mouseClick) || (bingoDoorClick && mouseClick) || keysJustPressed['KeyB'])) {
     state = 'casino';
     casinoTab = 0;
     pokerPhase = 'idle';
@@ -7264,6 +7367,11 @@ function drawHub() {
       casinoDialogueIndex = 0;
       casinoDialogueCooldown = 15;
     }
+    if (bossDefeated[1] && !seccoVisited && seccoIntroDone && seccoPhase === 0) {
+      seccoPhase = 1;
+      seccoLine = 0;
+      seccoCooldown = 15;
+    }
     mouseClick = false;
   }
 
@@ -7273,7 +7381,7 @@ function drawHub() {
   drawRect(movesBx, movesBy, 155, 32, movesHover ? '#1565c0' : '#0d47a1');
   drawRect(movesBx, movesBy, 155, 2, '#42a5f5');
   drawText('AIUTO [TAB]', movesBx + 78, movesBy + 22, '#fff', 13, 'center');
-  if (!showCredits && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
+  if (!showCredits && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && ((movesHover && mouseClick) || keysJustPressed['Tab'] || keysJustPressed['KeyP'])) {
     toggleMovesScreen();
     mouseClick = false;
   }
@@ -7287,16 +7395,16 @@ function drawHub() {
   if (hubInputCooldown > 0) hubInputCooldown--;
 
   // Keyboard navigation
-  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA'])) {
     hubSelection = Math.max(0, hubSelection - 1);
     playSFX('hit');
   }
-  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD'])) {
     hubSelection = Math.min(levels.length - 1, hubSelection + 1);
     playSFX('hit');
   }
   // Number keys to jump to level
-  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive) {
   for (let n = 0; n < levels.length; n++) {
     if (keysJustPressed['Digit' + (n+1)]) {
       hubSelection = n;
@@ -7305,7 +7413,7 @@ function drawHub() {
   }
   }
   // Enter to open confirmation (not start level directly)
-  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+  if (!showCredits && !hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && hubInputCooldown <= 0 && (keysJustPressed['Enter'] || keysJustPressed['Space'])) {
     const selLocked = hubSelection > 0 && !bossDefeated[hubSelection - 1];
     if (!selLocked) {
       hubConfirm = true;
@@ -7360,7 +7468,7 @@ function drawHub() {
     }
 
     // Click opens confirmation, not instant start
-    if (!hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && isHover && mouseClick && !locked) {
+    if (!hubConfirm && !hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && isHover && mouseClick && !locked) {
       hubSelection = i;
       hubConfirm = true;
       hubInputCooldown = 12;
@@ -7418,7 +7526,7 @@ function drawHub() {
   const hoverCred = mouseX >= credBtnX && mouseX <= credBtnX + credBtnW && mouseY >= credBtnY && mouseY <= credBtnY + credBtnH;
   drawRect(credBtnX, credBtnY, credBtnW, credBtnH, hoverCred ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)');
   drawText('Crediti', credBtnX + 33, credBtnY + 14, hoverCred ? '#aaa' : '#555', 10, 'center');
-  if (!hubStoryActive && !startapparoActive && !startapparoIntroShowing && mouseClick && hoverCred) {
+  if (!hubStoryActive && !startapparoActive && !startapparoIntroShowing && !seccoIntroShowing && !newspaperActive && mouseClick && hoverCred) {
     showCredits = true;
     codeInput = '';
     mouseClick = false;
@@ -8004,6 +8112,133 @@ function drawHub() {
     return;
   }
 
+  // === Newspaper overlay ===
+  if (newspaperPhase === 1) {
+    if (newspaperCooldown > 0) newspaperCooldown--;
+
+    // Dark overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
+
+    const npW = 520, npH = 400;
+    const npX = W/2 - npW/2, npY = H/2 - npH/2;
+
+    // Paper shadow
+    ctx.globalAlpha = 0.4;
+    drawRect(npX + 4, npY + 4, npW, npH, '#000');
+    ctx.globalAlpha = 1;
+
+    // Aged paper background
+    const paperBg = ctx.createLinearGradient(npX, npY, npX + npW, npY + npH);
+    paperBg.addColorStop(0, '#f5f0d0');
+    paperBg.addColorStop(0.3, '#ede8c8');
+    paperBg.addColorStop(0.6, '#e8e0b8');
+    paperBg.addColorStop(1, '#e0d8b0');
+    ctx.fillStyle = paperBg;
+    ctx.fillRect(npX, npY, npW, npH);
+
+    // Subtle stain texture
+    ctx.globalAlpha = 0.06;
+    ctx.beginPath();
+    ctx.arc(npX + 380, npY + 120, 60, 0, Math.PI * 2);
+    ctx.fillStyle = '#8B7355';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(npX + 100, npY + 300, 45, 0, Math.PI * 2);
+    ctx.fillStyle = '#8B7355';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Border frame
+    ctx.strokeStyle = '#8a7a50';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(npX + 3, npY + 3, npW - 6, npH - 6);
+    ctx.strokeStyle = '#b0a070';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(npX + 6, npY + 6, npW - 12, npH - 12);
+
+    // Header: IL GIORNALE DI PRATI
+    ctx.font = 'bold 26px monospace';
+    ctx.fillStyle = '#1a1008';
+    ctx.textAlign = 'center';
+    ctx.fillText('IL GIORNALE DI PRATI', W/2, npY + 42);
+
+    // Date line
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#5a4a30';
+    ctx.fillText('Anno MMXXVI \u2014 Numero 47', W/2, npY + 60);
+
+    // Horizontal rule
+    drawRect(npX + 30, npY + 68, npW - 60, 2, '#5a4a30');
+    drawRect(npX + 30, npY + 71, npW - 60, 0.5, '#8a7a50');
+
+    // === Article 1: Bitcoin ===
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillStyle = '#1a1008';
+    ctx.fillText('BITCOIN GIU\' DEL 123%', npX + 30, npY + 100);
+
+    // Article 1 body
+    ctx.font = '12px monospace';
+    ctx.fillStyle = '#2a1a08';
+    const art1Lines = [
+      'Doctor Pi, il piu\' grande holder di Bitcoin al mondo,',
+      'e\' stato privato delle sue 3 lauree come conseguenza',
+      'del crollo. "Non capisco," ha dichiarato, "avevo',
+      'fatto i calcoli su un tovagliolo del bar."'
+    ];
+    for (let i = 0; i < art1Lines.length; i++) {
+      ctx.fillText(art1Lines[i], npX + 30, npY + 120 + i * 18);
+    }
+
+    // Separator between articles
+    drawRect(npX + 50, npY + 198, npW - 100, 1, '#8a7a50');
+
+    // === Article 2: Torino Freeride ===
+    ctx.font = 'bold 16px monospace';
+    ctx.fillStyle = '#1a1008';
+    ctx.fillText('TORINO FREERIDE: LA PAGINA', npX + 30, npY + 228);
+    ctx.fillText('PIU\' SEGUITA AL MONDO', npX + 30, npY + 248);
+
+    // Article 2 body
+    ctx.font = '12px monospace';
+    ctx.fillStyle = '#2a1a08';
+    const art2Lines = [
+      'La pagina Instagram ha superato i 4 miliardi',
+      'di follower, diventando la pagina piu\' seguita',
+      'nella storia dei social media. Il fondatore ha',
+      'commentato: "E\' solo l\'inizio. Il prossimo',
+      'obiettivo e\' superare la popolazione mondiale."'
+    ];
+    for (let i = 0; i < art2Lines.length; i++) {
+      ctx.fillText(art2Lines[i], npX + 30, npY + 268 + i * 18);
+    }
+
+    // Footer: Continua a pagina 13
+    ctx.font = 'italic 11px monospace';
+    ctx.fillStyle = '#5a4a30';
+    ctx.textAlign = 'right';
+    ctx.fillText('Continua a pagina 13', npX + npW - 30, npY + npH - 50);
+
+    // Dismiss hint
+    ctx.textAlign = 'center';
+    const dismissPulse = 0.4 + Math.sin(gameTime * 0.06) * 0.3;
+    ctx.globalAlpha = dismissPulse;
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#5a4a30';
+    ctx.fillText('CLICCA PER CHIUDERE', W/2, npY + npH - 18);
+    ctx.globalAlpha = 1;
+
+    // Dismiss on click or Enter
+    if (newspaperCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+      newspaperPhase = 0;
+      newspaperRead = true;
+      mouseClick = false;
+    }
+
+    mouseClick = false;
+  }
+
   // Show cheat active indicator
   if (player.maxHp >= 999) {
     drawText('CONTE MODE', W/2, 105, '#ffd700', 11, 'center');
@@ -8367,8 +8602,8 @@ function drawShop() {
   drawText('COINS: ' + coins, W/2, 74, '#ffd700', 14, 'center');
 
   // === TAB BUTTONS ===
-  const tabNames = ['ARMA', 'HELPER', 'LA RUOTA', 'STATS'];
-  const tabColors = ['#ff8a65', '#e040fb', '#ffd700', '#4caf50'];
+  const tabNames = ['ARMA', 'STATS', 'HELPER', 'LA RUOTA'];
+  const tabColors = ['#ff8a65', '#4caf50', '#e040fb', '#ffd700'];
   const tabW = 205, tabH = 28, tabY = 128;
   for (let t = 0; t < 4; t++) {
     const tx = 18 + t * (tabW + 8);
@@ -8389,7 +8624,7 @@ function drawShop() {
   if (keysJustPressed['Digit4']) shopTab = 3;
   // Mele comment on tab switch
   if (shopTab !== shopPrevTab) {
-    meleComment = getMeleComment(shopTab === 2 ? 'gacha' : 'tab');
+    meleComment = getMeleComment(shopTab === 3 ? 'gacha' : 'tab');
     meleCommentTimer = 150;
     shopPrevTab = shopTab;
   }
@@ -8397,9 +8632,9 @@ function drawShop() {
   const panelY = 160;
 
   if (shopTab === 0) drawShopWeapon(panelY);
-  else if (shopTab === 1) drawShopHelper(panelY);
-  else if (shopTab === 2) drawShopGacha(panelY);
-  else drawShopStats(panelY);
+  else if (shopTab === 1) drawShopStats(panelY);
+  else if (shopTab === 2) drawShopHelper(panelY);
+  else drawShopGacha(panelY);
 
   // Back button
   const backHover = mouseX > 30 && mouseX < 150 && mouseY > H - 38 && mouseY < H - 10;
@@ -8667,24 +8902,22 @@ function drawShopGacha(py) {
       drawText(r.joke, W/2, slotY + 82, '#ffcc80', 11, 'center');
       // Sad trombone particles
       if (gachaResultTimer === 298) spawnParticles(W/2, slotY + 60, '#666', 8, 3);
-    } else if (r.type === 'upgrade') {
-      if (weaponTier >= 3) {
-        // Already maxed — show consolation
-        drawText('GIA\' AL MASSIMO!', W/2, slotY + 48 + bounce, '#ff9800', 24, 'center');
-        drawText('L\'arma e\' gia\' Lv.3... niente da fare!', W/2, slotY + 82, '#ffcc80', 11, 'center');
-      } else {
-        drawText('POTENZIAMENTO!', W/2, slotY + 36 + bounce, '#4caf50', 26, 'center');
-        ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.1) * 0.1;
-        drawRect(slotX + 20, slotY + 10, slotW - 40, slotH - 20, '#4caf50');
-        ctx.globalAlpha = 1;
-        drawText(weapons[0].name + ' Lv.' + weaponTier + ' \u2192 Lv.' + (weaponTier + 1), W/2, slotY + 70, '#fff', 16, 'center');
-        drawText('+1 livello arma gratis!', W/2, slotY + 94, '#a5d6a7', 12, 'center');
-        if (gachaResultTimer === 298) {
-          applyWeaponUpgrade(weaponTier);
-          weaponTier++;
-          spawnParticles(W/2, slotY + 60, '#4caf50', 15, 5);
-          playSFX('coin');
-        }
+    } else if (r.type === 'buff') {
+      const b = r.buff;
+      drawText(b.label, W/2, slotY + 42 + bounce, b.color, 26, 'center');
+      ctx.globalAlpha = 0.2 + Math.sin(gameTime * 0.1) * 0.1;
+      drawRect(slotX + 20, slotY + 10, slotW - 40, slotH - 20, b.color);
+      ctx.globalAlpha = 1;
+      drawText(b.desc, W/2, slotY + 76, '#fff', 14, 'center');
+      drawText('Bonus applicato!', W/2, slotY + 100, '#a5d6a7', 12, 'center');
+      if (gachaResultTimer === 298) {
+        if (b.stat === 'hp') { player.maxHp = Math.floor(player.maxHp * 1.05); player.hp = Math.min(player.hp, player.maxHp); }
+        else if (b.stat === 'stamina') { player.maxStamina = Math.floor(player.maxStamina * 1.05); }
+        else if (b.stat === 'defense') { player.defenseBuff = (player.defenseBuff || 0) + 0.05; }
+        else if (b.stat === 'crit') { player.critBuff = (player.critBuff || 0) + 3; }
+        else if (b.stat === 'coins') { coins += 15; }
+        spawnParticles(W/2, slotY + 60, b.color, 15, 5);
+        playSFX('coin');
       }
     } else if (r.type === 'rare') {
       drawText('ARMA RARA!', W/2, slotY + 36 + bounce, '#2196f3', 26, 'center');
@@ -8760,8 +8993,15 @@ function rollGacha() {
     // Nothing (40%)
     return { type: 'nothing', joke: gachaJokes[Math.floor(Math.random() * gachaJokes.length)] };
   } else if (roll < 0.75) {
-    // Weapon upgrade +1 lvl (35%)
-    return { type: 'upgrade' };
+    // Minor stat buff (35%)
+    const buffs = [
+      { stat: 'hp', label: '+5% SALUTE', desc: 'Vita massima +5%', color: '#e91e63' },
+      { stat: 'stamina', label: '+5% STAMINA', desc: 'Stamina massima +5%', color: '#ff9800' },
+      { stat: 'defense', label: '+5% DIFESA', desc: 'Danno subito -5%', color: '#2196f3' },
+      { stat: 'crit', label: '+3% CRITICO', desc: 'Probabilita\' critico +3%', color: '#ab47bc' },
+      { stat: 'coins', label: '+15 COINS', desc: 'Un po\' di soldi extra!', color: '#ffd700' },
+    ];
+    return { type: 'buff', buff: buffs[Math.floor(Math.random() * buffs.length)] };
   } else if (roll < 0.95) {
     // Rare weapon (20%)
     const w = rareWeapons[Math.floor(Math.random() * rareWeapons.length)];
@@ -9325,6 +9565,264 @@ function drawCasino() {
   grad.addColorStop(1, '#0d0a1a');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
+
+  // === IL SECCO ENCOUNTER ===
+  if (seccoPhase > 0 && seccoPhase < 4) {
+    if (seccoCooldown > 0) seccoCooldown--;
+
+    // Casino interior background
+    // Wall
+    const wallGrad = ctx.createLinearGradient(0, 0, 0, H * 0.7);
+    wallGrad.addColorStop(0, '#1a1028');
+    wallGrad.addColorStop(0.5, '#221438');
+    wallGrad.addColorStop(1, '#1e1230');
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(0, 0, W, H);
+    // Subtle wallpaper pattern (diamond shapes)
+    ctx.globalAlpha = 0.04;
+    for (let wy = 0; wy < H * 0.7; wy += 40) {
+      for (let wx = 0; wx < W; wx += 40) {
+        const off = (Math.floor(wy / 40) % 2) * 20;
+        drawRect(wx + off + 16, wy + 8, 8, 8, '#ce93d8');
+        drawRect(wx + off + 18, wy + 10, 4, 4, '#e1bee7');
+      }
+    }
+    ctx.globalAlpha = 1;
+    // Crown moulding
+    drawRect(0, 0, W, 3, '#3d2050');
+    drawRect(0, 3, W, 2, '#4a1a60');
+    // Floor — polished dark carpet
+    const floorGrad = ctx.createLinearGradient(0, H - 120, 0, H);
+    floorGrad.addColorStop(0, '#1a0e28');
+    floorGrad.addColorStop(0.3, '#221438');
+    floorGrad.addColorStop(1, '#140c20');
+    ctx.fillStyle = floorGrad;
+    ctx.fillRect(0, H - 120, W, 120);
+    // Carpet pattern
+    ctx.globalAlpha = 0.06;
+    for (let ci = 0; ci < 30; ci++) {
+      drawRect(ci * 32, H - 118, 28, 4, '#3d2050');
+      drawRect(ci * 32 + 16, H - 112, 28, 4, '#3d2050');
+    }
+    ctx.globalAlpha = 1;
+    // Floor border strip
+    drawRect(0, H - 120, W, 2, '#4a2060');
+    // Wainscoting / lower wall panel
+    drawRect(0, H * 0.55, W, H * 0.15, '#160c22');
+    drawRect(0, H * 0.55, W, 2, '#3d2050');
+    drawRect(0, H * 0.55 + H * 0.15 - 2, W, 2, '#3d2050');
+    // Panel rectangles
+    ctx.globalAlpha = 0.05;
+    for (let pi = 0; pi < 7; pi++) {
+      const px = 40 + pi * 125;
+      drawRect(px, H * 0.55 + 8, 100, H * 0.15 - 16, '#ce93d8');
+    }
+    ctx.globalAlpha = 1;
+    // Warm wall sconces (soft glow)
+    for (let si = 0; si < 3; si++) {
+      const sx = 150 + si * 300;
+      // Glow
+      ctx.globalAlpha = 0.08 + Math.sin(gameTime * 0.03 + si) * 0.02;
+      drawRect(sx - 25, 60, 50, 70, '#ffcc80');
+      ctx.globalAlpha = 1;
+      // Sconce fixture
+      drawRect(sx - 4, 75, 8, 14, '#8d6e63');
+      drawRect(sx - 2, 72, 4, 4, '#ffcc80');
+      drawRect(sx - 3, 70, 6, 3, '#ffe0b2');
+    }
+    // Neon "BINGO" sign glow (subtle, centered)
+    const nPulse = 0.6 + Math.sin(gameTime * 0.04) * 0.2;
+    ctx.globalAlpha = nPulse * 0.08;
+    drawRect(W/2 - 80, 18, 160, 30, '#ce93d8');
+    ctx.globalAlpha = nPulse * 0.7;
+    drawText('BINGO', W/2, 40, '#ce93d8', 16, 'center');
+    ctx.globalAlpha = nPulse * 0.3;
+    drawText('BINGO', W/2, 41, '#e1bee7', 16, 'center');
+    ctx.globalAlpha = 1;
+    // Subtle vignette
+    ctx.globalAlpha = 0.3;
+    drawRect(0, 0, 40, H, '#000');
+    drawRect(W - 40, 0, 40, H, '#000');
+    ctx.globalAlpha = 0.15;
+    drawRect(0, 0, W, 20, '#000');
+    ctx.globalAlpha = 1;
+
+    // Draw Il Secco (slim build, darker skin, dark curly hair, emerald track jacket, white tee)
+    const scX = W/2 - 28, scY = 295;
+    const scBob = Math.sin(gameTime * 0.04) * 1.5;
+    const scSc = 1.25;
+    ctx.save();
+    ctx.translate(scX + 28, scY + 42 + scBob);
+    ctx.scale(scSc, scSc);
+    ctx.translate(-(scX + 28), -(scY + 42 + scBob));
+    drawPixelChar(scX, scY + scBob, 56, 85, '#2e7d32', '#c68642', (x, y, w, h) => {
+      // Dark curly hair
+      drawRect(x + 5, y - 6, w - 10, 8, '#1a1209');
+      drawRect(x + 3, y - 4, 5, 5, '#1a1209');
+      drawRect(x + w - 8, y - 4, 5, 5, '#1a1209');
+      drawRect(x + w/2 - 3, y - 8, 6, 5, '#1a1209');
+      drawRect(x + 8, y - 5, 4, 3, '#2a1a0a'); // curl highlight
+      drawRect(x + w - 12, y - 5, 4, 3, '#2a1a0a');
+      // Track jacket (emerald green) — zip open
+      drawRect(x, y + 24, 6, 28, '#2e7d32');
+      drawRect(x + w - 6, y + 24, 6, 28, '#2e7d32');
+      drawRect(x + 6, y + 24, 2, 26, '#388e3c'); // left edge
+      drawRect(x + w - 8, y + 24, 2, 26, '#388e3c'); // right edge
+      // White stripes on sleeves
+      drawRect(x - 1, y + 26, 3, 22, '#fff');
+      drawRect(x + w - 2, y + 26, 3, 22, '#fff');
+      // White t-shirt underneath
+      drawRect(x + 10, y + 27, w - 20, 14, '#f5f5f5');
+      drawRect(x + w/2 - 3, y + 24, 6, 6, '#f5f5f5'); // crew neck
+      // Jacket collar
+      drawRect(x + 5, y + 22, 8, 4, '#2e7d32');
+      drawRect(x + w - 13, y + 22, 8, 4, '#2e7d32');
+      drawRect(x + 5, y + 22, 8, 1, '#43a047');
+      drawRect(x + w - 13, y + 22, 8, 1, '#43a047');
+      // Zip line
+      drawRect(x + w/2 - 1, y + 30, 2, 24, '#555');
+      // Belt
+      drawRect(x + 4, y + 54, w - 8, 3, '#333');
+      drawRect(x + w/2 - 2, y + 54, 4, 3, '#9e9e9e');
+      // Slim dark jeans
+      drawRect(x + 10, y + h - 20, 10, 20, '#1a1a2e');
+      drawRect(x + w - 20, y + h - 20, 10, 20, '#1a1a2e');
+      drawRect(x + w/2 - 1, y + 57, 2, 8, '#111');
+      // Sneakers
+      drawRect(x + 9, y + h - 5, 12, 5, '#e0e0e0');
+      drawRect(x + w - 21, y + h - 5, 12, 5, '#e0e0e0');
+      drawRect(x + 9, y + h - 3, 12, 3, '#bdbdbd');
+      drawRect(x + w - 21, y + h - 3, 12, 3, '#bdbdbd');
+      // Left arm (jacket) + hand
+      drawRect(x - 5, y + 28, 6, 18, '#2e7d32');
+      drawRect(x - 5, y + 46, 6, 4, '#c68642');
+      // Right arm (jacket) + hand
+      drawRect(x + w - 1, y + 28, 6, 18, '#2e7d32');
+      drawRect(x + w - 1, y + 46, 6, 4, '#c68642');
+      // Grin
+      drawRect(x + 12, y + 16, 14, 2, '#8d5524');
+      drawRect(x + 13, y + 17, 12, 1, '#fff'); // teeth flash
+      // Eyebrows
+      drawRect(x + 7, y + 5, 8, 2, '#1a1209');
+      drawRect(x + w - 15, y + 6, 8, 2, '#1a1209');
+    });
+
+    // Name label
+    ctx.globalAlpha = 0.8;
+    drawText('IL SECCO', scX + 28, scY + scBob - 14, '#66bb6a', 12, 'center');
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Dialogue lines
+    const seccoIntroLines = [
+      "Ehi! Tu devi essere il Conte di Prati!",
+      "Io sono il Secco. Vengo qui ogni tanto a giocare...",
+      "Ma la mia vera passione, sai com'e'... sono le belle donne.",
+      "Senti, dimmi una cosa importante..."
+    ];
+    const seccoCuloLines = [
+      "Mamma mia... che delusione.",
+      "Sei di una banalita' disarmante. Zero sofisticatezza.",
+      "Vabe', ti saluto Conte. Non siamo sulla stessa lunghezza d'onda."
+    ];
+    const seccoPiediLines = [
+      "ECCOLO! Un uomo di cultura! Lo sapevo!",
+      "Conte, tu si' che capisci le cose belle della vita.",
+      "Sai che c'e'? Ti meriti un regalo. Ti presento lo Shark.",
+      "E' il mio bull terrier. Da oggi ti aiutera' in battaglia!",
+      "Quando attivi l'Ultra, lo Shark entra in azione. Fidati di lui!"
+    ];
+
+    // Dialogue box
+    drawRect(60, 430, W - 120, 80, 'rgba(0,0,0,0.85)');
+    drawRect(60, 430, W - 120, 2, '#66bb6a');
+
+    if (seccoPhase === 1) {
+      // Click-through intro lines
+      const line = seccoIntroLines[seccoLine] || seccoIntroLines[seccoIntroLines.length - 1];
+      drawText('"' + line + '"', W/2, 470, '#e0e0e0', 14, 'center');
+      ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+      drawText('[Click / Enter]', W/2, 498, '#66bb6a', 10, 'center');
+      ctx.globalAlpha = 1;
+
+      if (seccoCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+        seccoLine++;
+        seccoCooldown = 10;
+        playSFX('hit');
+        if (seccoLine >= seccoIntroLines.length) {
+          seccoPhase = 2;
+          seccoChoice = -1;
+          seccoCooldown = 15;
+        }
+        mouseClick = false;
+      }
+    } else if (seccoPhase === 2) {
+      // Choice: culo or piedi
+      drawText('"Che preferisci in una donna?"', W/2, 455, '#e0e0e0', 14, 'center');
+
+      const btnW = 160, btnH = 36;
+      const btn1X = W/2 - btnW - 20, btn2X = W/2 + 20, btnY = 468;
+
+      // Keyboard selection
+      if (seccoCooldown <= 0) {
+        if (keysJustPressed['ArrowLeft'] || keysJustPressed['KeyA']) { seccoChoice = 0; playSFX('hit'); }
+        if (keysJustPressed['ArrowRight'] || keysJustPressed['KeyD']) { seccoChoice = 1; playSFX('hit'); }
+      }
+
+      const hover1 = mouseX > btn1X && mouseX < btn1X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+      const hover2 = mouseX > btn2X && mouseX < btn2X + btnW && mouseY > btnY && mouseY < btnY + btnH;
+      if (hover1) seccoChoice = 0;
+      if (hover2) seccoChoice = 1;
+
+      // IL CULO button (brown/warm)
+      drawRect(btn1X, btnY, btnW, btnH, seccoChoice === 0 ? '#4e342e' : '#2c1e14');
+      drawRect(btn1X, btnY, btnW, 2, seccoChoice === 0 ? '#ff8f00' : '#5d4037');
+      drawText('IL CULO', btn1X + btnW/2, btnY + 24, seccoChoice === 0 ? '#ff8f00' : '#8d6e63', 14, 'center');
+
+      // I PIEDI button (green)
+      drawRect(btn2X, btnY, btnW, btnH, seccoChoice === 1 ? '#1b5e20' : '#1a2e1a');
+      drawRect(btn2X, btnY, btnW, 2, seccoChoice === 1 ? '#66bb6a' : '#2e7d32');
+      drawText('I PIEDI', btn2X + btnW/2, btnY + 24, seccoChoice === 1 ? '#66bb6a' : '#4caf50', 14, 'center');
+
+      if (seccoCooldown <= 0 && seccoChoice >= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+        seccoPhase = 3;
+        seccoLine = 0;
+        seccoCooldown = 15;
+        if (seccoChoice === 1) {
+          sharkUnlocked = true;
+          playSFX('coin');
+          spawnParticles(W/2, 300, '#90caf9', 15, 5);
+          showQuickText('SHARK SBLOCCATO!', '#90caf9');
+        }
+        mouseClick = false;
+      }
+    } else if (seccoPhase === 3) {
+      // Response lines based on choice
+      const lines = seccoChoice === 0 ? seccoCuloLines : seccoPiediLines;
+      const line = lines[seccoLine] || lines[lines.length - 1];
+      const textColor = seccoChoice === 0 ? '#ff8f00' : '#66bb6a';
+      drawText('"' + line + '"', W/2, 470, textColor, 14, 'center');
+      ctx.globalAlpha = 0.5 + Math.sin(gameTime * 0.08) * 0.3;
+      drawText('[Click / Enter]', W/2, 498, '#66bb6a', 10, 'center');
+      ctx.globalAlpha = 1;
+
+      if (seccoCooldown <= 0 && (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space'])) {
+        seccoLine++;
+        seccoCooldown = 10;
+        playSFX('hit');
+        if (seccoLine >= lines.length) {
+          seccoVisited = true;
+          seccoPhase = 4;
+          state = 'hub';
+          hubInputCooldown = 15;
+        }
+        mouseClick = false;
+      }
+    }
+
+    mouseClick = false;
+    return;
+  }
 
   // Ambient smoke particles
   ctx.globalAlpha = 0.05;
@@ -10222,6 +10720,7 @@ function startLevel(idx) {
   mariusoActive = false;
   mariuso = null;
   activeHelperVisuals = [];
+  sharkEntity = null;
   bossIntro = false;
   bossIntroTimer = 0;
   waveClearTimer = 0;
@@ -11097,6 +11596,43 @@ function updateLevel() {
   // Update helper visuals
   updateHelperVisuals();
 
+  // Update Shark entity
+  if (sharkEntity) {
+    sharkEntity.timer++;
+    sharkEntity.x += sharkEntity.vx;
+    // Hit goons
+    goons.forEach((g, i) => {
+      if (!g.dead && !sharkEntity.hitEnemies.has(i) &&
+          Math.abs(g.x - sharkEntity.x) < 35 && Math.abs(g.y - sharkEntity.y) < 40) {
+        sharkEntity.hitEnemies.add(i);
+        const dmg = 8 + Math.random() * 6;
+        g.hp -= dmg;
+        g.hitFlash = 8;
+        spawnDamageNumber(g.x, g.y - (g.h || 50), Math.floor(dmg), '#90caf9');
+        spawnParticles(g.x, g.y - (g.h || 50)/2, '#90caf9', 5, 3);
+        if (g.hp <= 0) { g.dead = true; totalKills++; spawnCoinPickup(g.x, g.y - 20, 5); }
+      }
+    });
+    // Hit boss
+    if (boss && !boss.dead && bossIntro && bossIntroTimer <= 0 &&
+        !sharkEntity.hitEnemies.has('boss') && Math.abs(boss.x - sharkEntity.x) < 45) {
+      sharkEntity.hitEnemies.add('boss');
+      const dmg = 10 + Math.random() * 8;
+      boss.hp -= dmg;
+      boss.hitFlash = 8;
+      spawnDamageNumber(boss.x, boss.y - boss.h, Math.floor(dmg), '#90caf9');
+      spawnParticles(boss.x, boss.y - boss.h/2, '#90caf9', 8, 4);
+    }
+    // Particle trail
+    if (sharkEntity.timer % 4 === 0) {
+      spawnParticles(sharkEntity.x, sharkEntity.y - 8, '#90caf9', 1, 2);
+    }
+    // Remove when off-screen or after 180 frames (3 sec)
+    if (sharkEntity.timer > 180 || sharkEntity.x < -80 || sharkEntity.x > W + 80) {
+      sharkEntity = null;
+    }
+  }
+
   // Exhaustion timer
   if (player.exhaustedTimer > 0) player.exhaustedTimer--;
   // Reload timer for ranged weapons
@@ -11115,7 +11651,7 @@ function updateLevel() {
   if (player.staminaRegenDelay > 0) {
     player.staminaRegenDelay--;
   } else if (player.stamina < player.maxStamina) {
-    const stRegenRate = player.upgrades.some(u => u.effect === 'stregen') ? 0.7 : 0.5;
+    const stRegenRate = player.upgrades.some(u => u.effect === 'stregen') ? 0.65 : 0.465;
     player.stamina = Math.min(player.maxStamina, player.stamina + stRegenRate);
   }
 
@@ -11288,6 +11824,17 @@ function updatePlayerInput() {
     spawnParticles(player.x, player.y - 30, '#ffd700', 25, 7);
     showQuickText('ULTRA!!!', '#ffd700');
     playSFX('stomp');
+    if (sharkUnlocked && !sharkEntity) {
+      sharkEntity = {
+        x: player.x - player.facing * 120,
+        y: GROUND_Y,
+        vx: player.facing * 5,
+        facing: player.facing,
+        timer: 0,
+        hitEnemies: new Set()
+      };
+      showQuickText('LO SHARK!', '#90caf9');
+    }
   }
 
   // Combo chain attack system — requires keysJustPressed (no hold-to-spam)
@@ -11406,6 +11953,84 @@ function drawLevel() {
 
   // Draw helper characters
   drawHelperVisuals();
+
+  // Draw Shark (bull terrier)
+  if (sharkEntity) {
+    const sk = sharkEntity;
+    const fadeAlpha = sk.timer > 160 ? (180 - sk.timer) / 20 : 1;
+    ctx.globalAlpha = fadeAlpha;
+    ctx.save();
+    ctx.translate(sk.x, sk.y);
+    if (sk.facing < 0) { ctx.scale(-1, 1); }
+    const legAnim = Math.sin(sk.timer * 0.35) * 5;
+    const runBob = Math.abs(Math.sin(sk.timer * 0.35)) * 1.5;
+    const bY = -runBob; // body bob while running
+    // Shadow (oval, moves with bob)
+    ctx.globalAlpha = fadeAlpha * 0.25;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 18, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = fadeAlpha;
+    // === BODY — stocky, barrel-chested bull terrier ===
+    // Torso (wide chest tapering to rear)
+    drawRect(-16, bY - 18, 30, 14, '#f5f5f5'); // main body
+    drawRect(-14, bY - 20, 26, 4, '#ededed');   // back/spine
+    drawRect(-16, bY - 16, 6, 10, '#e8e8e8');   // rear haunch
+    drawRect(10, bY - 20, 6, 14, '#fafafa');     // chest (lighter, forward)
+    // Belly shading
+    drawRect(-10, bY - 6, 20, 2, '#e0e0e0');
+    // === HEAD — signature egg-shaped, long sloping Roman nose ===
+    // Skull slopes down continuously into muzzle (no stop)
+    drawRect(14, bY - 28, 12, 8, '#f5f5f5');   // top of skull
+    drawRect(16, bY - 30, 8, 4, '#fafafa');     // crown
+    drawRect(14, bY - 20, 14, 8, '#f5f5f5');    // mid face
+    drawRect(18, bY - 14, 12, 4, '#f0f0f0');    // lower muzzle slope
+    drawRect(22, bY - 12, 8, 4, '#ededed');      // nose bridge
+    drawRect(26, bY - 10, 6, 4, '#e8e8e8');      // nose tip area
+    // Nose (black, at the very tip of the slope)
+    drawRect(30, bY - 10, 3, 3, '#111');
+    // Eye — small, triangular, sunken (signature look)
+    drawRect(18, bY - 24, 4, 3, '#1a1a1a');
+    drawRect(19, bY - 24, 2, 2, '#333');        // glint
+    // Eye patch (subtle darker marking around eye — many bull terriers have this)
+    ctx.globalAlpha = fadeAlpha * 0.12;
+    drawRect(16, bY - 26, 8, 7, '#555');
+    ctx.globalAlpha = fadeAlpha;
+    // Mouth line (slight underbite grin)
+    drawRect(24, bY - 8, 6, 1, '#bbb');
+    drawRect(28, bY - 9, 3, 1, '#ccc');
+    // === EARS — small, thin, erect, close together on top of skull ===
+    drawRect(17, bY - 35, 3, 7, '#f5f5f5');
+    drawRect(23, bY - 35, 3, 7, '#f5f5f5');
+    drawRect(18, bY - 34, 1, 5, '#ffcdd2');     // inner ear pink
+    drawRect(24, bY - 34, 1, 5, '#ffcdd2');
+    // === COLLAR (blue) ===
+    drawRect(12, bY - 20, 5, 3, '#64b5f6');
+    drawRect(14, bY - 19, 2, 2, '#ffd700');      // tag
+    // === LEGS — short, muscular, straight ===
+    // Front legs (with paws)
+    drawRect(6, bY - 6, 5, 10 + legAnim, '#f5f5f5');
+    drawRect(12, bY - 6, 5, 10 - legAnim, '#f5f5f5');
+    drawRect(6, bY + 3 + legAnim, 5, 3, '#e8e8e8');  // front paw
+    drawRect(12, bY + 3 - legAnim, 5, 3, '#e8e8e8');
+    // Back legs (thicker at haunch)
+    drawRect(-15, bY - 8, 5, 10 - legAnim, '#f0f0f0');
+    drawRect(-9, bY - 8, 5, 10 + legAnim, '#f0f0f0');
+    drawRect(-15, bY + 1 - legAnim, 5, 3, '#e0e0e0');
+    drawRect(-9, bY + 1 + legAnim, 5, 3, '#e0e0e0');
+    // === TAIL — short, carried horizontally, tapered ===
+    const tailWag = Math.sin(sk.timer * 0.5) * 3;
+    drawRect(-19, bY - 22 + tailWag, 5, 3, '#f5f5f5');
+    drawRect(-22, bY - 21 + tailWag, 4, 2, '#ededed');
+    ctx.restore();
+    // "SHARK!" text above briefly
+    if (sk.timer < 40) {
+      ctx.globalAlpha = fadeAlpha * (1 - sk.timer / 40);
+      drawText('SHARK!', sk.x, sk.y - 40, '#90caf9', 11, 'center');
+    }
+    ctx.globalAlpha = 1;
+  }
 
   // Draw particles
   drawParticles();
@@ -11772,6 +12397,10 @@ function drawGameOver() {
         bossDefeated = [false, false, false, false, false];
         lives = 3; firstTime = true;
         hubStoryShown = false; hubStoryLine = 0;
+        newspaperRead = false; newspaperPhase = 0;
+        seccoVisited = false; seccoIntroDone = false; seccoPhase = 0;
+        sharkUnlocked = false; sharkEntity = null;
+        player.defenseBuff = 0; player.critBuff = 0;
         state = 'menu';
         resetPlayer();
         bossIntro = false;
@@ -12405,6 +13034,13 @@ function drawVictory() {
       startapparoIntroDone = false;
       startapparoFirstSeen = false;
       startapparoBubbleTimer = 0;
+      seccoVisited = false;
+      seccoIntroDone = false;
+      seccoPhase = 0;
+      sharkUnlocked = false;
+      sharkEntity = null;
+      player.defenseBuff = 0;
+      player.critBuff = 0;
       lampHit = false;
       hubCatPetted = false;
       drinkTaken = false;
@@ -12413,6 +13049,8 @@ function drawVictory() {
       hubStoryLine = 0;
       hubStoryCooldown = 0;
       hubVisitInited = false;
+      newspaperRead = false;
+      newspaperPhase = 0;
       stopVictorySong();
       state = 'menu';
     }
