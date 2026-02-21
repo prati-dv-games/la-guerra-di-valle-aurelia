@@ -7719,28 +7719,30 @@ function drawVideoPoker(panelY) {
   drawRect(tableX, panelY, tableW, H - panelY - 50, 'rgba(0,60,0,0.12)');
   drawRect(tableX, panelY, tableW, 2, '#4caf50');
 
-  // Payout table (top right corner)
-  const payX = tableX + tableW - 200;
+  // Payout table (compact strip on right)
+  const payW = 150;
+  const payX = tableX + tableW - payW - 4;
   const payY = panelY + 4;
-  drawRect(payX, payY, 195, 182, 'rgba(0,0,0,0.55)');
-  drawRect(payX, payY, 195, 3, '#ffd700');
-  drawText('PAGAMENTI', payX + 98, payY + 18, '#ffd700', 13, 'center');
+  drawRect(payX, payY, payW, 182, 'rgba(0,0,0,0.55)');
+  drawRect(payX, payY, payW, 3, '#ffd700');
+  drawText('PAGAMENTI', payX + payW/2, payY + 16, '#ffd700', 12, 'center');
   const payNames = Object.keys(POKER_PAYOUTS);
   for (let i = 0; i < payNames.length - 1; i++) {
     const name = payNames[i];
     const mult = POKER_PAYOUTS[name];
     const isActive = pokerPhase === 'result' && pokerResult === name;
-    if (isActive) drawRect(payX + 3, payY + 24 + i * 17, 189, 16, 'rgba(255,215,0,0.15)');
-    drawText(name, payX + 10, payY + 38 + i * 17, isActive ? '#ffd700' : '#bbb', 11);
-    drawText(mult + 'x', payX + 180, payY + 38 + i * 17, isActive ? '#ffd700' : '#999', 11, 'right');
+    if (isActive) drawRect(payX + 3, payY + 22 + i * 17, payW - 6, 16, 'rgba(255,215,0,0.15)');
+    drawText(name, payX + 8, payY + 36 + i * 17, isActive ? '#ffd700' : '#bbb', 10);
+    drawText(mult + 'x', payX + payW - 8, payY + 36 + i * 17, isActive ? '#ffd700' : '#999', 10, 'right');
   }
 
-  // Cards area — bigger cards, centered in table
-  const cardW = 64, cardH = 88;
-  const cardSpacing = 74;
-  const totalCardsW = 5 * cardSpacing - (cardSpacing - cardW);
-  const cardStartX = tableX + (tableW - totalCardsW) / 2 - 40;
-  const cardY = panelY + 18;
+  // Cards area — big cards, centered in table (left of payout)
+  const cardW = 80, cardH = 110;
+  const cardAreaW = tableW - payW - 20;
+  const cardSpacing = Math.min(90, Math.floor((cardAreaW - cardW) / 4));
+  const totalCardsW = 4 * cardSpacing + cardW;
+  const cardStartX = tableX + (cardAreaW - totalCardsW) / 2;
+  const cardY = panelY + 10;
 
   if (pokerPhase === 'idle') {
     // Show face-down cards
@@ -7750,7 +7752,7 @@ function drawVideoPoker(panelY) {
 
     // Bet controls (below cards)
     const betY = cardY + cardH + 16;
-    const betCenterX = cardStartX + totalCardsW / 2 - 30;
+    const betCenterX = cardStartX + totalCardsW / 2;
     drawText('PUNTATA: ' + pokerBet, betCenterX, betY + 16, '#ffd700', 16, 'center');
 
     const minusBx = betCenterX - 90;
@@ -7841,7 +7843,7 @@ function drawVideoPoker(panelY) {
     // Draw button
     if (pokerDealAnim === 0) {
       const drawBtnY = cardY + cardH + 40;
-      const drawBx = cardStartX + totalCardsW / 2 - 130;
+      const drawBx = cardStartX + totalCardsW / 2 - 95;
       const drawBw = 190;
       const drawHover = mouseX > drawBx && mouseX < drawBx + drawBw && mouseY > drawBtnY && mouseY < drawBtnY + 38;
       drawRect(drawBx, drawBtnY, drawBw, 38, drawHover ? '#e65100' : '#bf360c');
@@ -7885,7 +7887,7 @@ function drawVideoPoker(panelY) {
     }
     const bounce = Math.sin(pokerResultTimer * 0.12) * 5;
     const resY = cardY + cardH + 20;
-    const resCenterX = cardStartX + totalCardsW / 2 - 30;
+    const resCenterX = cardStartX + totalCardsW / 2;
     if (pokerWinAmount > 0) {
       // Win glow
       ctx.globalAlpha = 0.08 + Math.sin(pokerResultTimer * 0.1) * 0.04;
@@ -7933,8 +7935,8 @@ function drawSlotMachine(panelY) {
   const areaX = npcX + npcW + 8;
   const areaW = W - areaX - 10;
 
-  // Slot machine frame — bigger
-  const machW = 380, machH = 240;
+  // Slot machine frame — wide
+  const machW = areaW - 20, machH = 260;
   const machX = areaX + 10;
   const machY = panelY + 4;
   // Outer frame (gray metal)
@@ -7961,7 +7963,7 @@ function drawSlotMachine(panelY) {
 
   // Reel window
   const reelY = machY + 38;
-  const reelH = 110;
+  const reelH = 150;
   drawRect(machX + 20, reelY, machW - 40, reelH, '#0a0a0a');
   drawRect(machX + 20, reelY, machW - 40, 2, '#444');
   drawRect(machX + 20, reelY + reelH - 2, machW - 40, 2, '#444');
@@ -7986,7 +7988,7 @@ function drawSlotMachine(panelY) {
       const speed = slotSpinTimers[r] < 10 ? 5 : 2;
       const symIdx = Math.floor(gameTime / speed) % SLOT_SYMBOLS.length;
       const sym = SLOT_SYMBOLS[symIdx];
-      drawText(sym.symbol, rx + rw/2, ry + 62, sym.color, 52, 'center');
+      drawText(sym.symbol, rx + rw/2, ry + 82, sym.color, 68, 'center');
 
       if (slotSpinTimers[r] <= 0) {
         slotReels[r] = slotTargetReels[r];
@@ -8030,8 +8032,8 @@ function drawSlotMachine(panelY) {
       }
     } else {
       const sym = SLOT_SYMBOLS[slotReels[r]];
-      drawText(sym.symbol, rx + rw/2, ry + 62, sym.color, 52, 'center');
-      drawText(sym.name, rx + rw/2, ry + 82, '#777', 9, 'center');
+      drawText(sym.symbol, rx + rw/2, ry + 82, sym.color, 68, 'center');
+      drawText(sym.name, rx + rw/2, ry + 105, '#777', 11, 'center');
     }
   }
 
@@ -8112,29 +8114,31 @@ function drawSlotMachine(panelY) {
     }
   }
 
-  // Payout table on right side
-  const ptX = machX + machW + 16, ptY = panelY + 4;
-  const ptW = W - ptX - 14;
-  drawRect(ptX, ptY, ptW, H - panelY - 54, 'rgba(0,0,0,0.5)');
+  // Payout table — compact horizontal strip below controls
+  const ptY = ctrlY + 82;
+  const ptX = machX;
+  const ptW = machW;
+  drawRect(ptX, ptY, ptW, 46, 'rgba(0,0,0,0.5)');
   drawRect(ptX, ptY, ptW, 2, '#ff9800');
-  drawText('PAGAMENTI', ptX + ptW/2, ptY + 18, '#ff9800', 12, 'center');
-
-  drawText('--- 3 UGUALI ---', ptX + ptW/2, ptY + 38, '#ffd700', 9, 'center');
+  // 3-of-a-kind payouts in a row
+  let px3 = ptX + 6;
+  drawText('3x:', px3, ptY + 16, '#ffd700', 11);
+  px3 += 28;
   for (let i = 0; i < SLOT_SYMBOLS.length; i++) {
     if (SLOT_PAYOUTS_3[i] === 0) continue;
     const sym = SLOT_SYMBOLS[i];
-    drawText(sym.symbol + ' ' + sym.symbol + ' ' + sym.symbol, ptX + 10, ptY + 56 + i * 18, sym.color, 10);
-    drawText(SLOT_PAYOUTS_3[i] + 'x', ptX + ptW - 12, ptY + 56 + i * 18, '#ffd700', 10, 'right');
+    drawText(sym.symbol + SLOT_PAYOUTS_3[i] + 'x', px3, ptY + 16, sym.color, 11);
+    px3 += 56;
   }
-
-  drawText('--- 2 UGUALI ---', ptX + ptW/2, ptY + 170, '#aaa', 9, 'center');
-  let p2Count = 0;
+  // 2-of-a-kind payouts in a row
+  let px2 = ptX + 6;
+  drawText('2x:', px2, ptY + 36, '#aaa', 11);
+  px2 += 28;
   for (let i = 0; i < SLOT_SYMBOLS.length; i++) {
     if (SLOT_PAYOUTS_2[i] === 0) continue;
     const sym = SLOT_SYMBOLS[i];
-    drawText(sym.symbol + ' ' + sym.symbol, ptX + 10, ptY + 188 + p2Count * 17, sym.color, 10);
-    drawText(SLOT_PAYOUTS_2[i] + 'x', ptX + ptW - 12, ptY + 188 + p2Count * 17, '#aaa', 10, 'right');
-    p2Count++;
+    drawText(sym.symbol + SLOT_PAYOUTS_2[i] + 'x', px2, ptY + 36, sym.color, 11);
+    px2 += 56;
   }
 }
 
