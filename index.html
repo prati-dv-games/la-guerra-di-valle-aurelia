@@ -936,7 +936,7 @@ window.addEventListener('keydown', e => {
 let state = 'menu'; // menu, difficultySelect, tutorial, weaponSelect, hub, dialogue, level, shop, upgrade, casino, gameover, victory
 let difficulty = 'medium'; // 'easy', 'medium', 'hard'
 const DIFF_HP = { easy: 0.61, medium: 0.76, hard: 0.84 };
-const DIFF_DMG = { easy: 0.6, medium: 0.85, hard: 0.935 };
+const DIFF_DMG = { easy: 0.54, medium: 0.765, hard: 0.84 };
 let tutorialStep = 0;
 let tutorialDummy = null;
 let tutorialTimer = 0;
@@ -1111,19 +1111,19 @@ const player = {
 
 // 4 starter weapons — player picks one at game start
 const starterWeapons = [
-  { name: 'Sanpietrino',    damage: 16, range: 50,  speed: 7,  crit: 18,
+  { name: 'Sanpietrino',    damage: 14, range: 50,  speed: 8,  crit: 15,
     comboHits: 4, poise: 8, activeFrames: 6, comboWindow: 13, endLag: 13,
     special: 'critCombo', desc: 'Veloce, 4 colpi. Crit cresce nel combo.',
     color: '#9e9e9e', icon: 'S' },
-  { name: 'Cacciavite',     damage: 16, range: 48,  speed: 10, crit: 10,
-    comboHits: 3, poise: 8, activeFrames: 7, comboWindow: 13, endLag: 18,
-    special: 'bleed', desc: 'Bilanciato. Ultra: sanguinamento.',
+  { name: 'Cacciavite',     damage: 19, range: 48,  speed: 9,  crit: 12,
+    comboHits: 3, poise: 8, activeFrames: 7, comboWindow: 13, endLag: 15,
+    special: 'bleed', desc: 'Bilanciato. Sanguinamento. Ultra: potenziato.',
     color: '#ff8a65', icon: 'C' },
-  { name: 'Spranga',        damage: 22, range: 65,  speed: 14, crit: 5,
-    comboHits: 3, poise: 14, activeFrames: 8, comboWindow: 13, endLag: 22,
+  { name: 'Spranga',        damage: 24, range: 65,  speed: 13, crit: 7,
+    comboHits: 3, poise: 14, activeFrames: 8, comboWindow: 13, endLag: 20,
     special: 'reachControl', desc: 'Pesante, lungo raggio. Colpo doppio.',
     color: '#795548', icon: 'P' },
-  { name: 'Fionda',         damage: 11, range: 180, speed: 17, crit: 8,
+  { name: 'Fionda',         damage: 12, range: 180, speed: 16, crit: 8,
     comboHits: 3, poise: 2, activeFrames: 6, comboWindow: 10, endLag: 20,
     special: 'pierce', desc: 'Ranged. 3o colpo perfora (Ultra).', ranged: true,
     color: '#a1887f', icon: 'F', maxAmmo: 4, reloadFrames: 90 }
@@ -1158,8 +1158,8 @@ const legendaryWeapons = [
 ];
 
 const manganelloWeapon = {
-  name: 'Manganello', damage: 20, range: 55, speed: 10, crit: 12,
-  comboHits: 3, poise: 14, activeFrames: 7, comboWindow: 14, endLag: 18,
+  name: 'Manganello', damage: 21, range: 55, speed: 9, crit: 14,
+  comboHits: 3, poise: 14, activeFrames: 7, comboWindow: 14, endLag: 17,
   special: 'interrogation',
   desc: 'Arma di Michele. Ultra: rallenta tutti i nemici.',
   color: '#263238', icon: 'M'
@@ -1337,7 +1337,7 @@ const levels = [
     groundColor: '#3a3a4a',
     goonCount: 3,
     music: 'level1',
-    weaponMatchups: { sanpietrino: 1.0, cacciavite: 1.25, spranga: 0.85, fionda: 0.7 },
+    weaponMatchups: { sanpietrino: 1.0, cacciavite: 1.25, spranga: 0.85, fionda: 0.85 },
     bossLines: [
       '"Ao\', ma lo sai chi so\' io?"',
       '"Sono pazzo... sono pazzo di te..."',
@@ -1381,7 +1381,7 @@ const levels = [
     groundColor: '#37474f',
     goonCount: 5,
     music: 'level3',
-    weaponMatchups: { sanpietrino: 1.25, cacciavite: 1.0, spranga: 0.85, fionda: 0.75 },
+    weaponMatchups: { sanpietrino: 1.25, cacciavite: 1.0, spranga: 0.85, fionda: 0.9 },
     bossLines: [
       '"Te faccio vede\' er giro der Dale!"',
       '"Capoeira de strada, Conte! Rimbalzo sui muri!"',
@@ -1423,7 +1423,7 @@ const levels = [
     groundColor: '#1a1a2e',
     goonCount: 6,
     music: 'level5',
-    weaponMatchups: { sanpietrino: 1.0, cacciavite: 1.1, spranga: 1.1, fionda: 0.6 },
+    weaponMatchups: { sanpietrino: 1.0, cacciavite: 1.1, spranga: 1.1, fionda: 0.8 },
     bossLines: [
       '"Yo Conte... you think you\'re ready? Nun ce crede manco te..."',
       '"I\'m the final boss bro, er Pisellino non perdona"',
@@ -3374,10 +3374,15 @@ function launchComboHit(stepIndex) {
       if (player.ultraCharge >= player.ultraMaxCharge) player.ultraAvailable = true;
     }
 
-    // Bleed DoT: Bottiglia/Cacciavite Ultra applies bleed
-    if (weap.special === 'bleed' && player.ultraActive) {
-      t.bleedTimer = 180;
-      t.bleedDmg = 2;
+    // Bleed DoT: Cacciavite always bleeds (light); Ultra boosts it; Bottiglia ultra-only
+    if (weap.special === 'bleed') {
+      if (player.ultraActive) {
+        t.bleedTimer = 180;
+        t.bleedDmg = 2;
+      } else if (weap.name === 'Cacciavite') {
+        t.bleedTimer = Math.max(t.bleedTimer || 0, 120);
+        t.bleedDmg = Math.max(t.bleedDmg || 0, 1);
+      }
     }
 
     // Ultra upgrade mods — trigger during Ultra mode
@@ -6368,6 +6373,7 @@ let micheleVisited = false;
 let micheleArgueTimer = 0;
 let micheleArgueLine = '';
 let micheleArgueIntroDone = false;
+let micheleArgueFirstSeen = false;
 let backroomPhase = 0; // 0=dialogue, 1=choice, 2=response, 3=exit
 let backroomLine = 0;
 let backroomChoice = -1; // 0=Scarabeo, 1=TMAX
@@ -6590,7 +6596,7 @@ function drawHub() {
   ctx.lineWidth = 1;
 
   // Backroom door click — Michele Lo Sbirro
-  const vanniDoorHover = !hubConfirm && !(bossDefeated[0] && !micheleVisited && !micheleArgueIntroDone) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
+  const vanniDoorHover = !hubConfirm && !(bossDefeated[0] && !micheleVisited && !micheleArgueFirstSeen) && mouseX > 385 && mouseX < 455 && mouseY > 280 && mouseY < 410;
   if (vanniDoorHover) {
     ctx.globalAlpha = 0.15;
     drawRect(385, 280, 70, 130, '#ffcc80');
@@ -6632,6 +6638,21 @@ function drawHub() {
       ctx.globalAlpha = 1;
       if (mouseClick || keysJustPressed['Enter'] || keysJustPressed['Space']) {
         micheleArgueIntroDone = true;
+        // Trigger first arguing bubble almost immediately
+        const MICHELE_ARGUE = [
+          '"Te lo giuro, e\' solo un\'amica!"',
+          '"Amore, ho perso il telefono per 3 giorni, capita!"',
+          '"Non e\' come sembra! Ero a jiu jitsu!"',
+          '"Ma quale sparizione?! Ero a fare surf!"',
+          '"Si, ok, non ho risposto... ma avevo il telefono in silenzioso!"',
+          '"Non urlare che ci sentono fuori!"',
+          '"Lo sai che ti amo... e anche il jiu jitsu..."',
+          '"Colpa del Conte, mi ha distratto!"',
+          '"Dai, ti porto in snowboard... domani... forse..."',
+          '"OK OK hai ragione, come sempre, MA..."'
+        ];
+        micheleArgueLine = MICHELE_ARGUE[Math.floor(Math.random() * MICHELE_ARGUE.length)];
+        micheleArgueTimer = 180;
         hubInputCooldown = 15;
         mouseClick = false;
       }
@@ -6656,6 +6677,9 @@ function drawHub() {
       if (micheleArgueTimer > 0) {
         micheleArgueTimer--;
         drawCasinoBubble(420, 278, micheleArgueLine, 200, '#78909c');
+      } else if (!micheleArgueFirstSeen) {
+        // First bubble has fully played — unlock the door
+        micheleArgueFirstSeen = true;
       }
     }
   }
@@ -11730,6 +11754,7 @@ function drawVictory() {
       hasSunglasses = false;
       micheleVisited = false;
       micheleArgueIntroDone = false;
+      micheleArgueFirstSeen = false;
       lampHit = false;
       hubCatPetted = false;
       drinkTaken = false;
